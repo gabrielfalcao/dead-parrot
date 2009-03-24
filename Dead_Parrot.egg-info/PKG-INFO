@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: Dead-Parrot
+Version: 0.1
+Summary: A model-based Django(ish) and SQLAlchemy-powered RESTful server/client
+Home-page: http://deadparrot.gabrielfalcao.com
+Author: Gabriel Falcão
+Author-email: gabriel@nacaolivre.org
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
