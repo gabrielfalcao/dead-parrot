@@ -16,11 +16,19 @@
 # License along with this program; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
+
 import unittest
+from deadparrot.client.models import Attribute
+from deadparrot.client.models import DateTimeAttribute
+from datetime import datetime
 
 class TestAttributes(unittest.TestCase):
+    def test_camel_name(self):
+        nc = Attribute(unicode)
+        nc.fill('my_over_long_attribute_name', 'Attribute Value')
+        self.assertEquals(nc.camel_name, 'myOverLongAttributeName')
+
     def test_unicode(self):
-        from deadparrot.client.models import Attribute
         nc = Attribute(unicode)
         nc.fill('full_name', 'John Doe')
         self.assertEquals(nc.name, 'full_name')
@@ -28,7 +36,6 @@ class TestAttributes(unittest.TestCase):
         self.assertEquals(nc.value, u'John Doe')
 
     def test_float(self):
-        from deadparrot.client.models import Attribute
         nc = Attribute(float)
         nc.fill('weight', '120.53')
         self.assertEquals(nc.name, 'weight')
@@ -36,7 +43,6 @@ class TestAttributes(unittest.TestCase):
         self.assertEquals(nc.value, 120.53)
 
     def test_int(self):
-        from deadparrot.client.models import Attribute
         nc = Attribute(int)
         nc.fill('age', '21.53')
         self.assertEquals(nc.name, 'age')
@@ -44,8 +50,6 @@ class TestAttributes(unittest.TestCase):
         self.assertEquals(nc.value, 21)
 
     def test_datetime(self):
-        from deadparrot.client.models import DateTimeAttribute
-        from datetime import datetime
         nc = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
         nc.fill('creation_date', '2009/03/24 00:46:20')
         self.assertEquals(nc.name, 'creation_date')
