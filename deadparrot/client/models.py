@@ -2,7 +2,7 @@
 # -*- coding: utf-8; -*-
 
 from lxml import etree
-from datetime import datetime, timedelta
+from datetime import datetime, date, time, timedelta
 # dicionário para o registro de classes de tags
 TAGS = {}
 
@@ -60,6 +60,21 @@ class DateTimeAttribute(Attribute):
             return datetime.strptime(val, self.vartype)
         else:
             return datetime.now()
+
+class TimeAttribute(Attribute):
+    def convert_type(self, val):
+        if val:
+            return datetime.strptime(val, self.vartype).time()
+        else:
+            return datetime.now().time()
+
+class DateAttribute(Attribute):
+    def convert_type(self, val):
+        if val:
+            return datetime.strptime(val, self.vartype).date()
+        else:
+            return datetime.now().date()
+
 
 class XmlTagText(Attribute):
     u"""Placeholder for the content of tags"""
@@ -361,3 +376,15 @@ class XmlTag(object):
     def camel_attrs(self):
         return [(name, attr) for name, attr in [(x, getattr(self, x)) for x in dir(self)] \
                 if isinstance(attr, Attribute)]
+
+class Model(object):
+    def __new__(cls):
+        if hasattr(cls, 'Meta'):
+            cls._meta = cls.Meta()
+        else:
+            cls._meta = None
+
+        return cls
+
+    def __init__(self):
+        self.meta = object()

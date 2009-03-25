@@ -18,9 +18,12 @@
 # Boston, MA 02111-1307, USA.
 
 import unittest
+from deadparrot.client.models import Model
 from deadparrot.client.models import Attribute
 from deadparrot.client.models import DateTimeAttribute
-from datetime import datetime
+from deadparrot.client.models import DateAttribute
+from deadparrot.client.models import TimeAttribute
+from datetime import datetime, date, time
 
 class TestAttributes(unittest.TestCase):
     def test_camel_name(self):
@@ -50,8 +53,42 @@ class TestAttributes(unittest.TestCase):
         self.assertEquals(nc.value, 21)
 
     def test_datetime(self):
-        nc = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
-        nc.fill('creation_date', '2009/03/24 00:46:20')
-        self.assertEquals(nc.name, 'creation_date')
-        self.assertEquals(nc.camel_name, 'creationDate')
-        self.assertEquals(nc.value.date(), datetime(2009, 3, 24).date())
+        dta = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
+        dta.fill('creation_date', '2009/03/24 00:46:20')
+        self.assertEquals(dta.name, 'creation_date')
+        self.assertEquals(dta.camel_name, 'creationDate')
+        self.assertEquals(dta.value.date(), datetime(2009, 3, 24).date())
+
+    def test_date(self):
+        dta = DateAttribute("%Y/%m/%d")
+        dta.fill('creation_date', '2009/03/24')
+        self.assertEquals(dta.name, 'creation_date')
+        self.assertEquals(dta.camel_name, 'creationDate')
+        self.assertEquals(dta.value, date(2009, 3, 24))
+
+    def test_time(self):
+        dta = TimeAttribute("%H:%M:%S")
+        dta.fill('creation_time', '23:44:10')
+        self.assertEquals(dta.value, time(hour=23, minute=44, second=10))
+
+class TestModel(unittest.TestCase):
+    def test_metadata(self):
+        class Person(Model):
+            class Meta:
+                single_name = 'Person'
+                plural_name = 'People'
+
+        p = Person()
+        self.failUnless(p._meta is not None)
+        self.assertEquals(p._meta.single_name, 'Person')
+        self.assertEquals(p._meta.plural_name, 'People')
+
+    def test_meta_serialization(self):
+        class Person(Model):
+            name = Attribute(unicode)
+            birthdate = DateAttribute("%d/%m/%Y")
+
+        p = Person()
+        p.name = "John Doe"
+        p.birthdate = date(1988, 02, 10)
+
