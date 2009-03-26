@@ -54,17 +54,21 @@ class TestAttributes(unittest.TestCase):
 
     def test_datetime(self):
         dta = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
+        dta2 = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
         dta.fill('creation_date', '2009/03/24 00:46:20')
         self.assertEquals(dta.name, 'creation_date')
         self.assertEquals(dta.camel_name, 'creationDate')
         self.assertEquals(dta.value.date(), datetime(2009, 3, 24).date())
 
     def test_date(self):
-        dta = DateAttribute("%Y/%m/%d")
-        dta.fill('creation_date', '2009/03/24')
-        self.assertEquals(dta.name, 'creation_date')
-        self.assertEquals(dta.camel_name, 'creationDate')
-        self.assertEquals(dta.value, date(2009, 3, 24))
+        dta1 = DateAttribute("%Y/%m/%d")
+        dta2 = DateAttribute("%Y/%m/%d")
+        dta1.fill('creation_date', '2009/03/24')
+        dta2.fill('creation_date', date(2009, 3, 24))
+        self.assertEquals(dta1.name, 'creation_date')
+        self.assertEquals(dta1.camel_name, 'creationDate')
+        self.assertEquals(dta1.value, date(2009, 3, 24))
+        self.assertEquals(dta2.value, date(2009, 3, 24))
 
     def test_time(self):
         dta = TimeAttribute("%H:%M:%S")
@@ -87,8 +91,52 @@ class TestModel(unittest.TestCase):
         class Person(Model):
             name = Attribute(unicode)
             birthdate = DateAttribute("%d/%m/%Y")
+            class Meta:
+                plural_name = 'People'
 
         p = Person()
         p.name = "John Doe"
         p.birthdate = date(1988, 02, 10)
 
+        my_dict = {
+            'Person': {
+                'name': u"John Doe",
+                'birthdate': u"10/02/1988"
+            }
+        }
+
+        self.assertEquals(my_dict, p.to_dict())
+
+    def test_model_set(self):
+        class Person(Model):
+            name = Attribute(unicode)
+            birthdate = DateAttribute("%d/%m/%Y")
+
+        p1 = Person()
+        p1.name = "John Doe"
+        p1.birthdate = date(1988, 02, 10)
+
+        p2 = Person()
+        p2.name = "Mary jane"
+        p2.birthdate = date(1970, 12, 20)
+
+        crowd = Person.Set([p1, p2])
+        self.assertEquals(len(crowd), 2)
+        for p in crowd:
+            self.failUnless(isinstance(p, Person))
+
+        my_dict = {
+            'People': [
+                {'Person': {
+                    'name': u"John Doe",
+                    'birthdate': u"10/02/1988"
+                    }
+                 },
+                {'Person': {
+                    'name': u"Mary Jane",
+                    'birthdate': u"20/12/1970"
+                     }
+                 }
+            ]
+        }
+        self.assertEquals(my_dict, crowd.to_dict())
