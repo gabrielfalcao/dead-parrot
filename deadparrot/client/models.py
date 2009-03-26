@@ -61,7 +61,7 @@ class Attribute(object):
 
 class DateTimeAttribute(Attribute):
     def serialize(self):
-        return self.value.strftime(self.vartype)
+        return unicode(self.value.strftime(self.vartype))
 
     def convert_type(self, val):
         if isinstance(val, basestring):
@@ -144,24 +144,49 @@ class ModelMeta(type):
 
         super(ModelMeta, cls).__init__(name, bases, attrs)
 
+class ModelSet(object):
+    set = []
+    model_klass = None
+    def __init__(self, model_klass, items):
+        if not isinstance(items, (list, tuple)):
+            klassname = self.__class__.__name__
+            raise TypeError, "%s needs a list or "\
+                  "tuple of %s objects. Got a %r" % (klassname,
+                                                     klassname[:-3],
+                                                     type(items))
+        self.model_klass = model_klass
+        self.set = list(items)
+
+    def __getslice__(self, *args, **kw):
+        return self.set.__getslice__(*args, **kw)
+
+    def __setslice__(self, *args, **kw):
+        return self.set.__setslice__(*args, **kw)
+
+    def __getitem__(self, *args, **kw):
+        return self.set.__getitem__(*args, **kw)
+
+    def __setitem__(self, *args, **kw):
+        return self.set.__setitem__(*args, **kw)
+
+    def __len__(self):
+        return len(self.set)
+
+    def __nonzero__(self):
+        return len(self.set) > 0
+
+    def to_dict(self):
+        return {self.model_klass._meta.plural_name: [m.to_dict() for m in self.set]}
+
 class Model(object):
     __metaclass__ = ModelMeta
 
-    def __setattr__(self, name, val):
-        attr = getattr(self, name)
-        if isinstance(attr, Attribute):
-            attr.fill(name, val)
-            return
-
-        super(Model, self).__setattr__(name, val)
-
     def _get_data(self):
-        return dict([(k, getattr(self, k).serialize()) for k in self._fields.keys()])
+        return dict([(k, v.__class__(v.vartype, k, getattr(self, k)).serialize()) for k, v in self._fields.items()])
 
     def to_dict(self):
         return {self._meta.single_name: self._get_data()}
 
     @classmethod
     def Set(cls, items):
-        return []
-
+        return type('%sSet' % cls.__name__, (ModelSet,), {})(cls, items)

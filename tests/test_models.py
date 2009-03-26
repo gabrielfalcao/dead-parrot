@@ -91,8 +91,6 @@ class TestModel(unittest.TestCase):
         class Person(Model):
             name = Attribute(unicode)
             birthdate = DateAttribute("%d/%m/%Y")
-            class Meta:
-                plural_name = 'People'
 
         p = Person()
         p.name = "John Doe"
@@ -111,15 +109,19 @@ class TestModel(unittest.TestCase):
         class Person(Model):
             name = Attribute(unicode)
             birthdate = DateAttribute("%d/%m/%Y")
+            def __unicode__(self):
+                return "<Person %s>" % self.name.value
+
+            class Meta:
+                plural_name = 'People'
 
         p1 = Person()
         p1.name = "John Doe"
         p1.birthdate = date(1988, 02, 10)
 
         p2 = Person()
-        p2.name = "Mary jane"
+        p2.name = "Mary Jane"
         p2.birthdate = date(1970, 12, 20)
-
         crowd = Person.Set([p1, p2])
         self.assertEquals(len(crowd), 2)
         for p in crowd:
@@ -139,4 +141,5 @@ class TestModel(unittest.TestCase):
                  }
             ]
         }
+
         self.assertEquals(my_dict, crowd.to_dict())
