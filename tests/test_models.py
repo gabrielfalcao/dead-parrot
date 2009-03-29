@@ -304,9 +304,67 @@ class TestFields(unittest.TestCase):
         fail_dict_int = {'Person': {'creation_date': 100000}}
         self.assertRaises(TypeError, Person.from_dict, fail_dict_int)
 
+    def test_datefield_success(self):
+        class Person(Model):
+            creation_date = fields.DateField(format="%Y-%m-%d")
+
+        expected_dict = {'Person': {'creation_date':
+                                    u'2009-03-29'}}
+        john = Person.from_dict(expected_dict)
+        self.assertEquals(john.creation_date,
+                          datetime.strptime("2009-03-29",
+                                            "%Y-%m-%d").date())
+        self.assertEquals(john.to_dict(), expected_dict)
+
+    def test_datefield_fail_format(self):
+        class Person(Model):
+            creation_date = fields.DateField(\
+                format="any wrong format")
+
+        expected_dict = {'Person': {'creation_date':
+                                    u'2009-03-29 14:38:20'}}
+        self.assertRaises(fields.FieldValidationError,
+                          Person.from_dict,
+                          expected_dict)
+
+    def test_datefield_fail_types(self):
+        class Person(Model):
+            creation_date = fields.DateField(format="%Y%m%d")
+
+        fail_dict_int = {'Person': {'creation_date': 100000}}
+        self.assertRaises(TypeError, Person.from_dict, fail_dict_int)
+
+    def test_timefield_success(self):
+        class Person(Model):
+            creation_time = fields.TimeField(format="%H:%M:%S")
+
+        expected_dict = {'Person': {'creation_time':
+                                    u'15:54:56'}}
+        john = Person.from_dict(expected_dict)
+        self.assertEquals(john.creation_time,
+                          datetime.strptime("15:54:56",
+                                            "%H:%M:%S").time())
+        self.assertEquals(john.to_dict(), expected_dict)
+
+    def test_timefield_fail_format(self):
+        class Person(Model):
+            creation_time = fields.TimeField(\
+                format="any wrong format")
+
+        expected_dict = {'Person': {'creation_time':
+                                    u'2009-03-29 14:38:20'}}
+        self.assertRaises(fields.FieldValidationError,
+                          Person.from_dict,
+                          expected_dict)
+
+    def test_timefield_fail_format_date(self):
+        class Person(Model):
+            creation_time = fields.TimeField(format="%Y%m%d")
+
+        fail_dict_int = {'Person': {'creation_time': "10:10:10"}}
+        self.assertRaises(ValueError, Person.from_dict, fail_dict_int)
+
     def test_types_successfully(self):
         pass
     def test_types_exceptions(self):
         pass
-
-

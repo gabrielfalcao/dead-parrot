@@ -53,7 +53,7 @@ class DateTimeField(CharField, DateTimeAttribute):
     vartype = "%Y-%m-%d %H:%M:%S"
 
     def __init__(self, *args, **kw):
-        vartype = kw.pop('format', "%Y-%m-%d %H:%M:%S")
+        vartype = kw.pop('format', self.vartype)
 
 
         kw['max_length'] = len(vartype)
@@ -85,3 +85,8 @@ class DateTimeField(CharField, DateTimeAttribute):
                                                 klassname,
                                                 self.name,
                                                 self.max_length)
+class DateField(DateTimeField, DateAttribute):
+    vartype = "%Y-%m-%d"
+
+class TimeField(DateTimeField, TimeAttribute):
+    vartype = "%H:%M:%S"
