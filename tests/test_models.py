@@ -273,7 +273,7 @@ class TestFields(unittest.TestCase):
         self.assertRaises(TypeError, Person.from_dict, fail_none_dict)
         self.assertRaises(TypeError, Person.from_dict, fail_type_dict)
 
-    def _test_datetimefield_success(self):
+    def test_datetimefield_success(self):
         class Person(Model):
             creation_date = fields.DateTimeField(\
                 format="%Y-%m-%d %H:%M:%S")
