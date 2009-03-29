@@ -209,7 +209,7 @@ class TestBasicModel(object):
         self.assertEquals(crowd[0].name.value, u"John Doe")
         self.assertEquals(crowd[0].birthdate.value, date(1988, 02, 10))
 
-class TestModelInstrospection(object):#unittest.TestCase):
+class TestModelInstrospection(unittest.TestCase):
     def test_field_names(self):
         class Foo(Model):
             baz = fields.Field()

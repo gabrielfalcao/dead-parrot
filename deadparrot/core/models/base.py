@@ -14,7 +14,11 @@ def build_metadata(klass, params):
     if not params.has_key('plural_name'):
         klass_meta.plural_name = plural_name
 
-    return klass_meta()
+    metaobj = klass_meta()
+    for k, v in metaobj._fields.items():
+        v.name = k
+
+    return metaobj
 
 class ModelMeta(type):
     def __init__(cls, name, bases, attrs):
