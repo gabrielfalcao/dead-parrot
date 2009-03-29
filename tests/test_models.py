@@ -18,12 +18,13 @@
 # Boston, MA 02111-1307, USA.
 
 import unittest
-from deadparrot.client.models import Model
-from deadparrot.client.models import build_metadata
-from deadparrot.client.models import Attribute
-from deadparrot.client.models import DateTimeAttribute
-from deadparrot.client.models import DateAttribute
-from deadparrot.client.models import TimeAttribute
+from deadparrot.core.models import fields
+from deadparrot.core.models import Model
+from deadparrot.core.models import build_metadata
+from deadparrot.core.models import Attribute
+from deadparrot.core.models import DateTimeAttribute
+from deadparrot.core.models import DateAttribute
+from deadparrot.core.models import TimeAttribute
 from datetime import datetime, date, time
 
 class TestAttributes(unittest.TestCase):
@@ -83,7 +84,7 @@ class TestAttributes(unittest.TestCase):
         nc = Attribute(object)
         self.assertRaises(TypeError, nc.fill, 'full_name', 'John Doe')
 
-class TestModel(unittest.TestCase):
+class TestBasicModel(object):
     def test_build_metadata(self):
         class Car(Model):
             pass
@@ -207,3 +208,87 @@ class TestModel(unittest.TestCase):
         self.failUnless(isinstance(crowd, People))
         self.assertEquals(crowd[0].name.value, u"John Doe")
         self.assertEquals(crowd[0].birthdate.value, date(1988, 02, 10))
+
+class TestModelInstrospection(object):#unittest.TestCase):
+    def test_field_names(self):
+        class Foo(Model):
+            baz = fields.Field()
+
+        foobar = Foo()
+        self.assertEquals(foobar._meta._fields['baz'].name, 'baz')
+
+class TestFields(unittest.TestCase):
+    def init(self):
+        class Person(Model):
+            first_name = fields.CharField(max_length=40)
+            last_name = fields.CharField(max_length=40)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            wakeup_at = fields.TimeField(format="%H:%M:%S")
+            creation_date = fields.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+            wage = fields.DecimalField(max_digits=6, decimal_places=2)
+            email = fields.EmailField()
+            favorite_phrase = fields.CharField(max_length=0, validate=False)
+            weight = fields.FloatField()
+            married = fields.BooleanField(positives=["true", "yes"],
+                                          negatives=["false", "not"])
+            childrens = fields.IntegerField()
+            cellphone = fields.PhoneNumberField(format="(00) 0000-0000")
+            biography = fields.TextField()
+            blog = fields.URLField(verify_exists=True)
+            father = fields.ForeignKey('self')
+
+            @property
+            def full_name(self):
+                return u"%s %s" % (self.first_name, self.last_name)
+
+            def __unicode__(self):
+                return "%s, son of %s" % (self.full_name, self.father.full_name)
+
+            class Meta:
+                fields_validation_policy = fields.VALIDATE_NONE
+
+        self.PersonClass = Person
+
+    def test_charfield_success(self):
+        class Person(Model):
+            first_name = fields.CharField(max_length=40)
+
+        expected_dict = {'Person': {'first_name': u'John Doe'}}
+        john = Person.from_dict(expected_dict)
+        self.assertEquals(john.first_name, u'John Doe')
+        self.assertEquals(john.to_dict(), expected_dict)
+
+    def test_charfield_fail(self):
+        class Person(Model):
+            first_name = fields.CharField(max_length=10)
+
+        fail_unicode_dict = {'Person': {'first_name': u'blah' * 4}}
+        fail_int_dict = {'Person': {'first_name': 0000000}}
+        fail_none_dict = {'Person': {'first_name': None}}
+        fail_type_dict = {'Person': {'first_name': unicode}}
+        self.assertRaises(fields.FieldValidationError,
+                          Person.from_dict,
+                          fail_unicode_dict)
+        self.assertRaises(TypeError, Person.from_dict, fail_int_dict)
+        self.assertRaises(TypeError, Person.from_dict, fail_none_dict)
+        self.assertRaises(TypeError, Person.from_dict, fail_type_dict)
+
+    def _test_datetimefield_success(self):
+        class Person(Model):
+            creation_date = fields.DateTimeField(\
+                format="%Y-%m-%d %H:%M:%S")
+
+        expected_dict = {'Person': {'creation_date':
+                                    u'2009-03-29 14:38:20'}}
+        john = Person.from_dict(expected_dict)
+        self.assertEquals(john.birthdate,
+                          datetime.strftime("'2009-03-29 14:38:20'",
+                                            "%Y-%m-%d %H:%M:%S"))
+        self.assertEquals(john.to_dict(), expected_dict)
+
+    def test_types_successfully(self):
+        pass
+    def test_types_exceptions(self):
+        pass
+
+
