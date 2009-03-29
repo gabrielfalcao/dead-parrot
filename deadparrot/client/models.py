@@ -1,14 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
-
-from lxml import etree
 from datetime import datetime, date, time, timedelta
-# dicionário para o registro de classes de tags
-TAGS = {}
-
-def path_join(base, *others):
-    base = base.endswith("/") and base or "%s/" % base
-    return "%s%s" % (base, "/".join(others))
 
 def camelize_string(string):
     camel_part =  "".join([s.title() for s in string.split("_")][1:])
@@ -55,9 +47,11 @@ class Attribute(object):
         return unicode(self.value or "")
 
     def __repr__(self):
-        return "<%s%s:%s attribute object>" % (str(self.vartype.__name__.title()),
-                                               self.__class__.__name__,
-                                               self.name)
+        return "<%s%s:%s%s attribute object at 0x%r>" % (str(self.vartype.__name__.title()),
+                                                       self.__class__.__name__,
+                                                       self.name,
+                                                       self.value and "=%r" % self.value,
+                                                       id(self))
 
 class DateTimeAttribute(Attribute):
     def serialize(self):
@@ -106,18 +100,7 @@ class DateAttribute(DateTimeAttribute):
                   "deals only with strings and "\
                   "datetime.date() objects. Got %r" % type(val)
 
-
-class XmlTagText(Attribute):
-    u"""Placeholder for the content of tags"""
-    def __init__(self, value=None):
-        super(XmlTagText, self).__init__(unicode, "_text_", value)
-
-FIELD_CLASSES = [Attribute]
-
 def build_metadata(klass, klass_meta=None):
-    if not isinstance(klass, object):
-        raise TypeError, "%r must be a new-style-class" % klass
-
     single_name = klass.__name__
     plural_name = "%ss" % single_name
     if not klass_meta:
@@ -128,7 +111,7 @@ def build_metadata(klass, klass_meta=None):
         klass_meta.single_name = single_name
 
     if not hasattr(klass_meta, 'plural_name'):
-        klass_meta.single_name = plural_name
+        klass_meta.plural_name = plural_name
 
     return klass_meta()
 
@@ -147,14 +130,13 @@ class ModelMeta(type):
 class ModelSet(object):
     set = []
     model_klass = None
-    def __init__(self, model_klass, items):
+    def __init__(self, items):
         if not isinstance(items, (list, tuple)):
             klassname = self.__class__.__name__
             raise TypeError, "%s needs a list or "\
                   "tuple of %s objects. Got a %r" % (klassname,
                                                      klassname[:-3],
                                                      type(items))
-        self.model_klass = model_klass
         self.set = list(items)
 
     def __getslice__(self, *args, **kw):
@@ -178,6 +160,21 @@ class ModelSet(object):
     def to_dict(self):
         return {self.model_klass._meta.plural_name: [m.to_dict() for m in self.set]}
 
+    @classmethod
+    def from_dict(cls, data_dict):
+        if not isinstance(data_dict, dict):
+            raise TypeError, "%s.from_dict takes a dict as parameter. " \
+                  "Got %r" % (cls.__name__, type(data_dict))
+        try:
+            l = data_dict[cls.model_klass._meta.plural_name]
+        except KeyError, e:
+            raise TypeError, "%s.from_dict got an mismatched dict structure." \
+                  "Expected {'%s': {... data ...}} like structure, got %s" % (cls.__name__,
+                                                                              cls.model_klass._meta.plural_name,
+                                                                              unicode(data_dict))
+        items = [cls.model_klass.from_dict(d.copy()) for d in l]
+        return cls(items[:])
+
 class Model(object):
     __metaclass__ = ModelMeta
 
@@ -188,5 +185,28 @@ class Model(object):
         return {self._meta.single_name: self._get_data()}
 
     @classmethod
-    def Set(cls, items):
-        return type('%sSet' % cls.__name__, (ModelSet,), {})(cls, items)
+    def from_dict(cls, data_dict):
+        if not isinstance(data_dict, dict):
+            raise TypeError, "%s.from_dict takes a dict as parameter. " \
+                  "Got %r" % (cls.__name__, type(data_dict))
+        try:
+            d = data_dict[cls._meta.single_name].copy()
+        except KeyError, e:
+            raise TypeError, "%s.from_dict got an mismatched dict structure." \
+                  "Expected {'%s': {... data ...}} like structure, got %s" % (cls,
+                                                                              cls._meta.single_name,
+                                                                              unicode(data_dict))
+        keys = cls._fields.keys()
+        obj = cls()
+        for k, v in d.items():
+            if k in keys:
+                klass = getattr(obj, k).__class__
+                atype = getattr(obj, k).vartype
+                setattr(obj, k, klass(atype, k, v))
+
+        return obj
+
+    @classmethod
+    def Set(cls, items=None):
+        klass = type('%sSet' % cls.__name__, (ModelSet,), {'model_klass': cls})
+        return items and klass(items) or klass

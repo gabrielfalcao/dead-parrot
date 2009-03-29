@@ -19,6 +19,7 @@
 
 import unittest
 from deadparrot.client.models import Model
+from deadparrot.client.models import build_metadata
 from deadparrot.client.models import Attribute
 from deadparrot.client.models import DateTimeAttribute
 from deadparrot.client.models import DateAttribute
@@ -59,6 +60,7 @@ class TestAttributes(unittest.TestCase):
         self.assertEquals(dta.name, 'creation_date')
         self.assertEquals(dta.camel_name, 'creationDate')
         self.assertEquals(dta.value.date(), datetime(2009, 3, 24).date())
+        self.assertRaises(TypeError, dta.fill, 'creation_date', 100.5)
 
     def test_date(self):
         dta1 = DateAttribute("%Y/%m/%d")
@@ -69,13 +71,32 @@ class TestAttributes(unittest.TestCase):
         self.assertEquals(dta1.camel_name, 'creationDate')
         self.assertEquals(dta1.value, date(2009, 3, 24))
         self.assertEquals(dta2.value, date(2009, 3, 24))
+        self.assertRaises(TypeError, dta1.fill, 'creation_date', 100.5)
 
     def test_time(self):
         dta = TimeAttribute("%H:%M:%S")
         dta.fill('creation_time', '23:44:10')
         self.assertEquals(dta.value, time(hour=23, minute=44, second=10))
+        self.assertRaises(TypeError, dta.fill, 'creation_time', 100.5)
+
+    def test_unknown(self):
+        nc = Attribute(object)
+        self.assertRaises(TypeError, nc.fill, 'full_name', 'John Doe')
 
 class TestModel(unittest.TestCase):
+    def test_build_metadata(self):
+        class Car(Model):
+            pass
+
+        class Meta:
+            pass
+
+        class Dummy:
+            pass
+
+        self.assertEquals(build_metadata(Car, Meta).single_name, 'Car')
+        self.assertEquals(build_metadata(Car, Meta).plural_name, 'Cars')
+
     def test_metadata(self):
         class Person(Model):
             class Meta:
@@ -87,7 +108,7 @@ class TestModel(unittest.TestCase):
         self.assertEquals(p._meta.single_name, 'Person')
         self.assertEquals(p._meta.plural_name, 'People')
 
-    def test_meta_serialization(self):
+    def test_to_dict(self):
         class Person(Model):
             name = Attribute(unicode)
             birthdate = DateAttribute("%d/%m/%Y")
@@ -105,7 +126,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEquals(my_dict, p.to_dict())
 
-    def test_model_set(self):
+    def test_set_to_dict(self):
         class Person(Model):
             name = Attribute(unicode)
             birthdate = DateAttribute("%d/%m/%Y")
@@ -143,3 +164,46 @@ class TestModel(unittest.TestCase):
         }
 
         self.assertEquals(my_dict, crowd.to_dict())
+
+    def test_from_dict(self):
+        class Person(Model):
+            name = Attribute(unicode)
+            birthdate = DateAttribute("%d/%m/%Y")
+
+        my_dict = {
+            'Person': {
+                'name': u"John Doe",
+                'birthdate': u"10/02/1988"
+            }
+        }
+
+        p = Person.from_dict(my_dict)
+        self.failUnless(isinstance(p, Person))
+        self.assertEquals(p.name.value, u"John Doe")
+        self.assertEquals(p.birthdate.value, date(1988, 02, 10))
+
+    def test_set_from_dict(self):
+        class Person(Model):
+            name = Attribute(unicode)
+            birthdate = DateAttribute("%d/%m/%Y")
+            class Meta:
+                plural_name = 'People'
+        my_dict = {
+            'People': [
+                {'Person': {
+                    'name': u"John Doe",
+                    'birthdate': u"10/02/1988"
+                    }
+                 },
+                {'Person': {
+                    'name': u"Mary Jane",
+                    'birthdate': u"20/12/1970"
+                     }
+                 }
+            ]
+        }
+        People = Person.Set()
+        crowd = People.from_dict(my_dict)
+        self.failUnless(isinstance(crowd, People))
+        self.assertEquals(crowd[0].name.value, u"John Doe")
+        self.assertEquals(crowd[0].birthdate.value, date(1988, 02, 10))
