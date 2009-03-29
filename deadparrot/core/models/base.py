@@ -86,7 +86,7 @@ class Model(object):
     __metaclass__ = ModelMeta
 
     def _get_data(self):
-        return dict([(k, v) for k, v in self._data.items()])
+        return dict([(k, self._meta._fields[k].serialize(v)) for k, v in self._data.items()])
 
     def to_dict(self):
         return {self._meta.single_name: self._get_data()}
@@ -97,6 +97,7 @@ class Model(object):
             field =self._meta._fields[attr]
             # raising the field-specific exceptions
             field.validate(val)
+            val = field.convert_type(val)
             self._data[attr] = val
         super(Model, self).__setattr__(attr, val)
 

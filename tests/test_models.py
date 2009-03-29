@@ -281,10 +281,28 @@ class TestFields(unittest.TestCase):
         expected_dict = {'Person': {'creation_date':
                                     u'2009-03-29 14:38:20'}}
         john = Person.from_dict(expected_dict)
-        self.assertEquals(john.birthdate,
-                          datetime.strftime("'2009-03-29 14:38:20'",
+        self.assertEquals(john.creation_date,
+                          datetime.strptime("2009-03-29 14:38:20",
                                             "%Y-%m-%d %H:%M:%S"))
         self.assertEquals(john.to_dict(), expected_dict)
+
+    def test_datetimefield_fail_format(self):
+        class Person(Model):
+            creation_date = fields.DateTimeField(\
+                format="any wrong format")
+
+        expected_dict = {'Person': {'creation_date':
+                                    u'2009-03-29 14:38:20'}}
+        self.assertRaises(fields.FieldValidationError,
+                          Person.from_dict,
+                          expected_dict)
+
+    def test_datetimefield_fail_types(self):
+        class Person(Model):
+            creation_date = fields.DateTimeField(format="%Y%m%d")
+
+        fail_dict_int = {'Person': {'creation_date': 100000}}
+        self.assertRaises(TypeError, Person.from_dict, fail_dict_int)
 
     def test_types_successfully(self):
         pass

@@ -36,8 +36,8 @@ class Attribute(object):
         return self.__value
     value = property(fget=_get_value, fset=_set_value)
 
-    def serialize(self):
-        return unicode(self.value)
+    def serialize(self, value=None):
+        return unicode(value or self.value)
 
     def fill(self, name, value):
         self.name = name
@@ -55,8 +55,9 @@ class Attribute(object):
                                                        id(self))
 
 class DateTimeAttribute(Attribute):
-    def serialize(self):
-        return unicode(self.value.strftime(self.vartype))
+    def serialize(self, value=None):
+        value = value or self.value
+        return unicode(value.strftime(self.vartype))
 
     def convert_type(self, val):
         if isinstance(val, basestring):

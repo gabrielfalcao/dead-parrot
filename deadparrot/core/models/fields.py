@@ -50,15 +50,38 @@ class CharField(Field):
 
 
 class DateTimeField(CharField, DateTimeAttribute):
-    format = "%Y-%m-%d %H:%M:%S"
+    vartype = "%Y-%m-%d %H:%M:%S"
+
     def __init__(self, *args, **kw):
-        format = kw.pop('format', "%Y-%m-%d %H:%M:%S")
-        kw['max_length'] = len(format)
-        if not isinstance(format, basestring):
+        vartype = kw.pop('format', "%Y-%m-%d %H:%M:%S")
+
+
+        kw['max_length'] = len(vartype)
+        # considering that %Y have 4 chars, lets add 2+ to the max_length
+        if "%Y" in vartype:
+            kw['max_length'] += 2
+
+        if not isinstance(vartype, basestring):
             raise TypeError, u"%s.max_length param must be a string" \
                   " got a %r (%r)" % \
                   (self.__class__.__name__,
                    type(format), format)
 
-        self.format = format
+        self.vartype = vartype
         super(DateTimeField, self).__init__(*args, **kw)
+
+    def validate(self, value):
+        klassname = self.__class__.__name__
+        if datetime.now().strftime(self.vartype) == self.vartype:
+            raise FieldValidationError, \
+                  u'"%s" is not a valid datetime format, ' % value
+
+        if self.validate and len(value) > self.max_length:
+            raise FieldValidationError, \
+                  u"%s have %d characters, " \
+                  "but the %s %s supports "\
+                  "at maximum %d characters" % (value,
+                                                len(value),
+                                                klassname,
+                                                self.name,
+                                                self.max_length)
