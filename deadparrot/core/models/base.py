@@ -78,8 +78,3 @@ class Model(object):
                 setattr(obj, k, v)
 
         return obj
-
-    @classmethod
-    def Set(cls, items=None):
-        klass = type('%sSet' % cls.__name__, (ModelSet,), {'model_klass': cls})
-        return items and klass(items) or klass

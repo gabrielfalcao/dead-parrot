@@ -138,6 +138,20 @@ class TestBasicModel(unittest.TestCase):
         self.assertEquals(p.name, u"John Doe")
         self.assertEquals(p.birthdate, date(1988, 02, 10))
 
+    def test_from_dict_fail(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+
+        my_dict = {
+            'Blah': {
+                'name': u"John Doe",
+                'birthdate': u"10/02/1988"
+            }
+        }
+
+        self.assertRaises(TypeError, Person.from_dict, my_dict)
+
 class TestModelInstrospection(unittest.TestCase):
     def test_field_names(self):
         class Foo(Model):
@@ -177,6 +191,15 @@ class TestFields(unittest.TestCase):
                 fields_validation_policy = fields.VALIDATE_NONE
 
         self.PersonClass = Person
+
+    def test_field_fail(self):
+        self.assertRaises(TypeError, fields.Field, validate=None)
+
+    def test_charfield_fail_construct(self):
+        self.assertRaises(TypeError, fields.CharField, max_length=None)
+
+    def test_datetimefield_fail_construct(self):
+        self.assertRaises(TypeError, fields.DateTimeField, format=None)
 
     def test_charfield_success(self):
         class Person(Model):

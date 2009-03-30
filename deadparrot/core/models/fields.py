@@ -62,7 +62,7 @@ class DateTimeField(CharField, DateTimeAttribute):
             kw['max_length'] += 2
 
         if not isinstance(vartype, basestring):
-            raise TypeError, u"%s.max_length param must be a string" \
+            raise TypeError, u"%s.format param must be a string" \
                   " got a %r (%r)" % \
                   (self.__class__.__name__,
                    type(format), format)
