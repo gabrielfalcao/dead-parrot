@@ -80,23 +80,17 @@ class TestAttributes(unittest.TestCase):
         self.assertEquals(dta.value, time(hour=23, minute=44, second=10))
         self.assertRaises(TypeError, dta.fill, 'creation_time', 100.5)
 
-    def test_unknown(self):
+    def test_unsupported_type(self):
         nc = Attribute(object)
         self.assertRaises(TypeError, nc.fill, 'full_name', 'John Doe')
 
-class TestBasicModel(object):
+class TestBasicModel(unittest.TestCase):
     def test_build_metadata(self):
         class Car(Model):
             pass
 
-        class Meta:
-            pass
-
-        class Dummy:
-            pass
-
-        self.assertEquals(build_metadata(Car, Meta).single_name, 'Car')
-        self.assertEquals(build_metadata(Car, Meta).plural_name, 'Cars')
+        self.assertEquals(build_metadata(Car, {}).single_name, 'Car')
+        self.assertEquals(build_metadata(Car, {}).plural_name, 'Cars')
 
     def test_metadata(self):
         class Person(Model):
@@ -111,11 +105,11 @@ class TestBasicModel(object):
 
     def test_to_dict(self):
         class Person(Model):
-            name = Attribute(unicode)
-            birthdate = DateAttribute("%d/%m/%Y")
+            name = fields.CharField(max_length=20)
+            birthdate = fields.DateField(format="%d/%m/%Y")
 
         p = Person()
-        p.name = "John Doe"
+        p.name = u"John Doe"
         p.birthdate = date(1988, 02, 10)
 
         my_dict = {
@@ -127,49 +121,10 @@ class TestBasicModel(object):
 
         self.assertEquals(my_dict, p.to_dict())
 
-    def test_set_to_dict(self):
-        class Person(Model):
-            name = Attribute(unicode)
-            birthdate = DateAttribute("%d/%m/%Y")
-            def __unicode__(self):
-                return "<Person %s>" % self.name.value
-
-            class Meta:
-                plural_name = 'People'
-
-        p1 = Person()
-        p1.name = "John Doe"
-        p1.birthdate = date(1988, 02, 10)
-
-        p2 = Person()
-        p2.name = "Mary Jane"
-        p2.birthdate = date(1970, 12, 20)
-        crowd = Person.Set([p1, p2])
-        self.assertEquals(len(crowd), 2)
-        for p in crowd:
-            self.failUnless(isinstance(p, Person))
-
-        my_dict = {
-            'People': [
-                {'Person': {
-                    'name': u"John Doe",
-                    'birthdate': u"10/02/1988"
-                    }
-                 },
-                {'Person': {
-                    'name': u"Mary Jane",
-                    'birthdate': u"20/12/1970"
-                     }
-                 }
-            ]
-        }
-
-        self.assertEquals(my_dict, crowd.to_dict())
-
     def test_from_dict(self):
         class Person(Model):
-            name = Attribute(unicode)
-            birthdate = DateAttribute("%d/%m/%Y")
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
 
         my_dict = {
             'Person': {
@@ -180,34 +135,8 @@ class TestBasicModel(object):
 
         p = Person.from_dict(my_dict)
         self.failUnless(isinstance(p, Person))
-        self.assertEquals(p.name.value, u"John Doe")
-        self.assertEquals(p.birthdate.value, date(1988, 02, 10))
-
-    def test_set_from_dict(self):
-        class Person(Model):
-            name = Attribute(unicode)
-            birthdate = DateAttribute("%d/%m/%Y")
-            class Meta:
-                plural_name = 'People'
-        my_dict = {
-            'People': [
-                {'Person': {
-                    'name': u"John Doe",
-                    'birthdate': u"10/02/1988"
-                    }
-                 },
-                {'Person': {
-                    'name': u"Mary Jane",
-                    'birthdate': u"20/12/1970"
-                     }
-                 }
-            ]
-        }
-        People = Person.Set()
-        crowd = People.from_dict(my_dict)
-        self.failUnless(isinstance(crowd, People))
-        self.assertEquals(crowd[0].name.value, u"John Doe")
-        self.assertEquals(crowd[0].birthdate.value, date(1988, 02, 10))
+        self.assertEquals(p.name, u"John Doe")
+        self.assertEquals(p.birthdate, date(1988, 02, 10))
 
 class TestModelInstrospection(unittest.TestCase):
     def test_field_names(self):
@@ -253,10 +182,28 @@ class TestFields(unittest.TestCase):
         class Person(Model):
             first_name = fields.CharField(max_length=40)
 
-        expected_dict = {'Person': {'first_name': u'John Doe'}}
-        john = Person.from_dict(expected_dict)
+        person_dict = {'Person': {'first_name': u'John Doe'}}
+        john = Person.from_dict(person_dict)
         self.assertEquals(john.first_name, u'John Doe')
-        self.assertEquals(john.to_dict(), expected_dict)
+        self.assertEquals(john.to_dict(), person_dict)
+
+    def test_charfield_success_validate(self):
+        class Person(Model):
+            first_name = fields.CharField(max_length=5)
+            class Meta:
+                validate_none = True
+
+        class Car(Model):
+            brand = fields.CharField(max_length=2, validate=False)
+
+        person_dict = {'Person': {'first_name': u'John Doe'}}
+        car_dict = {'Car': {'brand': u'Chevy'}}
+        john = Person.from_dict(person_dict)
+        chevy = Car.from_dict(car_dict)
+        self.assertEquals(john.first_name, u'John Doe')
+        self.assertEquals(john.to_dict(), person_dict)
+        self.assertEquals(chevy.brand, u'Chevy')
+        self.assertEquals(chevy.to_dict(), car_dict)
 
     def test_charfield_fail(self):
         class Person(Model):

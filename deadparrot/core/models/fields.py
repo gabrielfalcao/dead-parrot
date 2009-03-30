@@ -39,7 +39,7 @@ class CharField(Field):
             raise TypeError, \
                   u"%s must be unicode for CharField compatibility" % value
 
-        if self.validate and len(value) > self.max_length:
+        if self.must_validate and len(value) > self.max_length:
             raise FieldValidationError, \
                   u"%s have %d characters, " \
                   "but the CharField %s supports "\
@@ -76,15 +76,6 @@ class DateTimeField(CharField, DateTimeAttribute):
             raise FieldValidationError, \
                   u'"%s" is not a valid datetime format, ' % value
 
-        if self.validate and len(value) > self.max_length:
-            raise FieldValidationError, \
-                  u"%s have %d characters, " \
-                  "but the %s %s supports "\
-                  "at maximum %d characters" % (value,
-                                                len(value),
-                                                klassname,
-                                                self.name,
-                                                self.max_length)
 class DateField(DateTimeField, DateAttribute):
     vartype = "%Y-%m-%d"
 

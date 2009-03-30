@@ -15,8 +15,9 @@ def build_metadata(klass, params):
         klass_meta.plural_name = plural_name
 
     metaobj = klass_meta()
-    for k, v in metaobj._fields.items():
-        v.name = k
+    if hasattr(metaobj, '_fields'):
+        for k, v in metaobj._fields.items():
+            v.name = k
 
     return metaobj
 
@@ -26,6 +27,9 @@ class ModelMeta(type):
             fields =  dict([(k, v) for k, v in attrs.items() if isinstance(v, Field)])
             metadata_params = hasattr(cls, 'Meta') and vars(cls.Meta) or {}
             metadata_params['_fields'] = fields
+            if not metadata_params.has_key("validate_none"):
+                metadata_params['validate_none'] = False
+
             cls._meta = build_metadata(cls, metadata_params)
             cls._data = {}
             for k, v in fields.items():
@@ -33,54 +37,6 @@ class ModelMeta(type):
                 setattr(cls, k, None)
 
         super(ModelMeta, cls).__init__(name, bases, attrs)
-
-class ModelSet(object):
-    set = []
-    model_klass = None
-    def __init__(self, items):
-        if not isinstance(items, (list, tuple)):
-            klassname = self.__class__.__name__
-            raise TypeError, "%s needs a list or "\
-                  "tuple of %s objects. Got a %r" % (klassname,
-                                                     klassname[:-3],
-                                                     type(items))
-        self.set = list(items)
-
-    def __getslice__(self, *args, **kw):
-        return self.set.__getslice__(*args, **kw)
-
-    def __setslice__(self, *args, **kw):
-        return self.set.__setslice__(*args, **kw)
-
-    def __getitem__(self, *args, **kw):
-        return self.set.__getitem__(*args, **kw)
-
-    def __setitem__(self, *args, **kw):
-        return self.set.__setitem__(*args, **kw)
-
-    def __len__(self):
-        return len(self.set)
-
-    def __nonzero__(self):
-        return len(self.set) > 0
-
-    def to_dict(self):
-        return {self.model_klass._meta.plural_name: [m.to_dict() for m in self.set]}
-
-    @classmethod
-    def from_dict(cls, data_dict):
-        if not isinstance(data_dict, dict):
-            raise TypeError, "%s.from_dict takes a dict as parameter. " \
-                  "Got %r" % (cls.__name__, type(data_dict))
-        try:
-            l = data_dict[cls.model_klass._meta.plural_name]
-        except KeyError, e:
-            raise TypeError, "%s.from_dict got an mismatched dict structure." \
-                  "Expected {'%s': {... data ...}} like structure, got %s" % (cls.__name__,
-                                                                              cls.model_klass._meta.plural_name,
-                                                                              unicode(data_dict))
-        items = [cls.model_klass.from_dict(d.copy()) for d in l]
-        return cls(items[:])
 
 class Model(object):
     __metaclass__ = ModelMeta
@@ -95,8 +51,10 @@ class Model(object):
         if attr in self._data.keys():
             klassname = self.__class__.__name__
             field =self._meta._fields[attr]
-            # raising the field-specific exceptions
-            field.validate(val)
+            if not self._meta.validate_none:
+                # raising the field-specific exceptions
+                field.validate(val)
+
             val = field.convert_type(val)
             self._data[attr] = val
         super(Model, self).__setattr__(attr, val)

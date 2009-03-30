@@ -11,10 +11,8 @@ class Attribute(object):
     name = None
     __value = None
 
-    def __init__(self, vartype, name=None, value=None):
+    def __init__(self, vartype):
         self.vartype = vartype
-        if name and value:
-            self.fill(name, value)
 
     @property
     def camel_name(self):
@@ -43,9 +41,6 @@ class Attribute(object):
         self.name = name
         self.value = value
         return self
-
-    def __unicode__(self):
-        return unicode(self.value or "")
 
     def __repr__(self):
         return "<%s%s:%s%s attribute object at 0x%r>" % (str(self.vartype.__name__.title()),
