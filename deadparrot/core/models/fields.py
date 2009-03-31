@@ -55,17 +55,17 @@ class DateTimeField(CharField, DateTimeAttribute):
     def __init__(self, *args, **kw):
         vartype = kw.pop('format', self.vartype)
 
+        if not isinstance(vartype, basestring):
+            raise TypeError, u"%s.format param must be a string" \
+                  " got a %r (%r)" % \
+                  (self.__class__.__name__,
+                   type(format), format)
 
         kw['max_length'] = len(vartype)
         # considering that %Y have 4 chars, lets add 2+ to the max_length
         if "%Y" in vartype:
             kw['max_length'] += 2
 
-        if not isinstance(vartype, basestring):
-            raise TypeError, u"%s.format param must be a string" \
-                  " got a %r (%r)" % \
-                  (self.__class__.__name__,
-                   type(format), format)
 
         self.vartype = vartype
         super(DateTimeField, self).__init__(*args, **kw)
