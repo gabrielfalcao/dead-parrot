@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
 from attributes import *
+from decimal import Decimal, InvalidOperation
 
 class FieldValidationError(Exception):
     pass
@@ -59,7 +60,7 @@ class DateTimeField(CharField, DateTimeAttribute):
             raise TypeError, u"%s.format param must be a string" \
                   " got a %r (%r)" % \
                   (self.__class__.__name__,
-                   type(format), format)
+                   type(vartype), vartype)
 
         kw['max_length'] = len(vartype)
         # considering that %Y have 4 chars, lets add 2+ to the max_length
@@ -81,3 +82,40 @@ class DateField(DateTimeField, DateAttribute):
 
 class TimeField(DateTimeField, TimeAttribute):
     vartype = "%H:%M:%S"
+
+class DecimalField(Field):
+    max_digits = 0
+    decimal_places = 0
+    vartype = Decimal
+
+    def __init__(self, *args, **kw):
+        for param in 'max_digits', 'decimal_places':
+            val = kw.pop(param, 0)
+
+            if isinstance(val, int):
+                setattr(self, param, val)
+            else:
+                raise TypeError, u"%s.%s param must be a int" \
+                      " got a %r (%r)" % \
+                      (self.__class__.__name__, param,
+                       type(val), val)
+
+        super(DecimalField, self).__init__(*args, **kw)
+
+    def validate(self, value):
+        if not isinstance(value, basestring):
+            raise TypeError, \
+                  u"%s must be a string for DecimalField " \
+                  "compatibility" % value
+        try:
+            floated_value = float(Decimal(value))
+        except InvalidOperation:
+            raise FieldValidationError, 'the string "%s" is ' \
+                  "not a valid decimal number" % value
+
+        to_validate = u"%.*f" % (self.decimal_places, floated_value)
+        if (len(to_validate) - 1) != self.max_digits:
+            raise FieldValidationError, "%s do not have %d max " \
+                  "digits and %d decimal places" % (value,
+                                                    self.max_digits,
+                                                    self.decimal_places)

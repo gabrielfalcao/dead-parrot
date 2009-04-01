@@ -26,6 +26,7 @@ from deadparrot.core.models import DateTimeAttribute
 from deadparrot.core.models import DateAttribute
 from deadparrot.core.models import TimeAttribute
 from datetime import datetime, date, time
+from decimal import Decimal
 
 class TestAttributes(unittest.TestCase):
     def test_camel_name(self):
@@ -275,10 +276,11 @@ class TestFields(unittest.TestCase):
         self.assertRaises(TypeError, Person.from_dict, fail_dict_int)
 
     def test_datetimefield_fail_format_type(self):
-        class Person(Model):
-            creation_time = fields.DateTimeField(format=None)
+        def make_class():
+            class Person(Model):
+                creation_time = fields.DateTimeField(format=None)
 
-        self.assertRaises(TypeError, Person.from_dict, {})
+        self.assertRaises(TypeError, make_class)
 
 
     def test_datefield_success(self):
@@ -341,7 +343,49 @@ class TestFields(unittest.TestCase):
         fail_dict_int = {'Person': {'creation_time': "10:10:10"}}
         self.assertRaises(ValueError, Person.from_dict, fail_dict_int)
 
+    def test_decimalfield_success(self):
+        class Person(Model):
+            first_name = fields.CharField(max_length=20, validate=False)
+            wage = fields.DecimalField(max_digits=6, decimal_places=2)
+
+        person_dict = {'Person': {'first_name': u'John Doe',
+                                  'wage': '4000.55'}}
+
+        john = Person.from_dict(person_dict)
+        self.assertEquals(john.first_name, u'John Doe')
+        self.assertEquals(john.wage, Decimal("4000.55"))
+        self.assertEquals(john.to_dict(), person_dict)
+
+    def test_decimalfield_metadata(self):
+        class Person(Model):
+            wage = fields.DecimalField(max_digits=6, decimal_places=2)
+
+        person_dict = {'Person': {'wage': '4000.55'}}
+
+        john = Person.from_dict(person_dict)
+        self.assertEquals(john.wage, Decimal("4000.55"))
+        self.assertEquals(john._meta._fields['wage'].max_digits, 6)
+        self.assertEquals(john._meta._fields['wage'].decimal_places, 2)
+
+    def test_decimalfield_fail(self):
+        class Person(Model):
+            first_name = fields.CharField(max_length=20, validate=False)
+            wage = fields.DecimalField(max_digits=2, decimal_places=2)
+
+        person_dict = {'Person': {'first_name': u'John Doe',
+                                  'wage': '4000.55'}}
+
+        self.assertRaises(fields.FieldValidationError, Person.from_dict, person_dict)
+
+    def test_decimalfield_fail_from_dict(self):
+        class Person(Model):
+            wage = fields.DecimalField(max_digits=2, decimal_places=2)
+
+        fail_dict_weird = {'Person': {'wage': "10:10:10"}}
+        self.assertRaises(fields.FieldValidationError, Person.from_dict, fail_dict_weird)
+
     def test_types_successfully(self):
         pass
+
     def test_types_exceptions(self):
         pass
