@@ -76,10 +76,13 @@ class TestAttributes(unittest.TestCase):
         self.assertRaises(TypeError, dta1.fill, 'creation_date', 100.5)
 
     def test_time(self):
-        dta = TimeAttribute("%H:%M:%S")
-        dta.fill('creation_time', '23:44:10')
-        self.assertEquals(dta.value, time(hour=23, minute=44, second=10))
-        self.assertRaises(TypeError, dta.fill, 'creation_time', 100.5)
+        dta1 = TimeAttribute("%H:%M:%S")
+        dta2 = TimeAttribute("%H:%M:%S")
+        dta1.fill('creation_time', '23:44:10')
+        dta2.fill('creation_time', time(hour=23, minute=44, second=10))
+        self.assertEquals(dta1.value, time(hour=23, minute=44, second=10))
+        self.assertEquals(dta2.value, time(hour=23, minute=44, second=10))
+        self.assertRaises(TypeError, dta1.fill, 'creation_time', 100.5)
 
     def test_unsupported_type(self):
         nc = Attribute(object)
@@ -153,6 +156,18 @@ class TestBasicModel(unittest.TestCase):
 
         self.assertRaises(TypeError, Person.from_dict, my_dict)
 
+    def test_from_dict_fail_without_a_dict(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+
+        self.assertRaises(TypeError, Person.from_dict, "")
+        self.assertRaises(TypeError, Person.from_dict, [])
+        self.assertRaises(TypeError, Person.from_dict, tuple())
+        self.assertRaises(TypeError, Person.from_dict, 2)
+        self.assertRaises(TypeError, Person.from_dict, 2.2)
+        self.assertRaises(TypeError, Person.from_dict, None)
+
 class TestModelInstrospection(unittest.TestCase):
     def test_field_names(self):
         class Foo(Model):
@@ -160,6 +175,23 @@ class TestModelInstrospection(unittest.TestCase):
 
         foobar = Foo()
         self.assertEquals(foobar._meta._fields['baz'].name, 'baz')
+
+    def test_properties(self):
+        class Foo(Model):
+            baz = fields.CharField(max_length=100)
+            @property
+            def foobaz(self):
+                return u"Foo + %s" % self.baz
+
+        my_dict = {
+            'Foo': {
+                'baz': u"Baz, Bar and so on...",
+            }
+        }
+
+        foobar = Foo.from_dict(my_dict)
+        self.assertEquals(foobar.baz, u"Baz, Bar and so on...")
+        self.assertEquals(foobar.foobaz, u"Foo + Baz, Bar and so on...")
 
 class TestFields(unittest.TestCase):
     def init(self):
@@ -375,7 +407,32 @@ class TestFields(unittest.TestCase):
         person_dict = {'Person': {'first_name': u'John Doe',
                                   'wage': '4000.55'}}
 
-        self.assertRaises(fields.FieldValidationError, Person.from_dict, person_dict)
+        self.assertRaises(fields.FieldValidationError,
+                          Person.from_dict, person_dict)
+
+    def test_decimalfield_raises_on_construct(self):
+        self.assertRaises(TypeError, fields.DecimalField,
+                          max_digits="two", decimal_places=None)
+
+    def test_decimalfield_raises_on_setattr(self):
+        class Person(Model):
+            wage = fields.DecimalField(decimal_places=2, max_digits=6)
+
+        expected_dict = {'Person': {'wage': None}}
+
+        self.assertRaises(TypeError,
+                          Person.from_dict,
+                          expected_dict)
+
+    def test_decimalfield_fail_on_set(self):
+        class Person(Model):
+            wage = fields.DecimalField(max_digits=6, decimal_places=2)
+
+        person_dict = {'Person': {'wage': '4000.55'}}
+
+        man = Person.from_dict(person_dict)
+        self.assertRaises(fields.FieldValidationError,
+                          setattr, man, 'wage', '10:10:10')
 
     def test_decimalfield_fail_from_dict(self):
         class Person(Model):
@@ -384,8 +441,51 @@ class TestFields(unittest.TestCase):
         fail_dict_weird = {'Person': {'wage': "10:10:10"}}
         self.assertRaises(fields.FieldValidationError, Person.from_dict, fail_dict_weird)
 
-    def test_types_successfully(self):
-        pass
+    def test_emailfield_success(self):
+        class Person(Model):
+            first_name = fields.CharField(max_length=20, validate=False)
+            email = fields.EmailField()
 
-    def test_types_exceptions(self):
-        pass
+        person_dict = {'Person': {'first_name': u'John Doe',
+                                  'email': 'johndoe@jdfake.net'}}
+
+        john = Person.from_dict(person_dict)
+        self.assertEquals(john.first_name, u'John Doe')
+        self.assertEquals(john.email, 'johndoe@jdfake.net')
+        self.assertEquals(john.to_dict(), person_dict)
+
+    def test_emailfield_validate_fail_on_set(self):
+        class Person(Model):
+            email = fields.EmailField()
+
+        person_dict = {'Person': {'email': 'johndoe@jdfake.net'}}
+
+        john = Person.from_dict(person_dict)
+        self.assertRaises(fields.FieldValidationError,
+                          setattr, john, 'email',
+                          'testesadasdsad.sdsad.asdasd')
+
+    def test_emailfield_fail_on_validate(self):
+        class Person(Model):
+            email = fields.EmailField()
+
+        dicts = [{'Person': {'email': 'johndoejdfakenet'}},
+                 {'Person': {'email': 'dfdsf@@sdsd.com'}},
+                 {'Person': {'email': 'a@s.c'}},
+                 {'Person': {'email': 'asdas.xsad.xom'}},
+                 {'Person': {'email': 'johndoejdfak.enet'}},]
+
+        for person_dict in dicts:
+            try:
+                Person.from_dict(person_dict)
+                self.fail("Should raise exception when serializing" \
+                          " from %r" % person_dict)
+            except fields.FieldValidationError:
+                pass
+
+    def test_emailfield_fail_on_validate(self):
+        class Person(Model):
+            email = fields.EmailField()
+
+        person_dict = {'Person': {'email': None}}
+        self.assertRaises(TypeError, Person.from_dict, person_dict)

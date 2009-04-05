@@ -42,13 +42,6 @@ class Attribute(object):
         self.value = value
         return self
 
-    def __repr__(self):
-        return "<%s%s:%s%s attribute object at 0x%r>" % (str(self.vartype.__name__.title()),
-                                                       self.__class__.__name__,
-                                                       self.name,
-                                                       self.value and "=%r" % self.value,
-                                                       id(self))
-
 class DateTimeAttribute(Attribute):
     def serialize(self, value=None):
         value = value or self.value
@@ -71,10 +64,8 @@ class DateTimeAttribute(Attribute):
 class TimeAttribute(DateTimeAttribute):
     def convert_type(self, val):
         if isinstance(val, basestring):
-            if val:
-                return datetime.strptime(val, self.vartype).time()
-            else:
-                return datetime.now().time()
+            return datetime.strptime(val, self.vartype).time()
+
         elif isinstance(val, time):
             return val
         else:
@@ -86,10 +77,8 @@ class TimeAttribute(DateTimeAttribute):
 class DateAttribute(DateTimeAttribute):
     def convert_type(self, val):
         if isinstance(val, basestring):
-            if val:
-                return datetime.strptime(val, self.vartype).date()
-            else:
-                return datetime.now().date()
+            return datetime.strptime(val, self.vartype).date()
+
         elif isinstance(val, date):
             return val
         else:

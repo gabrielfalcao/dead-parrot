@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
+import re
 from attributes import *
 from decimal import Decimal, InvalidOperation
 
@@ -119,3 +120,21 @@ class DecimalField(Field):
                   "digits and %d decimal places" % (value,
                                                     self.max_digits,
                                                     self.decimal_places)
+
+class EmailField(CharField):
+    vartype = unicode
+    def __init__(self, *args, **kw):
+        kw['max_length'] = 255
+        super(EmailField, self).__init__(*args, **kw)
+
+    def validate(self, value):
+        if not isinstance(value, basestring):
+            raise TypeError, \
+                  u"%s must be a string(ish) type " \
+                  "for EmailField compatibility" % value
+
+        email_regex = re.compile(r'^[a-z0-9_.-]{2,}@[\w_.-]{3,}' \
+                                 '[.][a-z]{2,}([.][a-z]{2,})*', re.I)
+
+        if not email_regex.search(value):
+            raise FieldValidationError, 'The email is not valid: "%s"'% value
