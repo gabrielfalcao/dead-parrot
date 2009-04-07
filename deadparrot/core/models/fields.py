@@ -1,5 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
+#
+# Copyright (C) 2009 Gabriel Falcão <gabriel@nacaolivre.org>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public
+# License along with this program; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
+
 import re
 from attributes import *
 from decimal import Decimal, InvalidOperation
@@ -20,7 +38,6 @@ class Field(Attribute):
 
         self.must_validate = validate
         super(Field, self).__init__(self.vartype, *args, **kw)
-
 
 class CharField(Field):
     max_length = None
@@ -123,8 +140,13 @@ class DecimalField(Field):
 
 class EmailField(CharField):
     vartype = unicode
+
     def __init__(self, *args, **kw):
-        kw['max_length'] = 255
+        if kw.has_key('max_length'):
+            kw['max_length'] = kw.get('max_length')
+        else:
+            kw['max_length'] = 255
+
         super(EmailField, self).__init__(*args, **kw)
 
     def validate(self, value):
@@ -138,3 +160,78 @@ class EmailField(CharField):
 
         if not email_regex.search(value):
             raise FieldValidationError, 'The email is not valid: "%s"'% value
+
+class IntegerField(Field):
+    vartype = int
+
+    def validate(self, value):
+        try:
+            int(value)
+        except TypeError:
+            raise FieldValidationError, "The value of a %s must " \
+                  "be an number (even when inside a string) " \
+                  "got an %s" % (self.__class__.__name__,
+                                 type(value).__name__)
+
+class FloatField(IntegerField):
+    vartype = float
+
+class BooleanField(Field):
+    negatives = []
+    positives = []
+    vartype = bool
+
+    def __init__(self, *args, **kw):
+        for param in 'positives', 'negatives':
+            val = kw.pop(param, 0)
+
+            if isinstance(val, (list, tuple)):
+                setattr(self, param, val)
+            else:
+                raise TypeError, u"%s.negatives param must be a list" \
+                      " or tuple. But got a %r (%r)" % \
+                      (self.__class__.__name__,
+                       type(val), val)
+
+        super(BooleanField, self).__init__(*args, **kw)
+
+    def validate(self, value):
+        if not isinstance(value, bool):
+            raise TypeError, \
+                  u"%s must be a boolean type " \
+                  "for BooleanField compatibility" % str(value)
+
+class PhoneNumberField(CharField):
+    format = "(00) 0000-0000"
+    regex_format = None
+
+    def __init__(self, *args, **kw):
+        format = kw.pop('format', None)
+
+        if not isinstance(format, basestring):
+            raise TypeError, u"format param must be a string" \
+                  " got a %r (%r)" % \
+                  (type(format), format)
+
+        if kw.has_key('max_length'):
+            kw['max_length'] = kw.get('max_length')
+        else:
+            kw['max_length'] = len(format)
+
+        self.format = format
+
+        rfmt = re.escape(format).replace("0", r"\d")
+        self.regex_format = r"(%s)" % rfmt
+
+        super(PhoneNumberField, self).__init__(*args, **kw)
+
+    def validate(self, value):
+        if not isinstance(value, basestring):
+            raise TypeError, \
+                  u"%s must be a string(ish) type " \
+                  "for PhoneNumberField compatibility" % value
+
+        regex = re.compile(self.regex_format)
+        if not regex.search(value):
+            raise FieldValidationError, "The given value doesn't match " \
+                  "'%s'. Got %s" % (self.format, value)
