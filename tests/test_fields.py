@@ -18,6 +18,7 @@
 # Boston, MA 02111-1307, USA.
 
 import unittest
+import pmock
 from deadparrot.core.models import fields
 from deadparrot.core.models import Model
 from datetime import date, time, datetime
@@ -428,3 +429,103 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         self.assertRaises(TypeError,
                           Person.from_dict,
                           person_dict2)
+
+    def test_textfield_success(self):
+        class Person(Model):
+            biography = fields.TextField()
+
+        bio = u'I am a man who walks alone\n' * 20
+        person_dict = {'Person': {'biography': bio}}
+        john = Person.from_dict(person_dict)
+
+        self.assertEquals(john.biography, bio)
+        self.assertEquals(john.to_dict(), person_dict)
+
+    def test_textfield_fail(self):
+        class Person(Model):
+            biography = fields.TextField()
+
+        person_dict = {'Person': {'biography': "FooBar"}}
+        self.assertRaises(TypeError,
+                          Person.from_dict,
+                          person_dict)
+
+    def test_urlfield_success_verify(self):
+        checker_mock = pmock.Mock()
+
+        blog_url = "http://foo.bar.com/blog"
+
+        class Person(Model):
+            blog = fields.URLField(verify_exists=True,
+                                   url_checker=checker_mock)
+
+        person_dict = {'Person': {'blog': blog_url}}
+
+        checker_mock.expects(pmock.once()) \
+            .set_url(pmock.eq(blog_url))
+
+        checker_mock.expects(pmock.once()) \
+            .is_valid() \
+            .will(pmock.return_value(True))
+
+        checker_mock.expects(pmock.once()) \
+            .does_exists() \
+            .will(pmock.return_value(True))
+
+        john = Person.from_dict(person_dict)
+
+        self.assertEquals(john.blog, blog_url)
+        self.assertEquals(john.to_dict(), person_dict)
+        checker_mock.verify()
+
+    def test_urlfield_success_no_verify(self):
+        checker_mock = pmock.Mock()
+
+        blog_url = "http://foo.bar.com/blog"
+
+        class Person(Model):
+            blog = fields.URLField(verify_exists=False,
+                                   url_checker=checker_mock)
+
+        person_dict = {'Person': {'blog': blog_url}}
+
+        checker_mock.expects(pmock.once()) \
+            .set_url(pmock.eq(blog_url))
+
+        checker_mock.expects(pmock.once()) \
+            .is_valid() \
+            .will(pmock.return_value(True))
+
+        checker_mock.expects(pmock.never()) \
+            .does_exists()
+
+        john = Person.from_dict(person_dict)
+
+        self.assertEquals(john.blog, blog_url)
+        self.assertEquals(john.to_dict(), person_dict)
+        checker_mock.verify()
+
+    def test_urlfield_success_validate_url(self):
+        blog_url = "http://foo.bar.com/blog"
+
+        class Person(Model):
+            blog = fields.URLField(verify_exists=False)
+
+        person_dict = {'Person': {'blog': blog_url}}
+
+        john = Person.from_dict(person_dict)
+
+        self.assertEquals(john.blog, blog_url)
+        self.assertEquals(john.to_dict(), person_dict)
+
+    def test_urlfield_fail_validate_url(self):
+        blog_url = "http://foo&*(.bar.com/b897698&%log"
+
+        class Person(Model):
+            blog = fields.URLField(verify_exists=False)
+
+        person_dict = {'Person': {'blog': blog_url}}
+
+        self.assertRaises(fields.FieldValidationError,
+                          Person.from_dict,
+                          person_dict)

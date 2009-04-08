@@ -19,11 +19,27 @@
 # Boston, MA 02111-1307, USA.
 
 import re
+import urllib2
 from attributes import *
 from decimal import Decimal, InvalidOperation
 
 class FieldValidationError(Exception):
     pass
+
+class URLChecker(object):
+    def set_url(self, url):
+        self.url = url
+
+    def is_valid(self):
+        url_regex = re.compile(r'^https?:[/]{2}([\w_.-]+)+[.]\w{2,}([/]?.*)?')
+        return url_regex.search(self.url) and True or False
+
+    def does_exists(self):
+        try:
+            urllib2.urlopen(value)
+            return True
+        except urlopen.URLError:
+            return False
 
 class Field(Attribute):
     must_validate = True
@@ -235,3 +251,50 @@ class PhoneNumberField(CharField):
         if not regex.search(value):
             raise FieldValidationError, "The given value doesn't match " \
                   "'%s'. Got %s" % (self.format, value)
+
+class TextField(Field):
+    vartype = unicode
+
+    def validate(self, value):
+        if not isinstance(value, self.vartype):
+            raise TypeError, \
+                  u"%s must be unicode for TextField compatibility" % value
+
+class URLField(CharField):
+    vartype = unicode
+
+    def __init__(self, *args, **kw):
+        verify_exists = kw.pop('verify_exists', True)
+
+        # an object for checking url, for TDD reasons :)
+        self.url_checker = kw.pop('url_checker', URLChecker())
+
+        if not isinstance(verify_exists, bool):
+            raise TypeError, u"%s.verify_exists param must be a bool" \
+                  " (True or False), got %r (%r)" % \
+                  (self.__class__.__name__,
+                   type(verify_exists), verify_exists)
+
+        if kw.has_key('max_length'):
+            kw['max_length'] = kw.get('max_length')
+        else:
+            kw['max_length'] = 255
+
+        self.verify_exists = verify_exists
+
+        super(URLField, self).__init__(*args, **kw)
+
+    def validate(self, value):
+        if not isinstance(value, basestring):
+            raise TypeError, \
+                  u"%s must be a string(ish) type " \
+                  "for EmailField compatibility" % value
+
+        self.url_checker.set_url(value)
+
+        url_status = self.url_checker
+
+        if not url_status.is_valid():
+            raise FieldValidationError, 'The url is not valid: "%s"'% value
+        if self.verify_exists and not url_status.does_exists():
+            raise FieldValidationError, 'The url does not exist: "%s"'% value
