@@ -36,9 +36,9 @@ class URLChecker(object):
 
     def does_exists(self):
         try:
-            urllib2.urlopen(value)
+            urllib2.urlopen(self.url)
             return True
-        except urlopen.URLError:
+        except urllib2.URLError:
             return False
 
 class Field(Attribute):
@@ -296,5 +296,6 @@ class URLField(CharField):
 
         if not url_status.is_valid():
             raise FieldValidationError, 'The url is not valid: "%s"'% value
+
         if self.verify_exists and not url_status.does_exists():
             raise FieldValidationError, 'The url does not exist: "%s"'% value

@@ -19,6 +19,7 @@
 
 import unittest
 import pmock
+from urllib2 import URLError
 from deadparrot.core.models import fields
 from deadparrot.core.models import Model
 from datetime import date, time, datetime
@@ -393,6 +394,19 @@ class TestFieldsBasicBehavior(unittest.TestCase):
                           negatives=None,
                           positives=None)
 
+    def test_phonenumberfield_success_maxlength(self):
+        class Person(Model):
+            cellphone = fields.PhoneNumberField( \
+                format="(00) 0000-0000",
+                max_length=20
+            )
+
+        person_dict = {'Person': {'cellphone': "(21) 9966-6699"}}
+
+        john = Person.from_dict(person_dict)
+        self.assertEquals(john.cellphone, "(21) 9966-6699")
+        self.assertEquals(john.to_dict(), person_dict)
+
     def test_phonenumberfield_success(self):
         class Person(Model):
             cellphone = fields.PhoneNumberField(format="(00) 0000-0000")
@@ -402,6 +416,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         john = Person.from_dict(person_dict)
         self.assertEquals(john.cellphone, "(21) 9966-6699")
         self.assertEquals(john.to_dict(), person_dict)
+
 
     def test_phonenumberfield_fail_construct(self):
         self.assertRaises(TypeError,
@@ -505,6 +520,21 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         self.assertEquals(john.to_dict(), person_dict)
         checker_mock.verify()
 
+    def test_urlfield_success_no_verify_maxlength(self):
+
+        blog_url = "http://foo.bar.com/blog"
+
+        class Person(Model):
+            blog = fields.URLField(verify_exists=False,
+                                   max_length=20)
+
+        person_dict = {'Person': {'blog': blog_url}}
+
+        john = Person.from_dict(person_dict)
+
+        self.assertEquals(john.blog, blog_url)
+        self.assertEquals(john.to_dict(), person_dict)
+
     def test_urlfield_success_validate_url(self):
         blog_url = "http://foo.bar.com/blog"
 
@@ -529,3 +559,63 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         self.assertRaises(fields.FieldValidationError,
                           Person.from_dict,
                           person_dict)
+
+    def test_urlfield_fail_nonexistent_url(self):
+        blog_url = "http://qwerty.foo.bar"
+        checker_mock = pmock.Mock()
+
+        class Person(Model):
+            blog = fields.URLField(verify_exists=True,
+                                   url_checker=checker_mock)
+
+        person_dict = {'Person': {'blog': blog_url}}
+
+        checker_mock.expects(pmock.once()) \
+            .set_url(pmock.eq(blog_url))
+
+        checker_mock.expects(pmock.once()) \
+            .is_valid() \
+            .will(pmock.return_value(True))
+
+        checker_mock.expects(pmock.once()) \
+            .does_exists() \
+            .will(pmock.return_value(False))
+
+        self.assertRaises(fields.FieldValidationError,
+                          Person.from_dict,
+                          person_dict)
+
+    def test_urlfield_fail_validate_url(self):
+        def make_class():
+            class Person(Model):
+                blog = fields.URLField(verify_exists=None)
+
+        self.assertRaises(TypeError, make_class)
+
+    def test_urlfield_fail_value_nonstring(self):
+        class Person(Model):
+            blog = fields.URLField(verify_exists=False)
+
+        person_dict = {'Person': {'blog': None}}
+
+        self.assertRaises(TypeError,
+                          Person.from_dict,
+                          person_dict)
+
+
+    def test_url_checker(self):
+        urlmock = pmock.Mock()
+        fields.urllib2 = urlmock
+
+        urlmock.expects(pmock.once()) \
+            .urlopen(pmock.eq("http://foo.bar.com")) \
+            .will(pmock.return_value(None))
+
+        checker = fields.URLChecker()
+        checker.set_url("http://foo.bar.com")
+
+        self.assertEquals(checker.url, "http://foo.bar.com")
+        self.assertTrue(checker.is_valid())
+        self.assertTrue(checker.does_exists())
+
+        urlmock.verify()
