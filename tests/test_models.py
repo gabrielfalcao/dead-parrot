@@ -19,6 +19,7 @@
 
 import unittest
 from deadparrot.core.models import fields
+from deadparrot.core import models
 from deadparrot.core.models import Model
 from deadparrot.core.models import build_metadata
 from datetime import date, time, datetime
@@ -41,6 +42,7 @@ class TestBasicModel(unittest.TestCase):
         self.failUnless(p._meta is not None)
         self.assertEquals(p._meta.single_name, 'Person')
         self.assertEquals(p._meta.plural_name, 'People')
+        self.assertEquals(p._meta.fields_validation_policy, models.VALIDATE_ALL)
 
     def test_to_dict(self):
         class Person(Model):
@@ -102,6 +104,18 @@ class TestBasicModel(unittest.TestCase):
         self.assertRaises(TypeError, Person.from_dict, 2)
         self.assertRaises(TypeError, Person.from_dict, 2.2)
         self.assertRaises(TypeError, Person.from_dict, None)
+
+    def test_should_not_validate_with_meta_property(self):
+        class Person(Model):
+            name = fields.CharField(max_length=0)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+
+            class Meta:
+                fields_validation_policy = models.VALIDATE_NONE
+
+        john = Person.from_dict({"Person": {"name": "John",
+                                            "birthdate": "20/10/1980"}})
+        self.assertEquals(john.name, "John")
 
 class TestModelInstrospection(unittest.TestCase):
     def test_field_names(self):

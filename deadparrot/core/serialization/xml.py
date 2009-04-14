@@ -355,3 +355,7 @@ class XmlTag(object):
     def camel_attrs(self):
         return [(name, attr) for name, attr in [(x, getattr(self, x)) for x in dir(self)] \
                 if isinstance(attr, Attribute)]
+
+class XMLSerializer(object):
+    def __init__(self, obj):
+        pass

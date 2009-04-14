@@ -20,6 +20,7 @@
 import unittest
 import pmock
 from urllib2 import URLError
+from deadparrot.core import models
 from deadparrot.core.models import fields
 from deadparrot.core.models import Model
 from datetime import date, time, datetime
@@ -84,7 +85,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         class Person(Model):
             first_name = fields.CharField(max_length=5)
             class Meta:
-                validate_none = True
+                fields_validation_policy = models.VALIDATE_NONE
 
         class Car(Model):
             brand = fields.CharField(max_length=2, validate=False)

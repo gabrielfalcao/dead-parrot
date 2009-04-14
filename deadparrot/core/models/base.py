@@ -18,8 +18,17 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
+import simplejson
+
 from attributes import Attribute
 from fields import *
+
+VALIDATE_NONE = "The model won't validate any fields"
+VALIDATE_ALL = """
+    The model will validate all fields, unless
+    those which have the validate parameter set
+    to False
+"""
 
 def build_metadata(klass, params):
     single_name = klass.__name__
@@ -31,6 +40,9 @@ def build_metadata(klass, params):
 
     if not params.has_key('plural_name'):
         klass_meta.plural_name = plural_name
+
+    if not params.has_key('fields_validation_policy'):
+        klass_meta.fields_validation_policy = VALIDATE_ALL
 
     metaobj = klass_meta()
     if hasattr(metaobj, '_fields'):
@@ -45,8 +57,6 @@ class ModelMeta(type):
             fields =  dict([(k, v) for k, v in attrs.items() if isinstance(v, Field)])
             metadata_params = hasattr(cls, 'Meta') and vars(cls.Meta) or {}
             metadata_params['_fields'] = fields
-            if not metadata_params.has_key("validate_none"):
-                metadata_params['validate_none'] = False
 
             cls._meta = build_metadata(cls, metadata_params)
             cls._data = {}
@@ -69,7 +79,7 @@ class Model(object):
         if attr in self._data.keys():
             klassname = self.__class__.__name__
             field =self._meta._fields[attr]
-            if not self._meta.validate_none:
+            if self._meta.fields_validation_policy != VALIDATE_NONE:
                 # raising the field-specific exceptions
                 field.validate(val)
 
@@ -96,3 +106,6 @@ class Model(object):
                 setattr(obj, k, v)
 
         return obj
+
+    def serialize(self, to='json'):
+        return simplejson.dumps(self.to_dict())
