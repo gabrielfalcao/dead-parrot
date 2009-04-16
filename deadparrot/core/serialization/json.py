@@ -18,6 +18,19 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
+from simplejson import dumps, loads
+
 class JSONSerializer(object):
     def __init__(self, obj):
-        pass
+        if not isinstance(obj, (dict,)):
+            raise TypeError, "JSONSerializer takes a list or " \
+                  "dict as construction parameter"
+        self.obj = obj
+
+    def serialize(self):
+        return dumps(self.obj)
+
+    @classmethod
+    def deserialize(cls, json):
+        return loads(json)
+
