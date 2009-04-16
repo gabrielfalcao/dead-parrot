@@ -17,16 +17,9 @@
 # License along with this program; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
-import sys
+from os.path import dirname, abspath, join, split
+from glob import glob
 
-from plugins.base import Serializer, REGISTRY_DICT
-from plugins import *
-
-class Registry(object):
-    @classmethod
-    def get(cls, kind):
-        try:
-            return REGISTRY_DICT[kind]
-        except KeyError:
-            raise NotImplementedError, "The format %s was not implemented "
-        "as a serializer plugin for DeadParrot"
+base_path = abspath(dirname(__file__))
+pattern = join(base_path, "*.py")
+__all__ = [split(x)[1][:-3] for x in glob(pattern)]

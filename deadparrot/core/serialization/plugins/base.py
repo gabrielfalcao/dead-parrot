@@ -17,16 +17,24 @@
 # License along with this program; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
-import sys
 
-from plugins.base import Serializer, REGISTRY_DICT
-from plugins import *
+REGISTRY_DICT = {}
 
-class Registry(object):
+class SerializerMeta(type):
+    def __init__(cls, name, bases, attrs):
+        if name not in ('SerializerMeta', 'Serializer'):
+            if not attrs.has_key('format'):
+                raise AttributeError, \
+                      "%s does not has the attribute 'format'" % name
+
+            REGISTRY_DICT[attrs['format']] = cls
+        super(SerializerMeta, cls).__init__(name, bases, attrs)
+
+class Serializer(object):
+    __metaclass__ = SerializerMeta
+    def serialize(self):
+        raise NotImplementedError
+
     @classmethod
-    def get(cls, kind):
-        try:
-            return REGISTRY_DICT[kind]
-        except KeyError:
-            raise NotImplementedError, "The format %s was not implemented "
-        "as a serializer plugin for DeadParrot"
+    def deserialize(self, what):
+        raise NotImplementedError

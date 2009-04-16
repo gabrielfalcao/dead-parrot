@@ -17,16 +17,23 @@
 # License along with this program; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
-import sys
 
-from plugins.base import Serializer, REGISTRY_DICT
-from plugins import *
+from simplejson import dumps, loads
 
-class Registry(object):
+from base import Serializer
+
+class JSONSerializer(Serializer):
+    format = "json"
+    def __init__(self, obj):
+        if not isinstance(obj, (dict,)):
+            raise TypeError, "JSONSerializer takes a list or " \
+                  "dict as construction parameter"
+        self.obj = obj
+
+    def serialize(self):
+        return dumps(self.obj)
+
     @classmethod
-    def get(cls, kind):
-        try:
-            return REGISTRY_DICT[kind]
-        except KeyError:
-            raise NotImplementedError, "The format %s was not implemented "
-        "as a serializer plugin for DeadParrot"
+    def deserialize(cls, json):
+        return loads(json)
+
