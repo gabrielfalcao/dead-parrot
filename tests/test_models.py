@@ -44,6 +44,23 @@ class TestBasicModel(unittest.TestCase):
         self.assertEquals(p._meta.plural_name, 'People')
         self.assertEquals(p._meta.fields_validation_policy, models.VALIDATE_ALL)
 
+    def test_construction(self):
+        class Person(Model):
+            name = fields.CharField(max_length=20)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+
+        person = Person(name=u"blaj", birthdate=u'10/10/2000')
+        self.assertEquals(person.name, 'blaj')
+        self.assertEquals(person.birthdate, date(2000, 10, 10))
+
+    def test_construction_fail(self):
+        class Person(Model):
+            name = fields.CharField(max_length=20)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+
+        self.assertRaises(AttributeError,
+                          Person, name=u"blaj", dsa=u'10/10/2000')
+
     def test_to_dict(self):
         class Person(Model):
             name = fields.CharField(max_length=20)
@@ -141,3 +158,59 @@ class TestModelInstrospection(unittest.TestCase):
         foobar = Foo.from_dict(my_dict)
         self.assertEquals(foobar.baz, u"Baz, Bar and so on...")
         self.assertEquals(foobar.foobaz, u"Foo + Baz, Bar and so on...")
+
+class TestModelSet(unittest.TestCase):
+    my_dict = {
+        'People':
+        [
+            {
+                'Person': {
+                    'name': u"John Doe",
+                    'birthdate': u"10/02/1988"
+                }
+            },
+            {
+                'Person': {
+                    'name': u"Mary Doe",
+                    'birthdate': u"20/10/1989"
+                }
+            },
+        ]
+    }
+
+    def test_construction_fail(self):
+        self.assertRaises(TypeError, models.ModelSet, object(), None)
+
+    def test_to_dict(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            class Meta:
+                plural_name = 'People'
+
+        person1 = Person(name=u'John Doe', birthdate=u'10/02/1988')
+        person2 = Person(name=u'Mary Doe', birthdate=u'20/10/1989')
+        PersonSet = Person.Set()
+        people = PersonSet(person1, person2)
+        self.assert_(isinstance(people, models.ModelSet),
+                     "people should be a ModelSet")
+        print
+        print people.to_dict()
+        print self.my_dict
+        print
+        self.assertEquals(people.to_dict(), self.my_dict)
+
+    def test_from_dict(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            class Meta:
+                plural_name = 'People'
+
+        person1 = Person(name=u'John Doe', birthdate=u'10/02/1988')
+        person2 = Person(name=u'Mary Doe', birthdate=u'20/10/1989')
+        PersonSet = Person.Set()
+        people = PersonSet.from_dict(self.my_dict)
+        self.assert_(isinstance(people, models.ModelSet),
+                     "people should be a ModelSet")
+        self.assertEquals(people.to_dict(), self.my_dict)

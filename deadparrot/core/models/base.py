@@ -66,11 +66,44 @@ class ModelMeta(type):
 
         super(ModelMeta, cls).__init__(name, bases, attrs)
 
+class ModelSet(object):
+    __model_class__ = None
+    def __init__(self, *items):
+        for i in items:
+            if not isinstance(i, self.__model_class__):
+                raise TypeError, \
+                      "%s can only handle %s types, got %r" % \
+                      (self.__class__.__name__,
+                       self.__model_class__.__name__,
+                       type(i))
+        self.items = items
+
+    def to_dict(self):
+        dicts = [m.to_dict() for m in self.items]
+        ret = {self.__model_class__._meta.plural_name.title(): dicts}
+        return ret
+
+    @classmethod
+    def from_dict(cls, edict):
+        if not isinstance(edict, dict):
+            raise TypeError, "%s.from_dict takes a dict as parameter. " \
+                  "Got %r" % (cls.__name__, type(edict))
+
+        items = edict[cls.__model_class__._meta.plural_name]
+        return cls(*[cls.__model_class__.from_dict(i) for i in items])
+
 class Model(object):
     __metaclass__ = ModelMeta
 
+    def __init__(self, **kw):
+        for k, v in kw.items():
+            if k not in self._meta._fields.keys():
+                raise AttributeError, \
+            "%s has no attribute %s" % (self.__class__.__name__, k)
+            setattr(self, k, v)
+
     def _get_data(self):
-        return dict([(k, self._meta._fields[k].serialize(v)) for k, v in self._data.items()])
+        return dict([(k, self._meta._fields[k].serialize(getattr(self, k))) for k in self._data.keys()])
 
     def to_dict(self):
         return {self._meta.single_name: self._get_data()}
@@ -107,5 +140,7 @@ class Model(object):
 
         return obj
 
-    def serialize(self, to='json'):
-        return simplejson.dumps(self.to_dict())
+    @classmethod
+    def Set(cls):
+        klass = type('%sSet' % cls.__name__, (ModelSet, ), {'__model_class__': cls })
+        return klass
