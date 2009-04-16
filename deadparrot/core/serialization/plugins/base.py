@@ -32,9 +32,3 @@ class SerializerMeta(type):
 
 class Serializer(object):
     __metaclass__ = SerializerMeta
-    def serialize(self):
-        raise NotImplementedError
-
-    @classmethod
-    def deserialize(self, what):
-        raise NotImplementedError

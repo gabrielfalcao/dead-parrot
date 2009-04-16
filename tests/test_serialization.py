@@ -24,15 +24,15 @@ import simplejson
 from re import sub as resub
 from urllib2 import URLError
 
-from deadparrot.core import models
-from deadparrot.core.models import fields
-from deadparrot.core.serialization.json import JSONSerializer
-from deadparrot.core.serialization.xml import XMLSerializer
-from deadparrot.core.serialization import Registry
-from deadparrot.core.models import Model
-
 from datetime import date, time, datetime
 from decimal import Decimal
+
+from deadparrot.core import models
+from deadparrot.core.models import fields, Model
+from deadparrot.core.serialization import Registry
+from deadparrot.core.serialization.plugins.json import JSONSerializer
+from deadparrot.core.serialization.plugins.xml import XMLSerializer
+from deadparrot.core.serialization.plugins.base import Serializer
 
 class TestJSONSerializer(unittest.TestCase):
     my_dict = {
@@ -114,3 +114,18 @@ class TestSerializersRegistry(unittest.TestCase):
         json = simplejson.dumps(self.my_dict)
         self.assertEquals(json_serializer.deserialize(json),
                           self.my_dict)
+
+    def test_fail_get_unknown(self):
+        self.assertRaises(NotImplementedError, Registry.get, 'blabows')
+
+    def test_registry_requires_implementation(self):
+        """
+        When someone implements a serialization plugin,
+        the class must have the attribute "format", which
+        is a string to identify the plugin in the registry
+        """
+        def make_class():
+            class FakeSerializer(Serializer):
+                pass
+
+        self.assertRaises(AttributeError, make_class)
