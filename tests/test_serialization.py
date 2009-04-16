@@ -21,7 +21,6 @@ import unittest
 import pmock
 import simplejson
 
-from re import sub as resub
 from urllib2 import URLError
 
 from datetime import date, time, datetime
@@ -33,6 +32,8 @@ from deadparrot.core.serialization import Registry
 from deadparrot.core.serialization.plugins.json import JSONSerializer
 from deadparrot.core.serialization.plugins.xml import XMLSerializer
 from deadparrot.core.serialization.plugins.base import Serializer
+
+from utils import one_line_xml
 
 class TestJSONSerializer(unittest.TestCase):
     my_dict = {
@@ -56,12 +57,6 @@ class TestJSONSerializer(unittest.TestCase):
         self.assertRaises(TypeError, JSONSerializer, "")
         self.assertRaises(TypeError, JSONSerializer, None)
         self.assertRaises(TypeError, JSONSerializer, "sadasd")
-
-def one_line_xml(string):
-    string = "".join(string.splitlines())
-    string = resub("[>]\s+[<]", "><", string)
-    string = string.strip()
-    return string
 
 class TestXMLSerializer(unittest.TestCase):
     my_dict = {

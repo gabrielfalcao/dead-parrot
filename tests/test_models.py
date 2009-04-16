@@ -18,11 +18,15 @@
 # Boston, MA 02111-1307, USA.
 
 import unittest
+import simplejson
+
 from deadparrot.core.models import fields
 from deadparrot.core import models
 from deadparrot.core.models import Model
 from deadparrot.core.models import build_metadata
 from datetime import date, time, datetime
+
+from utils import one_line_xml
 
 class TestBasicModel(unittest.TestCase):
     def test_build_metadata(self):
@@ -194,10 +198,7 @@ class TestModelSet(unittest.TestCase):
         people = PersonSet(person1, person2)
         self.assert_(isinstance(people, models.ModelSet),
                      "people should be a ModelSet")
-        print
-        print people.to_dict()
-        print self.my_dict
-        print
+
         self.assertEquals(people.to_dict(), self.my_dict)
 
     def test_from_dict(self):
@@ -214,3 +215,46 @@ class TestModelSet(unittest.TestCase):
         self.assert_(isinstance(people, models.ModelSet),
                      "people should be a ModelSet")
         self.assertEquals(people.to_dict(), self.my_dict)
+
+class TestModelSerialization(unittest.TestCase):
+    class Person(Model):
+            first_name = fields.CharField(max_length=40)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+
+    my_json = simplejson.dumps({
+        'Person': {
+            'first_name': u"John Doe",
+            'birthdate': u"10/02/1988"
+        }
+    })
+    my_xml = """
+    <Person>
+       <first_name>John Doe</first_name>
+       <birthdate>10/02/1988</birthdate>
+    </Person>
+    """
+    def test_model_serialization_json(self):
+
+        john = self.Person(first_name=u'John Doe',
+                      birthdate=date(1988, 2, 10))
+
+        self.assertEquals(john.serialize(to='json'),
+                          self.my_json)
+
+    def test_model_serialization_xml(self):
+        john = self.Person(first_name=u'John Doe',
+                           birthdate=date(1988, 2, 10))
+
+        self.assertEquals(john.serialize(to='xml'),
+                          one_line_xml(self.my_xml))
+
+
+    def test_model_deserialization_json(self):
+        john = self.Person.deserialize(self.my_json, format='json')
+        self.assertEquals(one_line_xml(john.serialize(to='xml')),
+                          one_line_xml(self.my_xml))
+
+    def test_model_deserialization_xml(self):
+        john = self.Person.deserialize(self.my_xml, format='xml')
+        self.assertEquals(john.serialize(to='json'),
+                          self.my_json)

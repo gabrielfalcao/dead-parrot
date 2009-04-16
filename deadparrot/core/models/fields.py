@@ -70,9 +70,9 @@ class CharField(Field):
         super(CharField, self).__init__(*args, **kw)
 
     def validate(self, value):
-        if not isinstance(value, self.vartype):
+        if not isinstance(value, basestring):
             raise TypeError, \
-                  u"%s must be unicode for CharField compatibility" % value
+                  u"%s must be a string for CharField compatibility" % value
 
         if self.must_validate and len(value) > self.max_length:
             raise FieldValidationError, \

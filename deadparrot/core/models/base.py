@@ -20,6 +20,8 @@
 
 import simplejson
 
+from deadparrot.core.serialization import Registry
+
 from attributes import Attribute
 from fields import *
 
@@ -144,3 +146,15 @@ class Model(object):
     def Set(cls):
         klass = type('%sSet' % cls.__name__, (ModelSet, ), {'__model_class__': cls })
         return klass
+
+    def serialize(self, to):
+        serializer = Registry.get(to)
+        return serializer(self.to_dict()).serialize()
+
+    @classmethod
+    def deserialize(cls, data, format):
+        serializer = Registry.get(format)
+        my_dict = serializer.deserialize(data)
+        return cls.from_dict(my_dict)
+
+
