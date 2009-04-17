@@ -80,6 +80,19 @@ class ModelSet(object):
                        type(i))
         self.items = items
 
+    def __getitem__(self, *a, **kw):
+        return self.items.__getitem__(*a, **kw)
+    def __setitem__(self, *a, **kw):
+        return self.items.__setitem__(*a, **kw)
+    def __getslice__(self, *a, **kw):
+        return self.items.__getslice__(*a, **kw)
+    def __setslice__(self, *a, **kw):
+        return self.items.__setslice__(*a, **kw)
+    def __nonzero__(self):
+        return bool(self.items)
+    def __len__(self):
+        return len(self.items)
+
     def to_dict(self):
         dicts = [m.to_dict() for m in self.items]
         ret = {self.__model_class__._meta.plural_name.title(): dicts}
@@ -93,6 +106,16 @@ class ModelSet(object):
 
         items = edict[cls.__model_class__._meta.plural_name]
         return cls(*[cls.__model_class__.from_dict(i) for i in items])
+
+    def serialize(self, to):
+        serializer = Registry.get(to)
+        return serializer(self.to_dict()).serialize()
+
+    @classmethod
+    def deserialize(cls, data, format):
+        serializer = Registry.get(format)
+        my_dict = serializer.deserialize(data)
+        return cls.from_dict(my_dict)
 
 class Model(object):
     __metaclass__ = ModelMeta
@@ -126,7 +149,9 @@ class Model(object):
     def from_dict(cls, data_dict):
         if not isinstance(data_dict, dict):
             raise TypeError, "%s.from_dict takes a dict as parameter. " \
-                  "Got %r" % (cls.__name__, type(data_dict))
+                  "Got %r:%r" % (cls.__name__,
+                                 type(data_dict),
+                                 data_dict)
         try:
             d = data_dict[cls._meta.single_name].copy()
         except KeyError, e:

@@ -201,6 +201,29 @@ class TestModelSet(unittest.TestCase):
 
         self.assertEquals(people.to_dict(), self.my_dict)
 
+    def test_to_list_operations(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            class Meta:
+                plural_name = 'People'
+
+        person1 = Person(name=u'John Doe', birthdate=u'10/02/1988')
+        person2 = Person(name=u'Mary Doe', birthdate=u'20/10/1989')
+        PersonSet = Person.Set()
+        people = PersonSet(person1, person2)
+
+        # getitem
+        self.assertEquals(people[0].name, u'John Doe')
+        # length
+        self.assertEquals(len(people), 2)
+        # nonzero
+        self.assertEquals(bool(people), True)
+        self.assertEquals(bool(PersonSet()), False)
+        # iteration
+        self.assertEquals([u'John Doe', u'Mary Doe'],
+                          [x.name for x in people])
+
     def test_from_dict(self):
         class Person(Model):
             name = fields.CharField(max_length=10)
@@ -258,3 +281,76 @@ class TestModelSerialization(unittest.TestCase):
         john = self.Person.deserialize(self.my_xml, format='xml')
         self.assertEquals(john.serialize(to='json'),
                           self.my_json)
+
+class TestModelSetSerialization(unittest.TestCase):
+    class Person(Model):
+            first_name = fields.CharField(max_length=40)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            class Meta:
+                plural_name = 'People'
+
+    my_json = simplejson.dumps({
+        'People':
+        [
+            {
+                'Person': {
+                    'first_name': u"John Doe",
+                    'birthdate': u"10/02/1988"
+                }
+            },
+            {
+                'Person': {
+                    'first_name': u"Mary Doe",
+                    'birthdate': u"20/10/1989"
+                }
+            },
+        ]
+    })
+    my_xml = """
+    <People>
+        <Person>
+           <first_name>John Doe</first_name>
+           <birthdate>10/02/1988</birthdate>
+        </Person>
+        <Person>
+           <first_name>Mary Doe</first_name>
+           <birthdate>20/10/1989</birthdate>
+        </Person>
+    </People>
+    """
+    def test_modelset_serialization_json(self):
+
+        john = self.Person(first_name=u'John Doe',
+                      birthdate=date(1988, 2, 10))
+        mary = self.Person(first_name=u'Mary Doe',
+                      birthdate=date(1989, 10, 20))
+        PersonSet = self.Person.Set()
+        people = PersonSet(john, mary)
+
+        self.assertEquals(people.serialize(to='json'),
+                          self.my_json)
+
+    def test_modelset_deserialization_json(self):
+        PersonSet = self.Person.Set()
+        people = PersonSet.deserialize(self.my_json, format='json')
+
+        self.assert_(isinstance(people, PersonSet))
+        self.assertEquals(people[0].first_name, u'John Doe')
+
+    def test_modelset_serialization_xml(self):
+        john = self.Person(first_name=u'John Doe',
+                      birthdate=date(1988, 2, 10))
+        mary = self.Person(first_name=u'Mary Doe',
+                      birthdate=date(1989, 10, 20))
+        PersonSet = self.Person.Set()
+        people = PersonSet(john, mary)
+
+        self.assertEquals(one_line_xml(people.serialize(to='xml')),
+                          one_line_xml(self.my_xml))
+
+    def test_modelset_deserialization_xml(self):
+        PersonSet = self.Person.Set()
+        people = PersonSet.deserialize(self.my_xml, format='xml')
+
+        self.assert_(isinstance(people, PersonSet))
+        self.assertEquals(people[0].first_name, u'John Doe')

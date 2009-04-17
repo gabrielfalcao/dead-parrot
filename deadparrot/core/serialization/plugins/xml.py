@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
 from lxml import etree
+from lxml.etree import XMLSyntaxError
 
 from base import Serializer
 
@@ -16,8 +17,17 @@ class XMLSerializer(Serializer):
         self.root = etree.Element(rootname)
 
     def as_object(self):
-        for k, v in self.data[self.root.tag].items():
-            etree.SubElement(self.root, k).text = v
+        child = self.data[self.root.tag]
+        if isinstance(child, dict):
+            for k, v in child.items():
+                etree.SubElement(self.root, k).text = v
+        elif isinstance(child, list):
+            for obj in child:
+                node = self.__class__(obj).as_object()
+                self.root.append(node)
+        else:
+            raise TypeError, "XMLSerializer can handle only list and dict " \
+                  "got %r" % type(child)
 
         return self.root
 
@@ -27,7 +37,17 @@ class XMLSerializer(Serializer):
     @classmethod
     def deserialize(cls, xml):
         xobject = etree.XML(xml)
-        values = dict([(e.tag, e.text) for e in xobject.iterchildren()])
-        name = xobject.tag
-        return {name: values}
 
+        # I will now determine if i'm deserializing
+        # a set of objects or a object
+        is_object = bool(xobject[0].text.strip())
+
+        if is_object:
+            # I'm deserializing a object
+            values = dict([(e.tag, e.text) for e in xobject.iterchildren()])
+        else:
+            # I'm deserializing a set of objects
+            xml_list = [etree.tostring(x) for x in xobject.iterchildren()]
+            values = [cls.deserialize(o) for o in xml_list]
+
+        return {xobject.tag: values}
