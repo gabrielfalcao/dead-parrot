@@ -1,45 +1,37 @@
 .. _index:
 
-===================================
-Documentação do python-webmedia
-===================================
+=========================
+Dead Parrot Documentation
+=========================
 
-.. rubric:: Do core ao client em pequenos passos.
+.. rubric:: Introduction.
 
-Antes de tudo
-=============
+What is this library for
+========================
 
-Se você está começando a se aventurar no mundo python, é extremamente
-aconselhável seguir o estilo de código proposto na O módulo
-python-webmedia segue os padrões da :pep:`0008`.
+Is a RESTful framework based in the declarative approach of Django
+models, in which you describe a class and it's fields, to be
+serialized/deserialized in many formats (for now, xml and json).
 
-As PEPs são chamadas **"Python Enhancement Proposals"**, algo como
-"propostas de melhorias de Python", são boas práticas propostas, em
-grande parte, por desenvolvedores da linguagem.
+The project have been concepted to allow the developer to write their
+own format-style or serializer, deal with data validation and so on,
+without even needing the whole Django stack.
 
-A :pep:`0008` possui uma versão em *português* traduzida pela equipe
-do `Python Brasil <http://www.pythonbrasil.com.br>`, e pode ser
-acessada `aqui <http://www.pythonbrasil.com.br/moin.cgi/GuiaDeEstilo>`.
+I't have also been concepted to offer a standalone web server, based on cherrypy, to serve the resources,
+and to consume that resources through a client layer, that's also based in the Django queryset manager.
 
-Etapas
-======
-
-Esta documentação cobre o **core** do python-webmedia |version|,
-passando para a **API** python, um pequeno tutorial passo-a-passo e
-finalizando com um exemplo de utilização em conjunto com o `Django
-<http://docs.djangoproject.com/en/dev/>`_.
-
-* A :ref:`documentação do core <core>` explica toda a mecânica de
-  descrição das tags xml, sua deserialização e os conceitos de
-  utilização de `metaclasses
-  <http://www.python.org/download/releases/2.2.3/descrintro/#metaclasses>`_.
-
-* A :ref:`documentação da API <api>` mostra os atributos e métodos das
-  classes que obtém os dados do `webservice de webmedia
-  <http://wiki.globoi.com/view/WebMedia/WebMediaAPI/Webservices#WebMedia_API_Webservices>`_.
-
-* Se quiser aprender os detalhes mais tarde, você pode ir direto ao :ref:`tutorial <tutorial>` de utilização
-
-* Vai usar o **Django** ? Veja o exemplo de utilização :ref:`com Django <django_raw>`.
-
-* *TODO*: Criar um tutorial da nova plataforma + python-webmedia.
+In a nutshell you can make something like it in the client::
+   >>> from deadparrot import models
+   >>>
+   >>> class Car(models.Model):
+   ...     brand = models.CharField(max_length=20)
+   ...     color = models.CharField(max_length=15)
+   ...     website = models.CharField(max_length=0, validate=False)
+   ...     objects = CarManager(base_url="http://localhost:9090/api", resource="/car")
+   >>> car = Car.objects.get(uuid="49a17b42-209c-4a86-b9e0-41c4ca134d0e")
+   >>> print car.brand
+   OSCar
+   >>> print car.color
+   red
+   >>> print car.website
+   !http://www.theoscarproject.org/

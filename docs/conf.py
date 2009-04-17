@@ -26,7 +26,7 @@ import sys, os
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest']
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['.templates']
+templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -35,8 +35,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General substitutions.
-project = u'python-webmedia'
-copyright = u'2008, Gabriel Falcão <gabriel.falcao@corp.globo.com>'
+project = u'Dead Parrot'
+copyright = u'2008, Gabriel Falcão <gabriel@nacaolivre.org>'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -57,7 +57,7 @@ today_fmt = '%B %d, %Y'
 
 # List of directories, relative to source directories, that shouldn't be searched
 # for source files.
-exclude_trees = ['.build']
+exclude_trees = ['_build']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -103,7 +103,7 @@ html_style = 'default.css'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['.static']
+html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -141,7 +141,7 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'webmedia-clientdoc'
+htmlhelp_basename = 'deadparrot-clientdoc'
 
 
 # Options for LaTeX output
@@ -156,7 +156,7 @@ htmlhelp_basename = 'webmedia-clientdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [
-  ('index', 'webmedia-client.tex', u'webmedia-client Documentation',
+  ('index', 'deadparrot.tex', u'Dead Parrot Documentation',
    u'Gabriel Falcão', 'manual'),
 ]
 
