@@ -22,5 +22,4 @@ import unittest
 from deadparrot.core import models
 
 class TestRESTfulManager(unittest.TestCase):
-    def test_get_all(self):
-        objects = Manager(base_uri="http://")
+    pass
