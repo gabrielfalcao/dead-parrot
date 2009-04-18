@@ -249,8 +249,9 @@ class ModelRegistry(object):
                       "as parameter, got %r" % by_app_label
 
             ret = []
-            for modname, classdict in _MODULE_REGISTRY.items():
-                if modname == by_module:
+            for modname, classdict in _APP_REGISTRY.items():
+
+                if modname == by_app_label:
                     ret.extend(classdict.values())
             return ret
 
@@ -271,4 +272,3 @@ class ModelRegistry(object):
                 " Are you sure you've imported it ?" % app_label
 
         return classdict.get(classname)
-

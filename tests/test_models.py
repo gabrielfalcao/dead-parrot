@@ -470,21 +470,21 @@ class TestModelRegistry(unittest.TestCase):
         class Curitiba(Model):
             __module__ = 'brasil.parana'
 
-        kw = dict(by_module="brasil.minas_gerais")
+        kw = dict(by_app_label="minas_gerais")
         mg = models.ModelRegistry.get_all(**kw)
         self.assertEquals(len(mg), 1)
         self.assert_(BeloHorizonte in mg)
         self.assert_(PortoAlegre not in mg)
         self.assert_(Curitiba not in mg)
 
-        kw = dict(by_module="brasil.rio_grande_do_sul")
+        kw = dict(by_app_label="rio_grande_do_sul")
         rs = models.ModelRegistry.get_all(**kw)
         self.assertEquals(len(rs), 1)
         self.assert_(PortoAlegre in rs)
         self.assert_(BeloHorizonte not in rs)
         self.assert_(Curitiba not in rs)
 
-        kw = dict(by_module="brasil.parana")
+        kw = dict(by_app_label="parana")
         pr = models.ModelRegistry.get_all(**kw)
         self.assertEquals(len(pr), 1)
         self.assert_(Curitiba in pr)
