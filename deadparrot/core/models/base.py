@@ -32,16 +32,29 @@ VALIDATE_ALL = """
     to False
 """
 
+# the global registry, by module, app_label and classes
+_REGISTRY = {}
+# the module-based registry: module -> classes
+_MODULE_REGISTRY = {}
+# the app_label-based registry: app_label -> classes
+_APP_REGISTRY = {}
+
 def build_metadata(klass, params):
-    single_name = klass.__name__
-    plural_name = "%ss" % single_name
+    verbose_name = klass.__name__
+    verbose_name_plural = "%ss" % verbose_name
     klass_meta =  type('Meta', tuple(), params)
 
-    if not params.has_key('single_name'):
-        klass_meta.single_name = single_name
+    module_name = klass.__module__
+    if "." in module_name:
+        module_name = module_name.split(".")[-1]
 
-    if not params.has_key('plural_name'):
-        klass_meta.plural_name = plural_name
+    klass_meta.app_label = module_name
+
+    if not params.has_key('verbose_name'):
+        klass_meta.verbose_name = verbose_name
+
+    if not params.has_key('verbose_name_plural'):
+        klass_meta.verbose_name_plural = verbose_name_plural
 
     if not params.has_key('fields_validation_policy'):
         klass_meta.fields_validation_policy = VALIDATE_ALL
@@ -56,8 +69,10 @@ def build_metadata(klass, params):
 class ModelMeta(type):
     def __init__(cls, name, bases, attrs):
         if name not in ('ModelMeta', 'Model'):
-            fields =  dict([(k, v) for k, v in attrs.items() if isinstance(v, Field)])
-            metadata_params = hasattr(cls, 'Meta') and vars(cls.Meta) or {}
+            fields =  dict([(k, v) for k, v in attrs.items() \
+                            if isinstance(v, Field)])
+            metadata_params = hasattr(cls, 'Meta') and \
+                              vars(cls.Meta) or {}
             metadata_params['_fields'] = fields
 
             cls._meta = build_metadata(cls, metadata_params)
@@ -65,6 +80,23 @@ class ModelMeta(type):
             for k, v in fields.items():
                 cls._data[k] = v
                 setattr(cls, k, None)
+
+            # registering the class in my dicts
+            if not _APP_REGISTRY.get(cls._meta.app_label):
+                _APP_REGISTRY[cls._meta.app_label] = {}
+            _APP_REGISTRY[cls._meta.app_label][cls.__name__] = cls
+            if not _MODULE_REGISTRY.get(cls.__module__):
+                _MODULE_REGISTRY[cls.__module__] = {}
+            _MODULE_REGISTRY[cls.__module__][cls.__name__] = cls
+
+            if not _REGISTRY.get(cls.__module__):
+                _REGISTRY[cls.__module__] = {}
+
+            if not _REGISTRY[cls.__module__].get(cls._meta.app_label):
+                _REGISTRY[cls.__module__][cls._meta.app_label] = {}
+
+            gdict = _REGISTRY[cls.__module__][cls._meta.app_label]
+            gdict[cls.__name__] = cls
 
         super(ModelMeta, cls).__init__(name, bases, attrs)
 
@@ -95,7 +127,7 @@ class ModelSet(object):
 
     def to_dict(self):
         dicts = [m.to_dict() for m in self.items]
-        ret = {self.__model_class__._meta.plural_name.title(): dicts}
+        ret = {self.__model_class__._meta.verbose_name_plural.title(): dicts}
         return ret
 
     @classmethod
@@ -104,7 +136,7 @@ class ModelSet(object):
             raise TypeError, "%s.from_dict takes a dict as parameter. " \
                   "Got %r" % (cls.__name__, type(edict))
 
-        items = edict[cls.__model_class__._meta.plural_name]
+        items = edict[cls.__model_class__._meta.verbose_name_plural]
         return cls(*[cls.__model_class__.from_dict(i) for i in items])
 
     def serialize(self, to):
@@ -131,7 +163,7 @@ class Model(object):
         return dict([(k, self._meta._fields[k].serialize(getattr(self, k))) for k in self._data.keys()])
 
     def to_dict(self):
-        return {self._meta.single_name: self._get_data()}
+        return {self._meta.verbose_name: self._get_data()}
 
     def __setattr__(self, attr, val):
         if attr in self._data.keys():
@@ -153,11 +185,11 @@ class Model(object):
                                  type(data_dict),
                                  data_dict)
         try:
-            d = data_dict[cls._meta.single_name].copy()
+            d = data_dict[cls._meta.verbose_name].copy()
         except KeyError, e:
             raise TypeError, "%s.from_dict got an mismatched dict structure." \
                   "Expected {'%s': {... data ...}} like structure, got %s" % (cls,
-                                                                              cls._meta.single_name,
+                                                                              cls._meta.verbose_name,
                                                                               unicode(data_dict))
         keys = cls._meta._fields.keys()
         obj = cls()
@@ -182,4 +214,61 @@ class Model(object):
         my_dict = serializer.deserialize(data)
         return cls.from_dict(my_dict)
 
+class ModelRegistry(object):
+    @classmethod
+    def get_all(cls, by_class=None, by_module=None, by_app_label=None):
+        if by_class:
+            if not isinstance(by_class, basestring):
+                raise TypeError, "ModelRegistry.get_all "\
+                      "by_class parameter takes a string "\
+                      "as parameter, got %r" % by_class
+            ret = []
+            for module, app_dict in _REGISTRY.items():
+                for app_label, classdict in app_dict.items():
+                    for classname, klass in classdict.items():
+                        if classname == by_class:
+                            ret.append(klass)
+
+            return tuple(ret)
+
+        if by_module:
+            if not isinstance(by_module, basestring):
+                raise TypeError, "ModelRegistry.get_all "\
+                      "by_module parameter takes a string "\
+                      "as parameter, got %r" % by_module
+            ret = []
+            for modname, classdict in _MODULE_REGISTRY.items():
+                if modname == by_module:
+                    ret.extend(classdict.values())
+            return ret
+
+        if by_app_label:
+            if not isinstance(by_app_label, basestring):
+                raise TypeError, "ModelRegistry.get_all "\
+                      "by_app_label parameter takes a string "\
+                      "as parameter, got %r" % by_app_label
+
+            ret = []
+            for modname, classdict in _MODULE_REGISTRY.items():
+                if modname == by_module:
+                    ret.extend(classdict.values())
+            return ret
+
+    @classmethod
+    def get_model(cls, app_label, classname):
+        if not isinstance(app_label, basestring):
+            raise TypeError, "ModelRegistry.get_model takes the parameter" \
+                  "app_label as string. Got %r" % app_label
+
+        if not isinstance(classname, basestring):
+            raise TypeError, "ModelRegistry.get_model takes the parameter" \
+                  "classname as string. Got %r" % classname
+
+        classdict = _APP_REGISTRY.get(app_label)
+        if not classdict:
+            raise AttributeError, "The app_label %s is not "\
+                  "within Dead Parrot's registry." \
+                " Are you sure you've imported it ?" % app_label
+
+        return classdict.get(classname)
 

@@ -620,3 +620,8 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         self.assertTrue(checker.does_exists())
 
         urlmock.verify()
+
+    def test_auto_foreignkey(self):
+        pass
+#         class Person(Model):
+#             father = fields.ForeignKey('self')

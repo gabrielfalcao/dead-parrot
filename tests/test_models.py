@@ -20,7 +20,7 @@
 import unittest
 import simplejson
 
-from deadparrot.core.models import fields
+from deadparrot.core.models import fields, base
 from deadparrot.core import models
 from deadparrot.core.models import Model
 from deadparrot.core.models import build_metadata
@@ -29,23 +29,37 @@ from datetime import date, time, datetime
 from utils import one_line_xml
 
 class TestBasicModel(unittest.TestCase):
-    def test_build_metadata(self):
+    def test_build_metadata_verbose_name(self):
         class Car(Model):
             pass
 
-        self.assertEquals(build_metadata(Car, {}).single_name, 'Car')
-        self.assertEquals(build_metadata(Car, {}).plural_name, 'Cars')
+        self.assertEquals(build_metadata(Car, {}).verbose_name, 'Car')
+        self.assertEquals(build_metadata(Car, {}).verbose_name_plural, 'Cars')
+
+    def test_build_metadata_app_label(self):
+        class Car(Model):
+            __module__ = 'rentalsys.vehicles'
+
+        class Person(Model):
+            __module__ = 'medicalsys.management'
+
+        class Building(Model):
+            __module__ = 'engineering.constructions.items'
+
+        self.assertEquals(build_metadata(Car, {}).app_label, 'vehicles')
+        self.assertEquals(build_metadata(Person, {}).app_label, 'management')
+        self.assertEquals(build_metadata(Building, {}).app_label, 'items')
 
     def test_metadata(self):
         class Person(Model):
             class Meta:
-                single_name = 'Person'
-                plural_name = 'People'
+                verbose_name = 'Person'
+                verbose_name_plural = 'People'
 
         p = Person()
         self.failUnless(p._meta is not None)
-        self.assertEquals(p._meta.single_name, 'Person')
-        self.assertEquals(p._meta.plural_name, 'People')
+        self.assertEquals(p._meta.verbose_name, 'Person')
+        self.assertEquals(p._meta.verbose_name_plural, 'People')
         self.assertEquals(p._meta.fields_validation_policy, models.VALIDATE_ALL)
 
     def test_construction(self):
@@ -190,7 +204,7 @@ class TestModelSet(unittest.TestCase):
             name = fields.CharField(max_length=10)
             birthdate = fields.DateField(format="%d/%m/%Y")
             class Meta:
-                plural_name = 'People'
+                verbose_name_plural = 'People'
 
         person1 = Person(name=u'John Doe', birthdate=u'10/02/1988')
         person2 = Person(name=u'Mary Doe', birthdate=u'20/10/1989')
@@ -206,7 +220,7 @@ class TestModelSet(unittest.TestCase):
             name = fields.CharField(max_length=10)
             birthdate = fields.DateField(format="%d/%m/%Y")
             class Meta:
-                plural_name = 'People'
+                verbose_name_plural = 'People'
 
         person1 = Person(name=u'John Doe', birthdate=u'10/02/1988')
         person2 = Person(name=u'Mary Doe', birthdate=u'20/10/1989')
@@ -229,7 +243,7 @@ class TestModelSet(unittest.TestCase):
             name = fields.CharField(max_length=10)
             birthdate = fields.DateField(format="%d/%m/%Y")
             class Meta:
-                plural_name = 'People'
+                verbose_name_plural = 'People'
 
         person1 = Person(name=u'John Doe', birthdate=u'10/02/1988')
         person2 = Person(name=u'Mary Doe', birthdate=u'20/10/1989')
@@ -287,7 +301,7 @@ class TestModelSetSerialization(unittest.TestCase):
             first_name = fields.CharField(max_length=40)
             birthdate = fields.DateField(format="%d/%m/%Y")
             class Meta:
-                plural_name = 'People'
+                verbose_name_plural = 'People'
 
     my_json = simplejson.dumps({
         'People':
@@ -354,3 +368,154 @@ class TestModelSetSerialization(unittest.TestCase):
 
         self.assert_(isinstance(people, PersonSet))
         self.assertEquals(people[0].first_name, u'John Doe')
+
+class TestModelRegistry(unittest.TestCase):
+    def test_model_registry_global_dict(self):
+        class Foo(Model):
+            __module__ = 'loren.ipsum'
+
+        apps = base._REGISTRY[Foo.__module__].keys()
+        self.assert_('ipsum' in apps)
+
+        fooclass = base._REGISTRY[Foo.__module__]['ipsum']['Foo']
+        self.assertEquals(fooclass, Foo)
+
+    def test_model_registry_apps(self):
+        class Foo(Model):
+            __module__ = 'loren.ipsum'
+
+        fooclass = base._APP_REGISTRY['ipsum']['Foo']
+        self.assertEquals(fooclass, Foo)
+
+    def test_model_registry_modules(self):
+        class Foo(Model):
+            __module__ = 'loren.ipsum'
+
+        fooclass = base._MODULE_REGISTRY['loren.ipsum']['Foo']
+        self.assertEquals(fooclass, Foo)
+
+    def test_model_registry_get_all_raises(self):
+        self.assertRaises(TypeError,
+                          models.ModelRegistry.get_all, by_class=213)
+        self.assertRaises(TypeError,
+                          models.ModelRegistry.get_all, by_class=[1])
+        self.assertRaises(TypeError,
+                          models.ModelRegistry.get_all, by_class=[1])
+
+        self.assertRaises(TypeError,
+                          models.ModelRegistry.get_all, by_module=213)
+        self.assertRaises(TypeError,
+                          models.ModelRegistry.get_all, by_module=[1])
+        self.assertRaises(TypeError,
+                          models.ModelRegistry.get_all, by_module=[1])
+
+        self.assertRaises(TypeError,
+                          models.ModelRegistry.get_all, by_app_label=213)
+        self.assertRaises(TypeError,
+                          models.ModelRegistry.get_all, by_app_label=[1])
+        self.assertRaises(TypeError,
+                          models.ModelRegistry.get_all, by_app_label=[1])
+
+    def test_repeated_names_but_different_app_labels(self):
+        class Person(Model):
+            __module__ = 'universe.mars'
+            from_mars = fields.CharField(max_length=10)
+
+        martian = Person(from_mars='yes')
+        class Person(Model):
+            __module__ = 'universe.earth'
+            from_earth = fields.CharField(max_length=10)
+
+        earthling = Person(from_earth='yes')
+        class Person(Model):
+            __module__ = 'universe.venus'
+            from_venus = fields.CharField(max_length=10)
+        venusian = Person(from_venus='yes')
+
+        person_classes = models.ModelRegistry.get_all(by_class="Person")
+        self.assert_(isinstance(martian, person_classes))
+        self.assert_(martian.__class__ in person_classes)
+
+        self.assert_(isinstance(earthling, person_classes))
+        self.assert_(earthling.__class__ in person_classes)
+
+        self.assert_(isinstance(venusian, person_classes))
+        self.assert_(venusian.__class__ in person_classes)
+
+    def test_get_all_by_module(self):
+        class Boat(Model):
+            __module__ = 'america.vehicles'
+
+        class Car(Model):
+            __module__ = 'america.vehicles'
+
+        class Plane(Model):
+            __module__ = 'america.vehicles'
+
+        kw = dict(by_module="america.vehicles")
+        vehicles = models.ModelRegistry.get_all(**kw)
+
+        self.assertEquals(len(vehicles), 3)
+        self.assert_(Boat in vehicles)
+        self.assert_(Car in vehicles)
+        self.assert_(Plane in vehicles)
+
+    def test_get_all_by_app_label(self):
+        class BeloHorizonte(Model):
+            __module__ = 'brasil.minas_gerais'
+
+        class PortoAlegre(Model):
+            __module__ = 'brasil.rio_grande_do_sul'
+
+        class Curitiba(Model):
+            __module__ = 'brasil.parana'
+
+        kw = dict(by_module="brasil.minas_gerais")
+        mg = models.ModelRegistry.get_all(**kw)
+        self.assertEquals(len(mg), 1)
+        self.assert_(BeloHorizonte in mg)
+        self.assert_(PortoAlegre not in mg)
+        self.assert_(Curitiba not in mg)
+
+        kw = dict(by_module="brasil.rio_grande_do_sul")
+        rs = models.ModelRegistry.get_all(**kw)
+        self.assertEquals(len(rs), 1)
+        self.assert_(PortoAlegre in rs)
+        self.assert_(BeloHorizonte not in rs)
+        self.assert_(Curitiba not in rs)
+
+        kw = dict(by_module="brasil.parana")
+        pr = models.ModelRegistry.get_all(**kw)
+        self.assertEquals(len(pr), 1)
+        self.assert_(Curitiba in pr)
+        self.assert_(PortoAlegre not in pr)
+        self.assert_(BeloHorizonte not in pr)
+
+    def test_get_model(self):
+        class BeloHorizonte(Model):
+            __module__ = 'brasil.minas_gerais'
+        class PortoAlegre(Model):
+            __module__ = 'brasil.rio_grande_do_sul'
+        class Curitiba(Model):
+            __module__ = 'brasil.parana'
+
+        self.assertEquals(models.ModelRegistry.get_model(app_label='minas_gerais',
+                                                         classname='BeloHorizonte'),
+                          BeloHorizonte)
+
+    def test_get_model_raises(self):
+        self.assertRaises(AttributeError,
+                          models.ModelRegistry.get_model,
+                          app_label='foo',
+                          classname='bar')
+
+        self.assertRaises(TypeError,
+                          models.ModelRegistry.get_model,
+                          app_label=123,
+                          classname='bar')
+
+        self.assertRaises(TypeError,
+                          models.ModelRegistry.get_model,
+                          app_label='foo',
+                          classname=123)
+
