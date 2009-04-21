@@ -20,7 +20,7 @@
 
 import simplejson
 
-from deadparrot.core.serialization import Registry
+from deadparrot.serialization import Registry
 
 from attributes import Attribute
 from fields import *

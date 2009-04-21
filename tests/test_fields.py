@@ -20,9 +20,9 @@
 import unittest
 import pmock
 from urllib2 import URLError
-from deadparrot.core import models
-from deadparrot.core.models import fields
-from deadparrot.core.models import Model
+from deadparrot import models
+from deadparrot.models import fields
+from deadparrot.models import Model
 from datetime import date, time, datetime
 from decimal import Decimal
 
@@ -74,12 +74,13 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
     def test_charfield_success(self):
         class Person(Model):
-            first_name = fields.CharField(max_length=40)
+            first_name = fields.CharField(max_length=40, primary_key=True)
 
         person_dict = {'Person': {'first_name': u'John Doe'}}
         john = Person.from_dict(person_dict)
         self.assertEquals(john.first_name, u'John Doe')
         self.assertEquals(john.to_dict(), person_dict)
+        self.assertEquals(john._meta._fields['first_name'].primary_key, True)
 
     def test_charfield_success_validate(self):
         class Person(Model):

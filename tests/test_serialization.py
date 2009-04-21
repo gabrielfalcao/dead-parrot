@@ -26,12 +26,12 @@ from urllib2 import URLError
 from datetime import date, time, datetime
 from decimal import Decimal
 
-from deadparrot.core import models
-from deadparrot.core.models import fields, Model
-from deadparrot.core.serialization import Registry
-from deadparrot.core.serialization.plugins.json import JSONSerializer
-from deadparrot.core.serialization.plugins.xml import XMLSerializer
-from deadparrot.core.serialization.plugins.base import Serializer
+from deadparrot import models
+from deadparrot.models import fields, Model
+from deadparrot.serialization import Registry
+from deadparrot.serialization.plugins.json import JSONSerializer
+from deadparrot.serialization.plugins.xml import XMLSerializer
+from deadparrot.serialization.plugins.base import Serializer
 
 from utils import one_line_xml
 

@@ -18,11 +18,11 @@
 # Boston, MA 02111-1307, USA.
 
 import unittest
-from deadparrot.core.models import build_metadata
-from deadparrot.core.models import Attribute
-from deadparrot.core.models import DateTimeAttribute
-from deadparrot.core.models import DateAttribute
-from deadparrot.core.models import TimeAttribute
+from deadparrot.models import build_metadata
+from deadparrot.models import Attribute
+from deadparrot.models import DateTimeAttribute
+from deadparrot.models import DateAttribute
+from deadparrot.models import TimeAttribute
 from datetime import datetime, date, time
 
 class TestAttributes(unittest.TestCase):

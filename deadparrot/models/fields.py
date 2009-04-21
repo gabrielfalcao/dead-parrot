@@ -43,6 +43,7 @@ class URLChecker(object):
 
 class Field(Attribute):
     must_validate = True
+    primary_key = False
     vartype = None
     def __init__(self, *args, **kw):
         validate = kw.pop('validate', True)
@@ -52,7 +53,15 @@ class Field(Attribute):
                   (self.__class__.__name__,
                    type(validate), validate)
 
+        primary_key = kw.pop('primary_key', True)
+        if not isinstance(primary_key, bool):
+            raise TypeError, u"%s.primary_key param must be a bool" \
+                  " (True or False), got %r (%r)" % \
+                  (self.__class__.__name__,
+                   type(primary_key), primary_key)
+
         self.must_validate = validate
+        self.primary_key = primary_key
         super(Field, self).__init__(self.vartype, *args, **kw)
 
 class CharField(Field):

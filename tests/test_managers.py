@@ -19,7 +19,17 @@
 
 import unittest
 
-from deadparrot.core import models
+from deadparrot import models
+from datetime import datetime
 
-class TestRESTfulManager(unittest.TestCase):
-    pass
+class TestSQLAlchemyManager(unittest.TestCase):
+    def test_mapping(self):
+        class Person(models.Model):
+            name = models.CharField(max_length=10)
+            birthdate = models.DateField(format="%d/%m/%Y")
+
+            @property
+            def age(self):
+                return (datetime.now().date() - self.birthdate).days / 365
+
+

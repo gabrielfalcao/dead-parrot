@@ -20,10 +20,10 @@
 import unittest
 import simplejson
 
-from deadparrot.core.models import fields, base
-from deadparrot.core import models
-from deadparrot.core.models import Model
-from deadparrot.core.models import build_metadata
+from deadparrot.models import fields, base
+from deadparrot import models
+from deadparrot.models import Model
+from deadparrot.models import build_metadata
 from datetime import date, time, datetime
 
 from utils import one_line_xml
