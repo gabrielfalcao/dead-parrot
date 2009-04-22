@@ -297,7 +297,7 @@ class URLField(CharField):
         if not isinstance(value, basestring):
             raise TypeError, \
                   u"%s must be a string(ish) type " \
-                  "for EmailField compatibility" % value
+                  "for URLField compatibility" % value
 
         self.url_checker.set_url(value)
 

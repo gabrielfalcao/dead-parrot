@@ -85,6 +85,10 @@ class TestXMLSerializer(unittest.TestCase):
         xserial = XMLSerializer.deserialize(self.my_xml)
         self.assertEquals(xserial, self.my_dict)
 
+    def test_fail_as_object(self):
+        xml = XMLSerializer({'blah': set(range(10))})
+        self.assertRaises(TypeError, xml.as_object)
+
 class TestSerializersRegistry(unittest.TestCase):
     my_dict = {
         'Person': {

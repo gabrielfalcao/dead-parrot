@@ -65,6 +65,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
     def test_field_fail(self):
         self.assertRaises(TypeError, fields.Field, validate=None)
+        self.assertRaises(TypeError, fields.Field, primary_key=None)
 
     def test_charfield_fail_construct(self):
         self.assertRaises(TypeError, fields.CharField, max_length=None)

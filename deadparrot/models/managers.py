@@ -28,16 +28,6 @@ from deadparrot.models.fields import *
 engine = create_engine('sqlite:///:memory:')
 Session = sessionmaker(bind=engine)
 
-"""
->>> metadata = MetaData()
->>> users_table = Table('users', metadata,
-...     Column('id', Integer, primary_key=True),
-...     Column('name', String),
-...     Column('fullname', String),
-...     Column('password', String)
-... )
-"""
-
 class ModelManager(object):
     pass
 
@@ -145,4 +135,3 @@ class SQLAlchemyManagerBuilder(SQLAlchemyManagerBuilderBase):
 class SQLAlchemyManager(ModelManager):
     def __new__(cls, *args, **kw):
         return SQLAlchemyManagerBuilder, args, kw
-
