@@ -21,9 +21,9 @@
 import simplejson
 
 from deadparrot.serialization import Registry
-
-from attributes import Attribute
-from fields import *
+from deadparrot.models.attributes import Attribute
+from deadparrot.models.managers import *
+from deadparrot.models.fields import *
 
 VALIDATE_NONE = "The model won't validate any fields"
 VALIDATE_ALL = """
@@ -69,6 +69,7 @@ def build_metadata(klass, params):
 class ModelMeta(type):
     def __init__(cls, name, bases, attrs):
         if name not in ('ModelMeta', 'Model'):
+            # handling fields
             fields =  dict([(k, v) for k, v in attrs.items() \
                             if isinstance(v, Field)])
             metadata_params = hasattr(cls, 'Meta') and \
@@ -97,6 +98,15 @@ class ModelMeta(type):
 
             gdict = _REGISTRY[cls.__module__][cls._meta.app_label]
             gdict[cls.__name__] = cls
+
+            # handling managers
+            manager_classes = dict([(k, v) for k, v in attrs.items() \
+                                    if isinstance(v, tuple) and \
+                                    len(v) == 3 and \
+                                    issubclass(v[0], ModelManagerBuilder)])
+            for k, manager_tup in manager_classes.items():
+                manager_klass, args, kw = manager_tup
+                setattr(cls, k, manager_klass(model=cls, *args, **kw))
 
         super(ModelMeta, cls).__init__(name, bases, attrs)
 

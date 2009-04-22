@@ -53,7 +53,7 @@ class Field(Attribute):
                   (self.__class__.__name__,
                    type(validate), validate)
 
-        primary_key = kw.pop('primary_key', True)
+        primary_key = kw.pop('primary_key', False)
         if not isinstance(primary_key, bool):
             raise TypeError, u"%s.primary_key param must be a bool" \
                   " (True or False), got %r (%r)" % \

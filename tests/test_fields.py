@@ -127,6 +127,8 @@ class TestFieldsBasicBehavior(unittest.TestCase):
                           datetime.strptime("2009-03-29 14:38:20",
                                             "%Y-%m-%d %H:%M:%S"))
         self.assertEquals(john.to_dict(), expected_dict)
+        self.assertEquals(john._meta._fields['creation_date'].primary_key,
+                          False)
 
     def test_datetimefield_fail_format(self):
         class Person(Model):
