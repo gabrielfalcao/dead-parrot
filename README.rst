@@ -1,5 +1,5 @@
-What is Dead Parrot ?
-=====================
+What is the Dead Parrot ?
+=========================
 
 Is a RESTful framework based in the declarative approach of Django
 models, in which you describe a class and it's fields, to be
@@ -69,3 +69,13 @@ implement it in a few days.
 
 * Implement the RESTful manager, allowing the developer to consume
   resources in a very django-ish way
+
+Build dependencies:
+===================
+
+Dead Parroy lays in some very known python libraries, and you got to
+install them in order to start playing with the framework:
+
+* lxml for XML serialization: http://codespeak.net/lxml/ (in Debian: python-lxml)
+* sqlalchemy >= 0.5.3: http://www.sqlalchemy.org/ (in Debian: python-sqlalchemy)
+* simplejson for JSON serialization: http://pypi.python.org/pypi/simplejson/ (in Debian: python-simplejson)
