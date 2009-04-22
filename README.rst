@@ -41,9 +41,11 @@ but unfortunately, for now Dead parrot works with simple SQLAlchemy operations::
    Car.Set([<Car of brand "Chevy">, <Car of brand "OSCar">])
    >>> Car.objects.filter(Car.brand.like(u"%evy"))
    Car.Set([<Car of brand "Chevy">])
-   >>> Car.objects.all().serialize(to="json")
-   '{"Cars": [{"Car": {"website": "None", "color": "blue", "brand": "Chevy", "id": 1}}, {"Car": {"website": "http://www.theoscarproject.org", "color": "red", "brand": "OSCar", "id": 2}}]}'
+   >>> Car.objects.filter(Car.brand==u'OSCar').serialize(to="json")
+   '{"Cars": [{"Car": {"website": "http://www.theoscarproject.org", "color": "red", "brand": "OSCar", "id": 2}}]}'
    >>> json_cars = Car.objects.all().serialize(to="json")
    >>> cars = Car.Set().deserialize(json_cars, format="json")
    >>> cars
    Car.Set([<Car of brand "Chevy">, <Car of brand "OSCar">])
+   >>> car2.serialize(to="xml")
+   '<Car><website>http://www.theoscarproject.org</website><color>red</color><brand>OSCar</brand><id>2</id></Car>'

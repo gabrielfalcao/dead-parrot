@@ -65,12 +65,25 @@ class TestXMLSerializer(unittest.TestCase):
             'cellphone': u'(21) 9900-1234'
         }
     }
+    missing_dict = {
+        'Person': {
+            'wage': u'4500.00',
+            'cellphone': None
+        }
+    }
     my_xml = """
     <Person>
        <wage>4500.00</wage>
        <cellphone>(21) 9900-1234</cellphone>
     </Person>
     """
+    missing_xml = """
+    <Person>
+       <wage>4500.00</wage>
+       <cellphone></cellphone>
+    </Person>
+    """
+
     def test_fail_construction(self):
         self.assertRaises(TypeError, XMLSerializer, None)
         self.assertRaises(TypeError, XMLSerializer, "")
@@ -79,6 +92,11 @@ class TestXMLSerializer(unittest.TestCase):
     def test_serialization(self):
         xserial = XMLSerializer(self.my_dict)
         xml = one_line_xml(self.my_xml)
+        self.assertEquals(one_line_xml(xserial.serialize()), xml)
+
+    def test_serialization_missing(self):
+        xserial = XMLSerializer(self.missing_dict)
+        xml = one_line_xml(self.missing_xml)
         self.assertEquals(one_line_xml(xserial.serialize()), xml)
 
     def test_deserialization(self):
