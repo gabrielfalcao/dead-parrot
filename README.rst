@@ -1,8 +1,5 @@
-README
-======
-
-What is this library for
-========================
+What is Dead Parrot ?
+=====================
 
 Is a RESTful framework based in the declarative approach of Django
 models, in which you describe a class and it's fields, to be
@@ -15,6 +12,19 @@ without even needing the whole Django stack.
 I't have also been concepted to offer a standalone web server, based on cherrypy, to serve the resources,
 and to consume that resources through a client layer, that's also based in the Django queryset manager.
 
+Why "Dead Parrot"
+=================
+
+In tribute to one of my favorites Monty Python's sketch. In the sketch
+a customer try to chenge his parrot, that have been bought dead, and
+then he argue with the seller.
+
+Dead Parrot means to become a library to reach both server and client
+requisites, so it can be the "seller" as server providing a RESTful
+API, and can also be the "customer" consuming the API.
+
+Hands on!
+=========
 In the future you will be able to do many operations, and use both RESTful and SQLAlchemy manager (inclusive),
 but unfortunately, for now Dead parrot works with simple SQLAlchemy operations::
 
