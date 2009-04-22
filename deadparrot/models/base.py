@@ -135,6 +135,9 @@ class ModelSet(object):
     def __len__(self):
         return len(self.items)
 
+    def __repr__(self):
+        return "%s.Set(%r)" % (self.__model_class__.__name__, list(self))
+
     def to_dict(self):
         dicts = [m.to_dict() for m in self.items]
         ret = {self.__model_class__._meta.verbose_name_plural.title(): dicts}
@@ -168,6 +171,9 @@ class Model(object):
                 raise AttributeError, \
             "%s has no attribute %s" % (self.__class__.__name__, k)
             setattr(self, k, v)
+
+    def __repr__(self):
+        return unicode(self)
 
     def _get_data(self):
         return dict([(k, self._meta._fields[k].serialize(getattr(self, k))) for k in self._data.keys()])

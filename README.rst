@@ -1,10 +1,5 @@
-.. _index:
-
-=========================
-Dead Parrot Documentation
-=========================
-
-.. rubric:: Introduction.
+README
+======
 
 What is this library for
 ========================
@@ -20,26 +15,8 @@ without even needing the whole Django stack.
 I't have also been concepted to offer a standalone web server, based on cherrypy, to serve the resources,
 and to consume that resources through a client layer, that's also based in the Django queryset manager.
 
-In a nutshell you will be able to do something like it in the client::
-   >>> from deadparrot import models
-   >>>
-   >>> class Car(models.Model):
-   ...     brand = models.CharField(max_length=20)
-   ...     color = models.CharField(max_length=15)
-   ...     website = models.CharField(max_length=0, validate=False)
-   ...     objects = models.RESTfulManager(base_url="http://localhost:9090/api", resource="/car")
-   >>> car = Car.objects.get(uuid="49a17b42-209c-4a86-b9e0-41c4ca134d0e")
-   >>> print car.brand
-   OSCar
-   >>> print car.color
-   red
-   >>> print car.website
-   !http://www.theoscarproject.org/
-
-================
-SQLAlchemy usage
-================
-For now Dead parrot works with simple SQLAlchemy operations::
+In the future you will be able to do many operations, and use both RESTful and SQLAlchemy manager (inclusive),
+but unfortunately, for now Dead parrot works with simple SQLAlchemy operations::
 
    >>> from deadparrot import models
    >>>
@@ -53,15 +30,20 @@ For now Dead parrot works with simple SQLAlchemy operations::
    ...         return '<Car of brand "%s">' % self.brand
    ...
    >>> car1 = Car.objects.create(brand="Chevy", color="blue")
-   >>> car1 = Car.objects.create(brand="OSCar", color="red", website="!http://www.theoscarproject.org")
+   >>> car2 = Car.objects.create(brand="OSCar", color="red", website="http://www.theoscarproject.org")
    >>> print car1.brand
    Chevy
    >>> print car1.color
    blue
-   >>> print car2.website
-   !http://www.theoscarproject.org/
+   >>> car2.website
+   u'http://www.theoscarproject.org'
    >>> Car.objects.all()
    Car.Set([<Car of brand "Chevy">, <Car of brand "OSCar">])
-   >>> Car.objects.filter(Car.brand.like("%evy"))
+   >>> Car.objects.filter(Car.brand.like(u"%evy"))
    Car.Set([<Car of brand "Chevy">])
-
+   >>> Car.objects.all().serialize(to="json")
+   '{"Cars": [{"Car": {"website": "None", "color": "blue", "brand": "Chevy", "id": 1}}, {"Car": {"website": "http://www.theoscarproject.org", "color": "red", "brand": "OSCar", "id": 2}}]}'
+   >>> json_cars = Car.objects.all().serialize(to="json")
+   >>> cars = Car.Set().deserialize(json_cars, format="json")
+   >>> cars
+   Car.Set([<Car of brand "Chevy">, <Car of brand "OSCar">])

@@ -203,6 +203,10 @@ class TestModelSet(unittest.TestCase):
         class Person(Model):
             name = fields.CharField(max_length=10)
             birthdate = fields.DateField(format="%d/%m/%Y")
+            def __unicode__(self):
+                return u'Person(name="%s", birthdate="%s")' % \
+                        (self.name, self.birthdate.strftime("%d/%m/%Y"))
+
             class Meta:
                 verbose_name_plural = 'People'
 
@@ -214,6 +218,7 @@ class TestModelSet(unittest.TestCase):
                      "people should be a ModelSet")
 
         self.assertEquals(people.to_dict(), self.my_dict)
+        self.assertEquals(repr(people), 'Person.Set([Person(name="John Doe", birthdate="10/02/1988"), Person(name="Mary Doe", birthdate="20/10/1989")])')
 
     def test_to_list_operations(self):
         class Person(Model):
