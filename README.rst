@@ -59,3 +59,13 @@ but unfortunately, for now Dead parrot works with simple SQLAlchemy operations::
    Car.Set([<Car of brand "Chevy">, <Car of brand "OSCar">])
    >>> car2.serialize(to="xml")
    '<Car><website>http://www.theoscarproject.org</website><color>red</color><brand>OSCar</brand><id>2</id></Car>'
+
+TODO:
+=====
+
+* For now Dead Parrot does not support models.ForeignKey,
+models.OneToOneField and models.ManyToManyField, but I intend to
+implement it in a few days.
+
+* Implement the RESTful manager, allowing the developer to consume
+  resources in a very django-ish way
