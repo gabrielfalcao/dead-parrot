@@ -66,6 +66,7 @@ TODO:
 * For now Dead Parrot does not support models.ForeignKey,
 models.OneToOneField and models.ManyToManyField, but I intend to
 implement it in a few days.
+
 * Implement the RESTful manager, allowing the developer to consume
   resources in a very django-ish way
 
@@ -76,5 +77,8 @@ Dead Parroy lays in some very known python libraries, and you got to
 install them in order to start playing with the framework:
 
 * lxml for XML serialization: http://codespeak.net/lxml/ (in Debian: python-lxml)
+
 * sqlalchemy >= 0.5.3: http://www.sqlalchemy.org/ (in Debian: python-sqlalchemy)
+
 * simplejson for JSON serialization: http://pypi.python.org/pypi/simplejson/ (in Debian: python-simplejson)
+
