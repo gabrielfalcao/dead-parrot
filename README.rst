@@ -66,7 +66,6 @@ TODO:
 * For now Dead Parrot does not support models.ForeignKey,
 models.OneToOneField and models.ManyToManyField, but I intend to
 implement it in a few days.
-
 * Implement the RESTful manager, allowing the developer to consume
   resources in a very django-ish way
 
