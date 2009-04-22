@@ -16,7 +16,7 @@ Why "Dead Parrot"
 =================
 
 In tribute to one of my favorites Monty Python's sketch. In the sketch
-a customer try to chenge his parrot, that have been bought dead, and
+a customer try to exchange his parrot, that have been bought dead, and
 then he argue with the seller.
 
 Dead Parrot means to become a library to reach both server and client
