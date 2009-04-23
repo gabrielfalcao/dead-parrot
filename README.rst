@@ -1,23 +1,23 @@
 What is the Dead Parrot ?
 =========================
 
-Is a RESTful framework based in the declarative approach of Django
-models, in which you describe a class and it's fields, to be
+Dead Parrot is a RESTful framework based in the declarative approach of Django
+models, in which you describe a class and its fields, to be
 serialized/deserialized in many formats (for now, xml and json).
 
-The project have been concepted to allow the developer to write their
+The project has been concepted to allow the developer to write their
 own format-style or serializer, deal with data validation and so on,
 without even needing the whole Django stack.
 
-I't have also been concepted to offer a standalone web server, based on cherrypy, to serve the resources,
-and to consume that resources through a client layer, that's also based in the Django queryset manager.
+It has also been concepted to offer a standalone web server, based on cherrypy, to serve the resources,
+and to consume those resources through a client layer, that's also based in the Django queryset manager.
 
 Why "Dead Parrot"
 =================
 
-In tribute to one of my favorites Monty Python's sketch. In the sketch
-a customer try to exchange his parrot, that have been bought dead, and
-then he argue with the seller.
+In tribute to one of my favorites Monty Python's sketches. In the sketch
+a customer tries to exchange his parrot, that have been bought dead, and
+then he argues with the seller.
 
 Dead Parrot means to become a library to reach both server and client
 requisites, so it can be the "seller" as server providing a RESTful
