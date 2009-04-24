@@ -56,12 +56,21 @@ class TestBasicModel(unittest.TestCase):
                 verbose_name = 'Person'
                 verbose_name_plural = 'People'
 
-        p = Person()
-        self.failUnless(p._meta is not None)
-        self.assertEquals(p._meta.verbose_name, 'Person')
-        self.assertEquals(p._meta.verbose_name_plural, 'People')
-        self.assertEquals(p._meta.fields_validation_policy, models.VALIDATE_ALL)
+        self.failUnless(Person._meta is not None)
+        self.assertEquals(Person._meta.verbose_name, 'Person')
+        self.assertEquals(Person._meta.verbose_name_plural, 'People')
+        self.assertEquals(Person._meta.fields_validation_policy, models.VALIDATE_ALL)
+        self.assertEquals(Person._meta.has_pk, False)
 
+    def test_metadata_for_pks(self):
+        class Person(Model):
+            id = models.IntegerField(primary_key=True)
+            class Meta:
+                verbose_name = 'Person'
+                verbose_name_plural = 'People'
+
+        self.assertEquals(Person._meta.has_pk, True)
+        
     def test_construction(self):
         class Person(Model):
             name = fields.CharField(max_length=20)
@@ -218,7 +227,7 @@ class TestModelSet(unittest.TestCase):
                      "people should be a ModelSet")
 
         self.assertEquals(people.to_dict(), self.my_dict)
-        self.assertEquals(repr(people), 'Person.Set([Person(name="John Doe", birthdate="10/02/1988"), Person(name="Mary Doe", birthdate="20/10/1989")])')
+        self.assertEquals(unicode(people), 'Person.Set([Person(name="John Doe", birthdate="10/02/1988"), Person(name="Mary Doe", birthdate="20/10/1989")])')
 
     def test_to_list_operations(self):
         class Person(Model):
@@ -524,3 +533,44 @@ class TestModelRegistry(unittest.TestCase):
                           app_label='foo',
                           classname=123)
 
+class TestModelOperations(unittest.TestCase):
+    def test_equals_raises(self):
+        class Person(Model):
+            name = fields.CharField(max_length=20)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+
+        person1 = Person(name=u"blaj", birthdate=u'10/10/2000')
+        person2 = Person(name=u"blaj", birthdate=u'10/10/2000')        
+        self.assertRaises(TypeError, person1, range(10))
+
+    def test_all_fields_equals_success(self):
+        """Here I will test a common behavior: each field of both
+        model objects must have the same value"""
+        class Person(Model):
+            name = fields.CharField(max_length=20)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+
+        person1 = Person(name=u"blaj", birthdate=u'10/10/2000')
+        person2 = Person(name=u"blaj", birthdate=u'10/10/2000')        
+        self.assertEquals(person1, person2)        
+
+    def test_all_primary_keys_equals_success(self):
+        """Here I will test a special behavior: at least all
+        primary_keys must me equal"""
+        class Person(Model):
+            id = fields.IntegerField(primary_key=True)
+            name = fields.CharField(max_length=20)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+
+        person1 = Person(id=1, name=u"blaj", birthdate=u'10/10/2000')
+        person2 = Person(id=1, name=u"blu", birthdate=u'10/10/1988')        
+        self.assertEquals(person1, person2)        
+
+    def test_notequals_success(self):
+        class Person(Model):
+            name = fields.CharField(max_length=20)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+
+        person1 = Person(name=u"blaj", birthdate=u'10/10/2000')
+        person2 = Person(name=u"polly", birthdate=u'20/01/1988')        
+        self.assertNotEquals(person1, person2)        

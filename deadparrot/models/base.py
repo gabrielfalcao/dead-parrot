@@ -78,8 +78,14 @@ class ModelMeta(type):
 
             cls._meta = build_metadata(cls, metadata_params)
             cls._data = {}
+            cls._meta.has_pk = False
+            
             for k, v in fields.items():
                 cls._data[k] = v
+                
+                if v.primary_key:
+                    cls._meta.has_pk = True
+                    
                 setattr(cls, k, None)
 
             # registering the class in my dicts
@@ -173,7 +179,10 @@ class Model(object):
             setattr(self, k, v)
 
     def __repr__(self):
-        return unicode(self)
+        if hasattr(self, '__unicode__'):
+            return self.__unicode__()
+        pks = ", ".join(["%s=%s" % (k, getattr(self, k)) for k, f in self._meta._fields.items() if f.primary_key])
+        return "<%s%s object>" % (self.__class__.__name__, pks and "(%s)" % pks or "")
 
     def _get_data(self):
         return dict([(k, self._meta._fields[k].serialize(getattr(self, k))) for k in self._data.keys()])
@@ -181,6 +190,22 @@ class Model(object):
     def to_dict(self):
         return {self._meta.verbose_name: self._get_data()}
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            raise TypeError, "%s can be compared only with %s or its subclasses instances." \
+                  " Got %r" % (self.__class__.__name__, self.__class__.__name__, other)
+
+        # ok, "other" is the same type than self, gonna iterate through its attributes and compare them                
+        if not self._meta.has_pk:
+            mine = [getattr(self, field_name) for field_name in self._meta._fields.keys()]
+            from_other = [getattr(other, field_name) for field_name in self._meta._fields.keys()]
+        # unless "self" has at least one primary_key, only pk values will be used
+        else:
+            mine = [getattr(self, field_name) for field_name, field in self._meta._fields.items() if field.primary_key]
+            from_other = [getattr(other, field_name) for field_name, field in self._meta._fields.items() if field.primary_key]
+        
+        return mine == from_other
+    
     def __setattr__(self, attr, val):
         if attr in self._data.keys():
             klassname = self.__class__.__name__
