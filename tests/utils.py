@@ -16,6 +16,7 @@
 # License along with this program; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
+import sys
 from re import sub as resub
 
 def one_line_xml(string):
@@ -23,3 +24,11 @@ def one_line_xml(string):
     string = resub("[>]\s+[<]", "><", string)
     string = string.strip()
     return string
+
+def ignore_test(why):
+    def wrapp(func):
+        err = 'WARNING: %r is being ignored because "%s"\n' % (func, why)
+        sys.stderr.write("===========================================\n")
+        sys.stderr.write(err)
+        sys.stderr.write("===========================================\n")  
+    return wrapp

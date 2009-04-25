@@ -32,41 +32,19 @@ class TestFieldsBasicBehavior(unittest.TestCase):
     which means "meta-serialization", and tests if
     their values are working well when getting/setting
     """
-    def init(self):
-        class Person(Model):
-            first_name = fields.CharField(max_length=40)
-            last_name = fields.CharField(max_length=40)
-            birthdate = fields.DateField(format="%d/%m/%Y")
-            wakeup_at = fields.TimeField(format="%H:%M:%S")
-            creation_date = fields.DateTimeField(format="%Y-%m-%d %H:%M:%S")
-            wage = fields.DecimalField(max_digits=6, decimal_places=2)
-            email = fields.EmailField()
-            favorite_phrase = fields.CharField(max_length=0, validate=False)
-            weight = fields.FloatField()
-            married = fields.BooleanField(positives=["true", "yes"],
-                                          negatives=["false", "no"])
-            childrens = fields.IntegerField()
-            cellphone = fields.PhoneNumberField(format="(00) 0000-0000")
-            biography = fields.TextField()
-            blog = fields.URLField(verify_exists=True)
-            father = fields.ForeignKey('self')
-
-            @property
-            def full_name(self):
-                return u"%s %s" % (self.first_name, self.last_name)
-
-            def __unicode__(self):
-                return "%s, son of %s" % (self.full_name, self.father.full_name)
-
-            class Meta:
-                fields_validation_policy = fields.VALIDATE_NONE
-
-        self.PersonClass = Person
-
     def test_field_fail(self):
         self.assertRaises(TypeError, fields.Field, validate=None)
         self.assertRaises(TypeError, fields.Field, primary_key=None)
+        self.assertRaises(TypeError, fields.Field, null=None)
+        self.assertRaises(TypeError, fields.Field, blank=None)                
 
+    def test_field_success_null_and_blank(self):
+        class Person(Model):
+            first_name = fields.CharField(max_length=40)
+
+        john = Person(first_name=u'John')
+        self.assertEquals(john._meta._fields['first_name'].null, True)
+        self.assertEquals(john._meta._fields['first_name'].blank, True)        
     def test_charfield_fail_construct(self):
         self.assertRaises(TypeError, fields.CharField, max_length=None)
 
@@ -75,13 +53,26 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
     def test_charfield_success(self):
         class Person(Model):
-            first_name = fields.CharField(max_length=40, primary_key=True)
+            first_name = fields.CharField(max_length=40,
+                                          primary_key=True,
+                                          null=False,
+                                          blank=False)
 
         person_dict = {'Person': {'first_name': u'John Doe'}}
         john = Person.from_dict(person_dict)
         self.assertEquals(john.first_name, u'John Doe')
         self.assertEquals(john.to_dict(), person_dict)
-        self.assertEquals(john._meta._fields['first_name'].primary_key, True)
+
+    def test_charfield_success_metadata(self):
+        class Person(Model):
+            first_name = fields.CharField(max_length=40,
+                                          primary_key=True,
+                                          null=False,
+                                          blank=False)
+
+        self.assertEquals(Person._meta._fields['first_name'].primary_key, True)
+        self.assertEquals(Person._meta._fields['first_name'].null, False)
+        self.assertEquals(Person._meta._fields['first_name'].blank, False)        
 
     def test_charfield_success_validate(self):
         class Person(Model):

@@ -26,7 +26,7 @@ from deadparrot.models import Model
 from deadparrot.models import build_metadata
 from datetime import date, time, datetime
 
-from utils import one_line_xml
+from utils import one_line_xml, ignore_test
 
 class TestBasicModel(unittest.TestCase):
     def test_build_metadata_verbose_name(self):
@@ -161,6 +161,23 @@ class TestBasicModel(unittest.TestCase):
                                             "birthdate": "20/10/1980"}})
         self.assertEquals(john.name, "John")
 
+class TestModelInternals(unittest.TestCase):
+    def setUp(self):
+        class Foo(Model):
+            bar = fields.CharField(max_length=10, blank=False)
+            foobar = fields.CharField(max_length=10, blank=True)            
+        self.Foo = Foo
+        
+    def test_is_valid(self):
+        foo2 = self.Foo(bar=u'boo')
+        foo3 = self.Foo(foobar=u'meh', bar=u'boo')        
+        self.assertEquals(foo2._is_valid, True)
+        self.assertEquals(foo3._is_valid, True)
+
+    def test_is_not_valid(self):
+        foo1 = self.Foo(foobar=u'boo')
+        self.assertEquals(foo1._is_valid, False)
+        
 class TestModelInstrospection(unittest.TestCase):
     def test_field_names(self):
         class Foo(Model):
@@ -533,7 +550,7 @@ class TestModelRegistry(unittest.TestCase):
                           app_label='foo',
                           classname=123)
 
-class TestModelOperations(unittest.TestCase):
+class TestModelOperations(unittest.TestCase):    
     def test_equals_raises(self):
         class Person(Model):
             name = fields.CharField(max_length=20)

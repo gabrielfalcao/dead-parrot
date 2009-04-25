@@ -223,6 +223,12 @@ class Model(object):
         
         return mine == from_other
     
+    @property
+    def _is_valid(self):
+        """Check if all non-blank fields are filled"""
+        non_blank_fields = [k for k, v in self._meta._fields.items() if not v.blank]
+        return None not in [getattr(self, k) for k in non_blank_fields]
+
     def __setattr__(self, attr, val):
         if attr in self._data.keys():
             klassname = self.__class__.__name__
@@ -238,6 +244,7 @@ class Model(object):
                 val = field.convert_type(val)
                 
             self._data[attr] = val
+            
         super(Model, self).__setattr__(attr, val)
 
     @classmethod
