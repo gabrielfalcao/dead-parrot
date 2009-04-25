@@ -23,6 +23,8 @@ import urllib2
 from attributes import *
 from decimal import Decimal, InvalidOperation
 
+from deadparrot.models.registry import ModelRegistry
+
 class FieldValidationError(Exception):
     pass
 
@@ -308,3 +310,24 @@ class URLField(CharField):
 
         if self.verify_exists and not url_status.does_exists():
             raise FieldValidationError, 'The url does not exist: "%s"'% value
+
+class RelationShip(object):
+    pass
+
+class ForeignKey(RelationShip):
+    def __init__(self, model):
+        if isinstance(model, basestring):
+            # ok, it is a string, so I got to look for it in the
+            # registry
+            pass
+        
+        if not hasattr(model, '__dead_parrot__'):
+            raise TypeError, "%r is not a valid model" % model
+        
+        self.model = model
+        
+    def validate(self, val):
+        pass
+
+class InvalidRelationShipError(Exception):
+    pass

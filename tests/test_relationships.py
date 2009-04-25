@@ -23,17 +23,21 @@ import pmock
 from deadparrot import models
 
 class TestForeignKey(unittest.TestCase):
-    def _test_relation_with_class_object(self):
-        class Cage(Model):
+    def test_relation_with_class_object(self):
+        class Cage(models.Model):
             id = models.IntegerField(primary_key=True)
             color = models.CharField(max_length=30)
 
-        class Parrot(Model):
+        class Parrot(models.Model):
             id = models.IntegerField(primary_key=True)            
             name = models.CharField(max_length=40, primary_key=True)
-            is_dead = models.BooleanField()
+            is_dead = models.BooleanField(negatives=['false'],
+                                          positives=['true'])
             cage = models.ForeignKey(Cage)
 
         pollys_cage = Cage(id=1, color=u'black')
-        polly = Person(id=1, first_name=u"Polly", is_dead=True, cage=Cage(color=u'black'))
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cage=Cage(id=1))
         self.assertEquals(polly.cage, pollys_cage)

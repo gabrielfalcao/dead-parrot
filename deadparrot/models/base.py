@@ -25,19 +25,20 @@ from deadparrot.models.attributes import Attribute
 from deadparrot.models.managers import *
 from deadparrot.models.fields import *
 
+# for model registration that is important to the "model registry"
+# stay separated of base.py, to avoid circular dependency between
+# deadparrot's modules
+from deadparrot.models.registry import _REGISTRY
+from deadparrot.models.registry import _MODULE_REGISTRY
+from deadparrot.models.registry import _APP_REGISTRY
+from deadparrot.models.registry import ModelRegistry
+
 VALIDATE_NONE = "The model won't validate any fields"
 VALIDATE_ALL = """
     The model will validate all fields, unless
     those which have the validate parameter set
     to False
 """
-
-# the global registry, by module, app_label and classes
-_REGISTRY = {}
-# the module-based registry: module -> classes
-_MODULE_REGISTRY = {}
-# the app_label-based registry: app_label -> classes
-_APP_REGISTRY = {}
 
 def build_metadata(klass, params):
     verbose_name = klass.__name__
@@ -72,9 +73,14 @@ class ModelMeta(type):
             # handling fields
             fields =  dict([(k, v) for k, v in attrs.items() \
                             if isinstance(v, Field)])
+            relationships =  dict([(k, v) for k, v in attrs.items() \
+                                   if isinstance(v, RelationShip)])
+            
             metadata_params = hasattr(cls, 'Meta') and \
                               vars(cls.Meta) or {}
+            
             metadata_params['_fields'] = fields
+            metadata_params['_relationships'] = relationships            
 
             cls._meta = build_metadata(cls, metadata_params)
             cls._data = {}
@@ -86,6 +92,15 @@ class ModelMeta(type):
                 if v.primary_key:
                     cls._meta.has_pk = True
                     
+                setattr(cls, k, None)
+
+            for k, v in relationships.items():
+                if not v.model._meta.has_pk:
+                    raise InvalidRelationShipError, \
+                          "A model need to have at least " \
+                          "one primary_key for creating a relationship"
+
+                cls._data[k] = v
                 setattr(cls, k, None)
 
             # registering the class in my dicts
@@ -113,7 +128,7 @@ class ModelMeta(type):
             for k, manager_tup in manager_classes.items():
                 manager_klass, args, kw = manager_tup
                 setattr(cls, k, manager_klass(model=cls, *args, **kw))
-
+                
         super(ModelMeta, cls).__init__(name, bases, attrs)
 
 class ModelSet(object):
@@ -170,10 +185,12 @@ class ModelSet(object):
 
 class Model(object):
     __metaclass__ = ModelMeta
-
+    __dead_parrot__ = __module__
+    
     def __init__(self, **kw):
         for k, v in kw.items():
-            if k not in self._meta._fields.keys():
+            if k not in self._meta._fields.keys() and \
+               k not in self._meta._relationships.keys():
                 raise AttributeError, \
             "%s has no attribute %s" % (self.__class__.__name__, k)
             setattr(self, k, v)
@@ -209,12 +226,17 @@ class Model(object):
     def __setattr__(self, attr, val):
         if attr in self._data.keys():
             klassname = self.__class__.__name__
-            field =self._meta._fields[attr]
-            if self._meta.fields_validation_policy != VALIDATE_NONE:
-                # raising the field-specific exceptions
-                field.validate(val)
+            if attr in self._meta._fields.keys():
+                field = self._meta._fields[attr]
+            elif attr in self._meta._relationships.keys():
+                field = self._meta._relationships[attr]
 
-            val = field.convert_type(val)
+            if isinstance(field, Field):
+                if self._meta.fields_validation_policy != VALIDATE_NONE:
+                    # raising the field-specific exceptions
+                    field.validate(val)
+                val = field.convert_type(val)
+                
             self._data[attr] = val
         super(Model, self).__setattr__(attr, val)
 
@@ -254,62 +276,3 @@ class Model(object):
         serializer = Registry.get(format)
         my_dict = serializer.deserialize(data)
         return cls.from_dict(my_dict)
-
-class ModelRegistry(object):
-    @classmethod
-    def get_all(cls, by_class=None, by_module=None, by_app_label=None):
-        if by_class:
-            if not isinstance(by_class, basestring):
-                raise TypeError, "ModelRegistry.get_all "\
-                      "by_class parameter takes a string "\
-                      "as parameter, got %r" % by_class
-            ret = []
-            for module, app_dict in _REGISTRY.items():
-                for app_label, classdict in app_dict.items():
-                    for classname, klass in classdict.items():
-                        if classname == by_class:
-                            ret.append(klass)
-
-            return tuple(ret)
-
-        if by_module:
-            if not isinstance(by_module, basestring):
-                raise TypeError, "ModelRegistry.get_all "\
-                      "by_module parameter takes a string "\
-                      "as parameter, got %r" % by_module
-            ret = []
-            for modname, classdict in _MODULE_REGISTRY.items():
-                if modname == by_module:
-                    ret.extend(classdict.values())
-            return ret
-
-        if by_app_label:
-            if not isinstance(by_app_label, basestring):
-                raise TypeError, "ModelRegistry.get_all "\
-                      "by_app_label parameter takes a string "\
-                      "as parameter, got %r" % by_app_label
-
-            ret = []
-            for modname, classdict in _APP_REGISTRY.items():
-
-                if modname == by_app_label:
-                    ret.extend(classdict.values())
-            return ret
-
-    @classmethod
-    def get_model(cls, app_label, classname):
-        if not isinstance(app_label, basestring):
-            raise TypeError, "ModelRegistry.get_model takes the parameter" \
-                  "app_label as string. Got %r" % app_label
-
-        if not isinstance(classname, basestring):
-            raise TypeError, "ModelRegistry.get_model takes the parameter" \
-                  "classname as string. Got %r" % classname
-
-        classdict = _APP_REGISTRY.get(app_label)
-        if not classdict:
-            raise AttributeError, "The app_label %s is not "\
-                  "within Dead Parrot's registry." \
-                " Are you sure you've imported it ?" % app_label
-
-        return classdict.get(classname)
