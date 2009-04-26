@@ -1,32 +1,35 @@
 What is the Dead Parrot ?
 =========================
 
-Dead Parrot is a RESTful framework based in the declarative approach of Django
-models, in which you describe a class and its fields, to be
-serialized/deserialized in many formats (for now, xml and json).
+Dead Parrot is a RESTful framework with the declarative approach of Django 
+Models in mind. Describing a class and its fields, you can tailor the
+serialization/deserialization of your model in several formats, including xml and json.
 
-The project has been concepted to allow the developer to write their
-own format-style or serializer, deal with data validation and so on,
-without even needing the whole Django stack.
+The project has been conceived to allow for custom-tailored format-styles and/or 
+serializers, model-aware data validation and other extensibility points. One key goal 
+for the project is removing the dependency that current tools have on the large Django stack.
 
-It has also been concepted to offer a standalone web server, based on cherrypy, to serve the resources,
-and to consume those resources through a client layer, that's also based in the Django queryset manager.
+Dead Parrot uses a much thinner layer to serve and consume its resources. 
+A standalone web server, based on the CherryPy_ project is included to serve resources, 
+as well as a client layer based in the Django queryset manager.
 
 Why "Dead Parrot"
 =================
 
-In tribute to one of my favorites Monty Python's sketches. In the sketch
+It's a tribute to one of my favorite Monty Python's sketch. In the sketch
 a customer tries to exchange his parrot, that have been bought dead, and
 then he argues with the seller.
 
-Dead Parrot means to become a library to reach both server and client
-requisites, so it can be the "seller" as server providing a RESTful
-API, and can also be the "customer" consuming the API.
+Goals
+=====
+Dead Parrot is a library that reaches both server and client
+tiers, so that it can be the "seller" as the server providing a RESTful
+API, and also the "customer" consuming the API.
 
 Hands on!
 =========
-In the future you will be able to do many operations, and use both RESTful and SQLAlchemy manager (inclusive),
-but unfortunately, for now Dead parrot works with simple SQLAlchemy operations::
+In the future you will be able to do several operations, and use both RESTful and SQLAlchemy manager (inclusive),
+but unfortunately, for now Dead Parrot works with simple SQLAlchemy operations::
 
    >>> from deadparrot import models
    >>>
@@ -63,9 +66,8 @@ but unfortunately, for now Dead parrot works with simple SQLAlchemy operations::
 TODO:
 =====
 
-* For now Dead Parrot does not support models.ForeignKey,
-models.OneToOneField and models.ManyToManyField, but I intend to
-implement it in a few days.
+* models.ForeignKey, models.OneToOneField and models.ManyToManyField 
+are not yet supported, but they should be implemented soon.
 
 * Implement the RESTful manager, allowing the developer to consume
   resources in a very django-ish way
@@ -73,8 +75,9 @@ implement it in a few days.
 Build dependencies:
 ===================
 
-Dead Parroy lays in some very known python libraries, and you got to
-install them in order to start playing with the framework:
+Dead Parrot builds on some very well-known python libraries.
+The consequence is that in order to use it, you need those installed.
+They can be obtained from the following sites:
 
 * lxml for XML serialization: http://codespeak.net/lxml/ (in Debian: python-lxml)
 
@@ -82,3 +85,4 @@ install them in order to start playing with the framework:
 
 * simplejson for JSON serialization: http://pypi.python.org/pypi/simplejson/ (in Debian: python-simplejson)
 
+.. _CherryPy: http://www.cherrypy.org/
