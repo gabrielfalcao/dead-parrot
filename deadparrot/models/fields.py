@@ -326,7 +326,20 @@ class ForeignKey(RelationShip):
         if isinstance(model, basestring):
             # ok, it is a string, so I got to look for it in the
             # registry
-            pass
+            if "." in model:
+                items = model.split(".")
+                dots = len(items)
+                if dots == 2:
+                    app_label, classname = items
+                    model = ModelRegistry.get_model(app_label, classname)
+                else:
+                    modulename = ".".join(items[:-1])
+                    classname = items[-1]
+                    model = [m for m in \
+                             ModelRegistry.get_all(by_module=modulename) \
+                             if m.__name__ == classname][0]
+            else:
+                model = ModelRegistry.get_all(by_class=model)[0]
         
         if not hasattr(model, '__dead_parrot__'):
             raise TypeError, "%r is not a valid model" % model

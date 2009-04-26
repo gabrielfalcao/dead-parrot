@@ -41,3 +41,62 @@ class TestForeignKey(unittest.TestCase):
                        is_dead=True,
                        cage=Cage(id=1))
         self.assertEquals(polly.cage, pollys_cage)
+
+    def test_relation_with_class_string(self):
+        class Cage(models.Model):
+            id = models.IntegerField(primary_key=True)
+            color = models.CharField(max_length=30)
+
+        class Parrot(models.Model):
+            id = models.IntegerField(primary_key=True)            
+            name = models.CharField(max_length=40, primary_key=True)
+            is_dead = models.BooleanField(negatives=['false'],
+                                          positives=['true'])
+            cage = models.ForeignKey('Cage')
+
+        pollys_cage = Cage(id=1, color=u'black')
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cage=Cage(id=1))
+        self.assertEquals(polly.cage, pollys_cage)
+
+    def test_relation_with_class_and_app_label_string(self):
+        class Cage(models.Model):
+            __module__ = 'hunting.tools'
+            id = models.IntegerField(primary_key=True)
+            color = models.CharField(max_length=30)
+
+        class Parrot(models.Model):
+            id = models.IntegerField(primary_key=True)            
+            name = models.CharField(max_length=40, primary_key=True)
+            is_dead = models.BooleanField(negatives=['false'],
+                                          positives=['true'])
+            cage = models.ForeignKey('tools.Cage')
+
+        pollys_cage = Cage(id=1, color=u'black')
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cage=Cage(id=1))
+        self.assertEquals(polly.cage, pollys_cage)
+
+    def test_relation_with_module_name(self):
+        class Cage(models.Model):
+            __module__ = 'hunting.tools'
+            id = models.IntegerField(primary_key=True)
+            color = models.CharField(max_length=30)
+
+        class Parrot(models.Model):
+            id = models.IntegerField(primary_key=True)            
+            name = models.CharField(max_length=40, primary_key=True)
+            is_dead = models.BooleanField(negatives=['false'],
+                                          positives=['true'])
+            cage = models.ForeignKey('hunting.tools.Cage')
+
+        pollys_cage = Cage(id=1, color=u'black')
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cage=Cage(id=1))
+        self.assertEquals(polly.cage, pollys_cage)
