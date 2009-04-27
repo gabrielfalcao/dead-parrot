@@ -76,8 +76,14 @@ Dead Parrot builds on some very well-known python libraries.
 The consequence is that in order to use it, you need those installed.
 They can be obtained from the following sites:
 
-* lxml for XML serialization: http://codespeak.net/lxml/ (in Debian: python-lxml)
-* sqlalchemy >= 0.5.3: http://www.sqlalchemy.org/ (in Debian: python-sqlalchemy)
-* simplejson for JSON serialization: http://pypi.python.org/pypi/simplejson/ (in Debian: python-simplejson)
+* lxml for XML serialization: http://codespeak.net/lxml/
+* sqlalchemy >= 0.5.3: http://www.sqlalchemy.org/
+* simplejson for JSON serialization: http://pypi.python.org/pypi/simplejson/
+
+Or, to install those in Debian/Ubuntu::
+
+   aptitude install python-lxml
+   aptitude install python-sqlalchemy
+   aptitude install python-simplejson
 
 .. _CherryPy: http://www.cherrypy.org/
