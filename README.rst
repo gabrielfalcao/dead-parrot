@@ -66,11 +66,8 @@ but unfortunately, for now Dead Parrot works with simple SQLAlchemy operations::
 TODO:
 =====
 
-* models.ForeignKey, models.OneToOneField and models.ManyToManyField 
-are not yet supported, but they should be implemented soon.
-
-* Implement the RESTful manager, allowing the developer to consume
-  resources in a very django-ish way
+* models.ForeignKey, models.OneToOneField and models.ManyToManyField are not yet supported, but they should be implemented soon.
+* Implement the RESTful manager, allowing the developer to consume resources in a very django-ish way
 
 Build dependencies:
 ===================
