@@ -80,9 +80,7 @@ The consequence is that in order to use it, you need those installed.
 They can be obtained from the following sites:
 
 * lxml for XML serialization: http://codespeak.net/lxml/ (in Debian: python-lxml)
-
 * sqlalchemy >= 0.5.3: http://www.sqlalchemy.org/ (in Debian: python-sqlalchemy)
-
 * simplejson for JSON serialization: http://pypi.python.org/pypi/simplejson/ (in Debian: python-simplejson)
 
 .. _CherryPy: http://www.cherrypy.org/
