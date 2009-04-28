@@ -116,10 +116,11 @@ class TestForeignKeySerialization(unittest.TestCase):
        </cage>       
     </Parrot>
     """
-    def _test_to_xml_unevaluated(self):
+    def test_to_xml_unevaluated(self):
         pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
                        name=u"Polly",
                        is_dead=True,
                        cage=Cage(id=1))
-        self.assertEquals(polly.serialize(to='xml'), self.xml)
+        self.assertEquals(one_line_xml(polly.serialize(to='xml')),
+                          one_line_xml(self.xml))

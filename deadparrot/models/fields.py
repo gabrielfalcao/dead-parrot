@@ -327,6 +327,9 @@ class RelationShip(object):
     def set_to_model(self, to_model):
         self.to_model = to_model
 
+    def serialize(self, val):
+        return val.to_dict()
+    
 class ForeignKey(RelationShip):
     def __init__(self, model):
         if isinstance(model, basestring):

@@ -18,12 +18,18 @@ class XMLSerializer(Serializer):
 
     def as_object(self):
         child = self.data[self.root.tag]
+            
         if isinstance(child, dict):
             for k, v in child.items():
                 if v is None:
                     v = ""
 
-                etree.SubElement(self.root, k).text = unicode(v)
+                if isinstance(v, dict):
+                    va = self.__class__({k:v}).serialize()
+                    value = etree.fromstring(va)
+                    etree.SubElement(self.root, k).text = unicode(v)
+                else:
+                    etree.SubElement(self.root, k).text = unicode(v)
 
         elif isinstance(child, list):
             for obj in child:
