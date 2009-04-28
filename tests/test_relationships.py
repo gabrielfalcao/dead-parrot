@@ -191,3 +191,12 @@ class TestForeignKeySerialization(unittest.TestCase):
                        cage=Cage(id=1, color=u'black'))
         self.assertEquals(polly.serialize(to='json'),
                           self.evaluated_json)
+
+    def _test_from_xml_unevaluated(self):
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cage=Cage(id=1))
+
+        xml_polly = Parrot.deserialize(self.unevaluated_xml, format='xml')
+        self.assertEquals(xml_polly, polly)

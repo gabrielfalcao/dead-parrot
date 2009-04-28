@@ -375,6 +375,24 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         self.assertEquals(john.married, True)
         self.assertEquals(john.to_dict(), person_dict)
 
+    def test_booleanfield_success_with_stringified_boolean_type_true(self):
+        class Person(Model):
+            married = fields.BooleanField(positives=["true", "yes"],
+                                          negatives=["false", "no"])
+
+        person_dict = {'Person': {'married': 'True'}}
+        john = Person.from_dict(person_dict)
+        self.assertEquals(john.married, True)
+
+    def test_booleanfield_success_with_stringified_boolean_type_false(self):
+        class Person(Model):
+            married = fields.BooleanField(positives=["true", "yes"],
+                                          negatives=["false", "no"])
+
+        person_dict = {'Person': {'married': 'False'}}
+        john = Person.from_dict(person_dict)
+        self.assertEquals(john.married, False)
+
     def test_booleanfield_fail(self):
         class Person(Model):
             married = fields.BooleanField(positives=["true", "yes"],
@@ -456,7 +474,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         class Person(Model):
             biography = fields.TextField()
 
-        person_dict = {'Person': {'biography': "FooBar"}}
+        person_dict = {'Person': {'biography': 00}}
         self.assertRaises(TypeError,
                           Person.from_dict,
                           person_dict)

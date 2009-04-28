@@ -260,7 +260,6 @@ class Model(object):
                     # raising the field-specific exceptions
                     field.validate(val)
                 val = field.convert_type(val)
-                
             self._data[attr] = val
             
         super(Model, self).__setattr__(attr, val)

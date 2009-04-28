@@ -24,6 +24,8 @@ from datetime import datetime, date
 
 from deadparrot import models
 
+# TODO: test serialization/deserialization of values that came from SQLAlchemy
+
 class TestSQLAlchemyManager(unittest.TestCase):
     def setUp(self):
         class Person(models.Model):

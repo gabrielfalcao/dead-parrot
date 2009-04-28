@@ -119,7 +119,6 @@ class DateTimeField(CharField, DateTimeAttribute):
         if "%Y" in vartype:
             kw['max_length'] += 2
 
-
         self.vartype = vartype
         super(DateTimeField, self).__init__(*args, **kw)
 
@@ -200,7 +199,7 @@ class IntegerField(Field):
 
     def validate(self, value):
         try:
-            int(value)
+            self.vartype(value)
         except TypeError:
             raise FieldValidationError, "The value of a %s must " \
                   "be an number (even when inside a string) " \
@@ -221,6 +220,7 @@ class BooleanField(Field):
 
             if isinstance(val, (list, tuple)):
                 setattr(self, param, val)
+
             else:
                 raise TypeError, u"%s.negatives param must be a list" \
                       " or tuple. But got a %r (%r)" % \
@@ -229,8 +229,20 @@ class BooleanField(Field):
 
         super(BooleanField, self).__init__(*args, **kw)
 
+    def convert_type(self, val):
+        # if val is a string in "False" or "True", I will resolve it
+        # as a boolean type
+        if isinstance(val, basestring):
+            val = __builtins__.get(val, val)
+
+        return val
+    
     def validate(self, value):
-        if not isinstance(value, bool):
+        # if val is a string in "False" or "True", I will resolve it
+        # as a boolean type
+
+        if not isinstance(value, bool) \
+               and value not in ('True', 'False'):
             raise TypeError, \
                   u"%s must be a boolean type " \
                   "for BooleanField compatibility" % str(value)
@@ -274,9 +286,9 @@ class TextField(Field):
     vartype = unicode
 
     def validate(self, value):
-        if not isinstance(value, self.vartype):
+        if not isinstance(value, basestring):
             raise TypeError, \
-                  u"%s must be unicode for TextField compatibility" % value
+                  u"%s must be a string for TextField compatibility" % value
 
 class URLField(CharField):
     vartype = unicode

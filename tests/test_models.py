@@ -619,3 +619,141 @@ class TestModelOperations(unittest.TestCase):
         person1 = Person(name=u"blaj", birthdate=u'10/10/2000')
         person2 = Person(name=u"polly", birthdate=u'20/01/1988')        
         self.assertNotEquals(person1, person2)        
+
+class TestAllFieldsSerialization(unittest.TestCase):
+    def setUp(self):
+        class Person(models.Model):
+            id = models.IntegerField(primary_key=True)
+            name = models.CharField(max_length=40)
+            creation_date = models.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+            email = models.EmailField()
+            weight = models.FloatField()
+            married = models.BooleanField(positives=["true", "yes"],
+                                          negatives=["false", "no"])
+            childrens = models.IntegerField()
+            cellphone = models.PhoneNumberField(format="(00) 0000-0000")
+            biography = models.TextField()
+            blog = models.URLField(verify_exists=False)
+
+            @property
+            def age(self):
+                return (datetime.now().date() - self.birthdate).days / 365
+
+        self.Person = Person
+        
+    def test_all_kinds_of_fields_serialization_to_json(self):
+        dtime = datetime.now()
+        json = simplejson.dumps({
+            "Person":
+            {
+                "id": 1,                
+                "cellphone": "(21) 9988-7766",
+                "name": "John Doe",
+                "weight": 74.349999999999994,
+                "married": False,
+                "creation_date": dtime.strftime("%Y-%m-%d %H:%M:%S"),
+                "blog": "http://blog.john.doe.net",
+                "email": "john@doe.net",
+                "biography": "blabla",
+                "childrens": 2
+            }
+        })
+        john = self.Person(id=1,
+                           name=u'John Doe',
+                           creation_date=dtime,
+                           email=u"john@doe.net",
+                           weight=74.349999999999994,
+                           married=False,
+                           childrens=2,
+                           cellphone=u"(21) 9988-7766",
+                           biography=u"blabla",
+                           blog=u"http://blog.john.doe.net")
+
+        self.assertEquals(john.serialize(to='json'), json)
+              
+    def test_all_kinds_of_fields_deserialization_to_json(self):
+        dtime = datetime.now()
+        json = simplejson.dumps({
+            u"Person":
+            {
+                "id": 1,
+                "cellphone": u"(21) 9988-7766",
+                "name": u"John Doe",
+                "weight": 74.349999999999994,
+                "married": False,
+                "creation_date": dtime.strftime("%Y-%m-%d %H:%M:%S"),
+                "blog": u"http://blog.john.doe.net",
+                "email": u"john@doe.net",
+                "biography": u"blabla",
+                "childrens": 2
+            }
+        })
+        john1 = self.Person(id=1,
+                            name=u'John Doe',
+                            creation_date=dtime,
+                            email=u"john@doe.net",
+                            weight=74.349999999999994,
+                            married=False,
+                            childrens=2,
+                            cellphone=u"(21) 9988-7766",
+                            biography=u"blabla",
+                            blog=u"http://blog.john.doe.net")
+        john2 = self.Person.deserialize(json, format="json")
+        self.assertEquals(john1, john2)
+              
+    def test_all_kinds_of_fields_serialization_to_xml(self):
+        dtime = datetime.now()
+        xml = '''
+            <Person>
+              <cellphone>(21) 9988-7766</cellphone>
+              <name>John Doe</name>
+              <weight>74.35</weight>
+              <married>False</married>
+              <creation_date>%s</creation_date>
+              <blog>http://blog.john.doe.net</blog>
+              <email>john@doe.net</email>
+              <id>1</id>
+              <biography>blabla</biography>
+              <childrens>2</childrens>
+            </Person>
+        ''' % dtime.strftime("%Y-%m-%d %H:%M:%S")
+        john = self.Person(id=1,
+                           name=u'John Doe',
+                           creation_date=dtime,
+                           email=u"john@doe.net",
+                           weight=74.349999999999994,
+                           married=False,
+                           childrens=2,
+                           cellphone=u"(21) 9988-7766",
+                           biography=u"blabla",
+                           blog=u"http://blog.john.doe.net")
+        self.assertEquals(one_line_xml(john.serialize(to='xml')), one_line_xml(xml))
+
+    def test_all_kinds_of_fields_deserialization_to_xml(self):
+        dtime = datetime.now()
+        xml = '''
+            <Person>
+              <cellphone>(21) 9988-7766</cellphone>
+              <name>John Doe</name>
+              <weight>74.35</weight>
+              <married>False</married>
+              <creation_date>%s</creation_date>
+              <blog>http://blog.john.doe.net</blog>
+              <email>john@doe.net</email>
+              <id>1</id>
+              <biography>blabla</biography>
+              <childrens>2</childrens>
+            </Person>
+        ''' % dtime.strftime("%Y-%m-%d %H:%M:%S")
+        john1 = self.Person(id=1,
+                           name=u'John Doe',
+                           creation_date=dtime,
+                           email=u"john@doe.net",
+                           weight=74.35,
+                           married=False,
+                           childrens=2,
+                           cellphone=u"(21) 9988-7766",
+                           biography=u"blabla",
+                           blog=u"http://blog.john.doe.net")
+        john2 = self.Person.deserialize(xml, format='xml')
+        self.assertEquals(john1, john2)
