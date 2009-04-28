@@ -19,6 +19,7 @@
 
 import unittest
 import pmock
+import simplejson
 
 from utils import one_line_xml
 
@@ -104,7 +105,7 @@ class TestForeignKey(unittest.TestCase):
         self.assertEquals(polly.cage._to_model, Cage)
 
 class TestForeignKeySerialization(unittest.TestCase):
-    xml = """
+    unevaluated_xml = """
     <Parrot>
       <is_dead>True</is_dead>
       <cage>
@@ -116,6 +117,45 @@ class TestForeignKeySerialization(unittest.TestCase):
       <name>Polly</name>
     </Parrot>    
     """
+    evaluated_xml = """
+    <Parrot>
+      <is_dead>True</is_dead>
+      <cage>
+        <Cage>
+          <color>black</color>
+          <id>1</id>          
+        </Cage>
+      </cage>
+      <id>1</id>
+      <name>Polly</name>
+    </Parrot>    
+    """
+    unevaluated_json = simplejson.dumps({
+        'Parrot': {
+            'is_dead': True,
+            'id': 1,
+            'name': u'Polly',
+            'cage': {
+                'Cage': {
+                    'id': 1
+                 }
+            }
+        }
+    })
+    evaluated_json = simplejson.dumps({
+        'Parrot': {
+            'is_dead': True,
+            'id': 1,
+            'name': u'Polly',
+            'cage': {
+                'Cage': {
+                    'id': 1,
+                    'color': u'black'
+                 }
+            }
+        }
+    })
+    
     def test_to_xml_unevaluated(self):
         pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
@@ -123,4 +163,31 @@ class TestForeignKeySerialization(unittest.TestCase):
                        is_dead=True,
                        cage=Cage(id=1))
         self.assertEquals(one_line_xml(polly.serialize(to='xml')),
-                          one_line_xml(self.xml))
+                          one_line_xml(self.unevaluated_xml))
+
+    def test_to_xml_evaluated(self):
+        pollys_cage = Cage(id=1, color=u'black')
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cage=Cage(id=1, color=u'black'))
+        self.assertEquals(one_line_xml(polly.serialize(to='xml')),
+                          one_line_xml(self.evaluated_xml))
+
+    def test_to_json_unevaluated(self):
+        pollys_cage = Cage(id=1, color=u'black')
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cage=Cage(id=1))
+        self.assertEquals(polly.serialize(to='json'),
+                          self.unevaluated_json)
+
+    def test_to_json_evaluated(self):
+        pollys_cage = Cage(id=1, color=u'black')
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cage=Cage(id=1, color=u'black'))
+        self.assertEquals(polly.serialize(to='json'),
+                          self.evaluated_json)
