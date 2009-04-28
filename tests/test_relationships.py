@@ -122,6 +122,5 @@ class TestForeignKeySerialization(unittest.TestCase):
                        name=u"Polly",
                        is_dead=True,
                        cage=Cage(id=1))
-        x = etree.fromstring(polly.serialize(to='xml'))
         self.assertEquals(one_line_xml(polly.serialize(to='xml')),
                           one_line_xml(self.xml))
