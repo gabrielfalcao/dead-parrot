@@ -319,7 +319,13 @@ class URLField(CharField):
             raise FieldValidationError, 'The url does not exist: "%s"'% value
 
 class RelationShip(object):
-    pass
+    from_model = None
+    to_model = None
+    def set_from_model(self, from_model):
+        self.from_model = from_model
+        
+    def set_to_model(self, to_model):
+        self.to_model = to_model
 
 class ForeignKey(RelationShip):
     def __init__(self, model):
@@ -330,9 +336,11 @@ class ForeignKey(RelationShip):
                 items = model.split(".")
                 dots = len(items)
                 if dots == 2:
+                    # got the app_label
                     app_label, classname = items
                     model = ModelRegistry.get_model(app_label, classname)
-                else:
+                else: # more than 2 dots
+                    # got the module name
                     modulename = ".".join(items[:-1])
                     classname = items[-1]
                     model = [m for m in \
@@ -345,6 +353,7 @@ class ForeignKey(RelationShip):
             raise TypeError, "%r is not a valid model" % model
         
         self.model = model
+        self.set_to_model(model)
         
     def validate(self, val):
         pass

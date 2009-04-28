@@ -295,12 +295,30 @@ class TestModelSerialization(unittest.TestCase):
             'birthdate': u"10/02/1988"
         }
     })
+    extra_json = simplejson.dumps({
+        'Person': {
+            'first_name': u"John Doe",
+            'birthdate': u"10/02/1988",
+            'foo': {'bar': u'Baz'}
+        }
+    })
     my_xml = """
     <Person>
        <first_name>John Doe</first_name>
        <birthdate>10/02/1988</birthdate>
     </Person>
     """
+    extra_xml = """
+    <Person>
+       <first_name>John Doe</first_name>
+       <metadata>
+          <many>People</many>
+          <foo>Bar</foo>          
+       </metadata>       
+       <birthdate>10/02/1988</birthdate>
+    </Person>
+    """
+    
     def test_model_serialization_json(self):
 
         john = self.Person(first_name=u'John Doe',
@@ -322,8 +340,18 @@ class TestModelSerialization(unittest.TestCase):
         self.assertEquals(one_line_xml(john.serialize(to='xml')),
                           one_line_xml(self.my_xml))
 
+    def test_model_deserialization_extra_json(self):
+        john = self.Person.deserialize(self.extra_json, format='json')
+        self.assertEquals(one_line_xml(john.serialize(to='xml')),
+                          one_line_xml(self.my_xml))
+
     def test_model_deserialization_xml(self):
         john = self.Person.deserialize(self.my_xml, format='xml')
+        self.assertEquals(john.serialize(to='json'),
+                          self.my_json)
+
+    def test_model_deserialization_xml_json(self):
+        john = self.Person.deserialize(self.extra_xml, format='xml')
         self.assertEquals(john.serialize(to='json'),
                           self.my_json)
 

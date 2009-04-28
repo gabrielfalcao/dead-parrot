@@ -101,6 +101,7 @@ class ModelMeta(type):
                           "one primary_key for creating a relationship"
 
                 cls._data[k] = v
+                v.set_from_model(cls)
                 setattr(cls, k, None)
 
             # registering the class in my dicts
@@ -202,7 +203,18 @@ class Model(object):
         return "<%s%s object>" % (self.__class__.__name__, pks and "(%s)" % pks or "")
 
     def _get_data(self):
-        return dict([(k, self._meta._fields[k].serialize(getattr(self, k))) for k in self._data.keys()])
+        fields = []
+
+        for k in self._data.keys():
+            value = getattr(self, k)            
+            field = None
+            for x in '_fields', '_relationships':
+                if field is None:
+                    fdict = getattr(self._meta, x)
+                    field = fdict.get(k, None)
+            tup = (k, field.serialize(value))
+            fields.append(tup)
+        return dict(fields)
 
     def to_dict(self):
         return {self._meta.verbose_name: self._get_data()}
@@ -236,7 +248,8 @@ class Model(object):
                 field = self._meta._fields[attr]
             elif attr in self._meta._relationships.keys():
                 field = self._meta._relationships[attr]
-
+                setattr(val, '_from_model', field.from_model)
+                setattr(val, '_to_model', field.to_model)                
             if isinstance(field, Field):
                 if self._meta.fields_validation_policy != VALIDATE_NONE:
                     # raising the field-specific exceptions

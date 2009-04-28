@@ -20,21 +20,39 @@
 import unittest
 import pmock
 
+from utils import one_line_xml
+
 from deadparrot import models
+
+class Cage(models.Model):
+    id = models.IntegerField(primary_key=True)
+    color = models.CharField(max_length=30, blank=False)
+
+class Parrot(models.Model):
+    id = models.IntegerField(primary_key=True)            
+    name = models.CharField(max_length=40, primary_key=True)
+    is_dead = models.BooleanField(negatives=['false'],
+                                  positives=['true'])
+    cage = models.ForeignKey(Cage)
+
+class TestRelationShipBase(unittest.TestCase):
+    def test_set_from_model(self):
+        p = Parrot(id=1,
+                   name=u"Polly",
+                   is_dead=True,
+                   cage=Cage(id=1))
+        self.assertEquals(p.cage._from_model, Parrot)
+
+    def test_set_to_model(self):
+        p = Parrot(id=1,
+                   name=u"Polly",
+                   is_dead=True,
+                   cage=Cage(id=1))
+        
+        self.assertEquals(p.cage._to_model, Cage)
 
 class TestForeignKey(unittest.TestCase):
     def test_relation_with_class_object(self):
-        class Cage(models.Model):
-            id = models.IntegerField(primary_key=True)
-            color = models.CharField(max_length=30)
-
-        class Parrot(models.Model):
-            id = models.IntegerField(primary_key=True)            
-            name = models.CharField(max_length=40, primary_key=True)
-            is_dead = models.BooleanField(negatives=['false'],
-                                          positives=['true'])
-            cage = models.ForeignKey(Cage)
-
         pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
                        name=u"Polly",
@@ -43,17 +61,6 @@ class TestForeignKey(unittest.TestCase):
         self.assertEquals(polly.cage, pollys_cage)
 
     def test_relation_with_class_string(self):
-        class Cage(models.Model):
-            id = models.IntegerField(primary_key=True)
-            color = models.CharField(max_length=30)
-
-        class Parrot(models.Model):
-            id = models.IntegerField(primary_key=True)            
-            name = models.CharField(max_length=40, primary_key=True)
-            is_dead = models.BooleanField(negatives=['false'],
-                                          positives=['true'])
-            cage = models.ForeignKey('Cage')
-
         pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
                        name=u"Polly",
@@ -62,18 +69,6 @@ class TestForeignKey(unittest.TestCase):
         self.assertEquals(polly.cage, pollys_cage)
 
     def test_relation_with_class_and_app_label_string(self):
-        class Cage(models.Model):
-            __module__ = 'hunting.tools'
-            id = models.IntegerField(primary_key=True)
-            color = models.CharField(max_length=30)
-
-        class Parrot(models.Model):
-            id = models.IntegerField(primary_key=True)            
-            name = models.CharField(max_length=40, primary_key=True)
-            is_dead = models.BooleanField(negatives=['false'],
-                                          positives=['true'])
-            cage = models.ForeignKey('tools.Cage')
-
         pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
                        name=u"Polly",
@@ -82,21 +77,49 @@ class TestForeignKey(unittest.TestCase):
         self.assertEquals(polly.cage, pollys_cage)
 
     def test_relation_with_module_name(self):
-        class Cage(models.Model):
-            __module__ = 'hunting.tools'
-            id = models.IntegerField(primary_key=True)
-            color = models.CharField(max_length=30)
-
-        class Parrot(models.Model):
-            id = models.IntegerField(primary_key=True)            
-            name = models.CharField(max_length=40, primary_key=True)
-            is_dead = models.BooleanField(negatives=['false'],
-                                          positives=['true'])
-            cage = models.ForeignKey('hunting.tools.Cage')
-
         pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
                        name=u"Polly",
                        is_dead=True,
                        cage=Cage(id=1))
         self.assertEquals(polly.cage, pollys_cage)
+
+    def test_relation_has_from_model_class_as_attribute(self):
+        pollys_cage = Cage(id=1, color=u'black')
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cage=Cage(id=1))
+        self.assertEquals(polly.cage, pollys_cage)
+        self.assertEquals(polly.cage._from_model, Parrot)
+        
+
+    def test_relation_has_to_model_class_as_attribute(self):
+        pollys_cage = Cage(id=1, color=u'black')
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cage=Cage(id=1))
+        self.assertEquals(polly.cage, pollys_cage)
+        self.assertEquals(polly.cage._to_model, Cage)
+
+class TestForeignKeySerialization(unittest.TestCase):
+    xml = """
+    <Parrot>
+       <id>1</id>    
+       <name>Polly</name>
+       <is_dead>true</is_dead>
+       <cage>
+          <Parrot>
+             <id>1</id>    
+          </Parrot>       
+       </cage>       
+    </Parrot>
+    """
+    def _test_to_xml_unevaluated(self):
+        pollys_cage = Cage(id=1, color=u'black')
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cage=Cage(id=1))
+        self.assertEquals(polly.serialize(to='xml'), self.xml)
