@@ -208,12 +208,17 @@ class Model(object):
         for k in self._data.keys():
             value = getattr(self, k)            
             field = None
+            is_relation = None
             for x in '_fields', '_relationships':
+                is_relation = x == '_relationships'
                 if field is None:
                     fdict = getattr(self._meta, x)
                     field = fdict.get(k, None)
-            tup = (k, field.serialize(value))
-            fields.append(tup)
+
+            if not is_relation or value is not None:
+                tup = (k, field.serialize(value))
+                fields.append(tup)
+                
         return dict(fields)
 
     def to_dict(self):

@@ -106,15 +106,15 @@ class TestForeignKey(unittest.TestCase):
 class TestForeignKeySerialization(unittest.TestCase):
     xml = """
     <Parrot>
-       <id>1</id>    
-       <name>Polly</name>
-       <is_dead>true</is_dead>
-       <cage>
-          <Parrot>
-             <id>1</id>    
-          </Parrot>       
-       </cage>       
-    </Parrot>
+      <is_dead>True</is_dead>
+      <cage>
+        <Cage>
+          <id>1</id>
+        </Cage>
+      </cage>
+      <id>1</id>
+      <name>Polly</name>
+    </Parrot>    
     """
     def test_to_xml_unevaluated(self):
         pollys_cage = Cage(id=1, color=u'black')
@@ -122,5 +122,6 @@ class TestForeignKeySerialization(unittest.TestCase):
                        name=u"Polly",
                        is_dead=True,
                        cage=Cage(id=1))
+        x = etree.fromstring(polly.serialize(to='xml'))
         self.assertEquals(one_line_xml(polly.serialize(to='xml')),
                           one_line_xml(self.xml))

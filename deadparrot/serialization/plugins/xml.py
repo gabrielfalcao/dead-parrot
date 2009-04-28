@@ -27,7 +27,8 @@ class XMLSerializer(Serializer):
                 if isinstance(v, dict):
                     va = self.__class__({k:v}).serialize()
                     value = etree.fromstring(va)
-                    etree.SubElement(self.root, k).text = unicode(v)
+                    elem = etree.SubElement(self.root, k)
+                    self.root.replace(elem, value)
                 else:
                     etree.SubElement(self.root, k).text = unicode(v)
 
