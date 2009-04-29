@@ -26,7 +26,7 @@ from deadparrot.models import Model
 from deadparrot.models import build_metadata
 from datetime import date, time, datetime
 
-from utils import one_line_xml, ignore_test
+from utils import one_line_xml
 
 class TestBasicModel(unittest.TestCase):
     def test_build_metadata_verbose_name(self):

@@ -157,14 +157,8 @@ class SQLAlchemyManagerBuilder(SQLAlchemyManagerBuilderBase):
         params = self._build_sqlalchemy_filter_params(*args, **kw)
         result = self._query.filter(*params).scalar()
 
-        if not result:
-            raise RuntimeError, "No results found"
-        
-        if not isinstance(result, self.model):
-            raise RuntimeError, "The query should return only one result"
-
         return result
-    
+
 class SQLAlchemyManager(ModelManager):
     def __new__(cls, *args, **kw):
         return SQLAlchemyManagerBuilder, args, kw

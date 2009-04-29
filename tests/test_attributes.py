@@ -18,6 +18,8 @@
 # Boston, MA 02111-1307, USA.
 
 import unittest
+import pmock
+
 from deadparrot.models import build_metadata
 from deadparrot.models import Attribute
 from deadparrot.models import DateTimeAttribute
@@ -52,7 +54,7 @@ class TestAttributes(unittest.TestCase):
         self.assertEquals(nc.camel_name, 'age')
         self.assertEquals(nc.value, 21)
 
-    def test_datetime(self):
+    def test_datetime_success(self):
         dta = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
         dta2 = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
 
@@ -65,6 +67,30 @@ class TestAttributes(unittest.TestCase):
             self.assertEquals(dta.camel_name, 'creationDate')
             self.assertEquals(dta.value.date(),
                               datetime(2009, 3, 24).date())
+
+    def test_datetime_raises(self):
+        dta = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
+        dta2 = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
+
+        iters = '2009/03/24 00:46:20', \
+                datetime.strptime('2009/03/24 00:46:20',
+                                  "%Y/%m/%d %H:%M:%S")
+        for val in iters:
+            dta.fill('creation_date', val)
+            self.assertRaises(TypeError,
+                              dta.fill,
+                              'creation_date',
+                              100.5)
+        
+    def test_datetime_raises(self):
+        dta = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
+        dta2 = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
+
+        iters = '2009/03/24 00:46:20', \
+                datetime.strptime('2009/03/24 00:46:20',
+                                  "%Y/%m/%d %H:%M:%S")
+        for val in iters:
+            dta.fill('creation_date', val)
             self.assertRaises(TypeError,
                               dta.fill,
                               'creation_date',

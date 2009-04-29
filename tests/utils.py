@@ -25,7 +25,7 @@ def one_line_xml(string):
     string = string.strip()
     return string
 
-def ignore_test(why):
+def ignore_it(why):
     def wrapp(func):
         err = 'WARNING: %r is being ignored because "%s"\n' % (func, why)
         sys.stderr.write("===========================================\n")

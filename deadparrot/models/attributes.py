@@ -72,9 +72,6 @@ class DateTimeAttribute(Attribute):
             value = self.convert_type(value)
         return unicode(value.strftime(self.vartype))
 
-    def get_max_len(self):
-        return (datetime.now().strftime(self.vartype))
-
     def convert_type(self, val):
         if isinstance(val, basestring):
             if val:

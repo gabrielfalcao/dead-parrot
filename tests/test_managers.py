@@ -86,8 +86,8 @@ class TestSQLAlchemyManager(unittest.TestCase):
         self.assertEquals(len(self.Person.objects.all()), 1)
 
     def test_get(self):
-        test = self.Person.objects.create(name="Test")
-        self.assertEquals(self.Person.objects.get(name="Test"), test)
+        test = self.Person.objects.create(name=u"Test")
+        self.assertEquals(self.Person.objects.get(name=u"Test"), test)
 
     def test_delete(self):
         p = self.Person.objects.create(name="Blah")
@@ -111,7 +111,7 @@ class TestSQLAlchemyManager(unittest.TestCase):
         john = self.Person.objects.create(name="John Doe")
         mary = self.Person.objects.create(name="Mary Doe")
 
-        people = self.Person.objects.filter(self.Person.name.like('%Doe%'))
+        people = self.Person.objects.filter(self.Person.name.like(u'%Doe%'))
         self.assertEquals(len(people), 2)
         self.assert_(john in people)
         self.assert_(mary in people)
@@ -122,7 +122,7 @@ class TestSQLAlchemyManager(unittest.TestCase):
         john2 = self.Person.objects.create(name="John Doe", married=False)
         john3 = self.Person.objects.create(name="John Doe", married=False)        
 
-        people = self.Person.objects.filter(name='John Doe')
+        people = self.Person.objects.filter(name=u'John Doe')
         self.assertEquals(len(people), 3)
         self.assert_(john1 in people)
         self.assert_(john2 in people)
