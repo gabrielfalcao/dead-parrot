@@ -61,12 +61,20 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
         self._monkey_patch_model(self.model)
 
     def _monkey_patch_model(self, model):
+        # I really do not like this method, but it works for now.
         model._sqlalchemy_manager = self
         def delete_model(this, commit=True):
             this._sqlalchemy_manager.session.delete(this)
             if commit:
                 this._sqlalchemy_manager.session.commit()
+                
+        def save_model(this, commit=True):
+            this._sqlalchemy_manager.session.add(this)
+            if commit:
+                this._sqlalchemy_manager.session.commit()
+                
         model.delete = delete_model
+        model.save = save_model        
         return model
 
     @property
@@ -117,6 +125,17 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
             raise TypeError, \
                   "Unknown type of field: %r %r" % (type(field), field)
 
+    def _build_sqlalchemy_filter_params(self, *args, **kw):
+        """
+        SQLAlchemy takes just the "args", so I need to get the kwargs and transform it in alchemy-compatible args.
+        I.e.: kw = {'name': 'Foo'} becomes (Model.name == 'Foo')
+        """
+        params = list(args)
+        for k, v in kw.items():
+            params.append(getattr(self.model, k) == v)
+            del kw[k]
+        return params
+
 class SQLAlchemyManagerBuilder(SQLAlchemyManagerBuilderBase):
     def all(self):
         results = self._query.all()
@@ -129,9 +148,23 @@ class SQLAlchemyManagerBuilder(SQLAlchemyManagerBuilderBase):
         return mobject
 
     def filter(self, *args, **kw):
-        results = self._query.filter(*args, **kw)
+        params = self._build_sqlalchemy_filter_params(*args, **kw)
+        
+        results = self._query.filter(*params)
         return self._model_set(*results)
 
+    def get(self, *args, **kw):
+        params = self._build_sqlalchemy_filter_params(*args, **kw)
+        result = self._query.filter(*params).scalar()
+
+        if not result:
+            raise RuntimeError, "No results found"
+        
+        if not isinstance(result, self.model):
+            raise RuntimeError, "The query should return only one result"
+
+        return result
+    
 class SQLAlchemyManager(ModelManager):
     def __new__(cls, *args, **kw):
         return SQLAlchemyManagerBuilder, args, kw

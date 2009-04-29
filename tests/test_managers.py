@@ -21,6 +21,7 @@ import unittest
 import pmock
 
 from datetime import datetime, date
+from sqlalchemy.exc import InvalidRequestError
 
 from deadparrot import models
 
@@ -49,7 +50,11 @@ class TestSQLAlchemyManager(unittest.TestCase):
                 return (datetime.now().date() - self.birthdate).days / 365
 
         self.Person = Person
-
+        
+    def tearDown(self):
+        for person in self.Person.objects.all():
+            person.delete()
+        
     def test_construction(self):
         FooModel = type('FooModel', (models.Model,), {})
         Builder, args, kw = models.SQLAlchemyManager(create_schema=False)
@@ -75,21 +80,33 @@ class TestSQLAlchemyManager(unittest.TestCase):
                                           blog=u"http://blog.john.doe.net")
         self.assert_(isinstance(john, self.Person))
         self.assertEquals(john.name, u'John Doe')
-        john.delete()
 
     def test_get_all(self):
         test = self.Person.objects.create(name="Test")
         self.assertEquals(len(self.Person.objects.all()), 1)
-        test.delete()
-        
+
+    def test_get(self):
+        test = self.Person.objects.create(name="Test")
+        self.assertEquals(self.Person.objects.get(name="Test"), test)
+
     def test_delete(self):
         p = self.Person.objects.create(name="Blah")
         self.assertEquals(len(self.Person.objects.all()), 1)
         p.delete()
         self.assertEquals(len(self.Person.objects.all()), 0)
 
-    def test_filter(self):
+    def test_delete_raises(self):
+        self.assertRaises(InvalidRequestError, self.Person(name="Blah").delete)
 
+    def test_save(self):
+        p = self.Person(name="Blah")
+        self.assertEquals(len(self.Person.objects.all()), 0)
+        p.save()
+        self.assertEquals(len(self.Person.objects.all()), 1)
+        p.delete()
+        self.assertEquals(len(self.Person.objects.all()), 0)
+        
+    def test_filter(self):
         self.assertEquals(len(self.Person.objects.all()), 0)
         john = self.Person.objects.create(name="John Doe")
         mary = self.Person.objects.create(name="Mary Doe")
@@ -98,10 +115,20 @@ class TestSQLAlchemyManager(unittest.TestCase):
         self.assertEquals(len(people), 2)
         self.assert_(john in people)
         self.assert_(mary in people)
-        john.delete()
-        mary.delete()
-        
-    def test_serialization_to_xml(self):
+
+    def test_filter_with_kwargs(self):
+        self.assertEquals(len(self.Person.objects.all()), 0)
+        john1 = self.Person.objects.create(name="John Doe", married=True)
+        john2 = self.Person.objects.create(name="John Doe", married=False)
+        john3 = self.Person.objects.create(name="John Doe", married=False)        
+
+        people = self.Person.objects.filter(name='John Doe')
+        self.assertEquals(len(people), 3)
+        self.assert_(john1 in people)
+        self.assert_(john2 in people)
+        self.assert_(john3 in people)        
+
+    def test_serialization_xml(self):
         dtime = datetime.now()
         xml = '''
             <Person>
@@ -129,3 +156,26 @@ class TestSQLAlchemyManager(unittest.TestCase):
 
         self.assertEquals(one_line_xml(john.serialize(to='xml')),
                           one_line_xml(xml))
+
+    
+    def test_deserialization_xml(self):
+        dtime = datetime.now()
+        xml = '''
+            <Person>
+              <cellphone>(21) 9988-7766</cellphone>
+              <name>John Doe</name>
+              <weight>74.35</weight>
+              <married>False</married>
+              <creation_date>%s</creation_date>
+              <blog>http://blog.john.doe.net</blog>
+              <email>john@doe.net</email>
+              <id>1</id>
+              <biography>blabla</biography>
+              <childrens>2</childrens>
+            </Person>
+        ''' % dtime.strftime("%Y-%m-%d %H:%M:%S")
+        
+        john1 = self.Person.deserialize(xml, format='xml')
+        john1.save()
+        john2 = self.Person.objects.get(name=u'John Doe')
+        self.assertEquals(john1, john2)
