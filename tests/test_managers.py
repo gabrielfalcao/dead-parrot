@@ -24,6 +24,7 @@ from datetime import datetime, date
 
 from deadparrot import models
 
+from utils import one_line_xml
 # TODO: test serialization/deserialization of values that came from SQLAlchemy
 
 class TestSQLAlchemyManager(unittest.TestCase):
@@ -79,7 +80,8 @@ class TestSQLAlchemyManager(unittest.TestCase):
     def test_get_all(self):
         test = self.Person.objects.create(name="Test")
         self.assertEquals(len(self.Person.objects.all()), 1)
-
+        test.delete()
+        
     def test_delete(self):
         p = self.Person.objects.create(name="Blah")
         self.assertEquals(len(self.Person.objects.all()), 1)
@@ -98,3 +100,32 @@ class TestSQLAlchemyManager(unittest.TestCase):
         self.assert_(mary in people)
         john.delete()
         mary.delete()
+        
+    def test_serialization_to_xml(self):
+        dtime = datetime.now()
+        xml = '''
+            <Person>
+              <cellphone>(21) 9988-7766</cellphone>
+              <name>John Doe</name>
+              <weight>74.35</weight>
+              <married>False</married>
+              <creation_date>%s</creation_date>
+              <blog>http://blog.john.doe.net</blog>
+              <email>john@doe.net</email>
+              <id>1</id>
+              <biography>blabla</biography>
+              <childrens>2</childrens>
+            </Person>
+        ''' % dtime.strftime("%Y-%m-%d %H:%M:%S")
+        john = self.Person.objects.create(name=u'John Doe',
+                                          creation_date=dtime,
+                                          email=u"john@doe.net",
+                                          weight=74.35,
+                                          married=False,
+                                          childrens=2,
+                                          cellphone=u"(21) 9988-7766",
+                                          biography=u"blabla",
+                                          blog=u"http://blog.john.doe.net")
+
+        self.assertEquals(one_line_xml(john.serialize(to='xml')),
+                          one_line_xml(xml))

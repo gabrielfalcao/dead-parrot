@@ -67,11 +67,20 @@ class Attribute(object):
 class DateTimeAttribute(Attribute):
     def serialize(self, value=None):
         value = value or self.value
+        # sqlite quirks:
+        if isinstance(value, basestring):
+            value = self.convert_type(value)
         return unicode(value.strftime(self.vartype))
+
+    def get_max_len(self):
+        return (datetime.now().strftime(self.vartype))
 
     def convert_type(self, val):
         if isinstance(val, basestring):
             if val:
+                if "." in val:
+                    val = val.split(".")[0]
+
                 return datetime.strptime(val, self.vartype)
 
         elif isinstance(val, datetime):
