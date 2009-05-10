@@ -26,7 +26,6 @@ from sqlalchemy.exc import InvalidRequestError
 from deadparrot import models
 
 from utils import one_line_xml
-# TODO: test serialization/deserialization of values that came from SQLAlchemy
 
 class TestSQLAlchemyManager(unittest.TestCase):
     def setUp(self):
@@ -43,7 +42,7 @@ class TestSQLAlchemyManager(unittest.TestCase):
             biography = models.TextField()
             blog = models.URLField(verify_exists=False)
 
-            objects = models.SQLAlchemyManager(create_schema=True)
+            objects = models.SQLAlchemyManager(create_schema=True, engine="sqlite:///test.db")
 
             @property
             def age(self):
@@ -199,3 +198,28 @@ class TestSQLAlchemyManager(unittest.TestCase):
         john1.save()
         john2 = self.Person.objects.get(name=u'John Doe')
         self.assertEquals(john1, john2)
+
+    def test_foreign_key(self):
+        john = self.Person.objects.create(name=u'John Doe',
+                                          creation_date=datetime.now(),
+                                          email=u"john@doe.net",
+                                          weight=74.35,
+                                          married=False,
+                                          childrens=2,
+                                          cellphone=u"(21) 9988-7766",
+                                          biography=u"blabla",
+                                          blog=u"http://blog.john.doe.net")
+        
+        class Pet(models.Model):
+            id = models.IntegerField(primary_key=True)
+            animal = models.CharField(max_length=40)
+            owner = models.ForeignKey(self.Person) 
+            objects = models.SQLAlchemyManager(create_schema=True, engine="sqlite:///test.db")
+            def __unicode__(self):
+                return unicode(u"%s of %s"% (self.animal, self.owner.name))
+            
+        Pet.objects.create(animal=u'Dog', owner=john)
+        rex = Pet.objects.filter(Pet.animal==u'Dog')[0]
+        self.assert_(rex.owner is not None, "The pet owner should not be None")
+        self.assertEquals(rex.owner.name, u'John Doe')
+        self.assertEquals(rex.owner, john)        

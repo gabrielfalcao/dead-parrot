@@ -18,13 +18,16 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-from sqlalchemy.orm import sessionmaker, mapper
+from sqlalchemy.orm import sessionmaker, mapper, relation, backref
 
 from sqlalchemy import String, MetaData, Unicode, UnicodeText
 from sqlalchemy import Table, Column, Integer, DateTime, Date, Time, Float
 from sqlalchemy import create_engine, Boolean, Numeric
 from sqlalchemy import ForeignKey as SqlalchemyFK
 from deadparrot.models.fields import *
+from deadparrot.models.fields import ForeignKey
+
+METADATA = MetaData()
 
 class ModelManager(object):
     pass
@@ -45,12 +48,17 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
                 has_pk = True
             fields.append(self._parrot_field_to_alchemy_column(n, f))
 
+        for n, f in model._meta._relationships.items():
+            fields.append(self._parrot_field_to_alchemy_column(n, f))
+
         if not has_pk:
             raise AttributeError, \
                   "The model %s does not have " \
                   "any primary keys, which is required by SQLAlchemy"
 
-        self.metadata = MetaData()
+        global METADATA
+        self.metadata = METADATA
+
         if not session:
             if not engine:
                 engine = create_engine('sqlite:///:memory:')
@@ -61,10 +69,13 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
             self.session = Session()
         else:
             self.session = session
-            
-        self.table = Table(model.__name__.lower(), self.metadata, *fields)
+
+        tablename = model.__name__.lower()
+        self.table = Table(tablename, self.metadata, useexisting=True, *fields)
         if create_schema:
             self.metadata.create_all(self.session.bind)
+
+        # TODO: add the relationships in the mapping: properties={'addresses':relation(Address, backref='user', cascade="all, delete, delete-orphan")
 
         self.mapper = mapper(self.model, self.table)
         self._monkey_patch_model(self.model)
@@ -135,9 +146,10 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
         elif isinstance(field, BooleanField):
             return Column(name, Boolean,
                           primary_key=field.primary_key)
+
+        # heandling relationships
         elif isinstance(field, ForeignKey):
-            return Column(name, SqlalchemyFK,
-                          primary_key=field.primary_key)
+            return Column(name, SqlalchemyFK('%s.id' % (field.model.__name__.lower())))
         
         else:
             raise TypeError, \
