@@ -20,13 +20,11 @@
 
 from sqlalchemy.orm import sessionmaker, mapper
 
-from sqlalchemy import String, MetaData, ForeignKey, Unicode, UnicodeText
+from sqlalchemy import String, MetaData, Unicode, UnicodeText
 from sqlalchemy import Table, Column, Integer, DateTime, Date, Time, Float
 from sqlalchemy import create_engine, Boolean, Numeric
-
+from sqlalchemy import ForeignKey as SqlalchemyFK
 from deadparrot.models.fields import *
-engine = create_engine('sqlite:///:memory:')
-Session = sessionmaker(bind=engine)
 
 class ModelManager(object):
     pass
@@ -36,8 +34,9 @@ class ModelManagerBuilder(object):
 
 class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
     def __init__(self, model,
+                 engine=None,
                  create_schema=False,
-                 session=Session()):
+                 session=None):
         self.model = model
         fields = []
         has_pk = False
@@ -52,10 +51,20 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
                   "any primary keys, which is required by SQLAlchemy"
 
         self.metadata = MetaData()
-        self.session = session
+        if not session:
+            if not engine:
+                engine = create_engine('sqlite:///:memory:')
+            else:
+                engine = create_engine(engine)
+                
+            Session = sessionmaker(bind=engine)
+            self.session = Session()
+        else:
+            self.session = session
+            
         self.table = Table(model.__name__.lower(), self.metadata, *fields)
         if create_schema:
-            self.metadata.create_all(session.bind)
+            self.metadata.create_all(self.session.bind)
 
         self.mapper = mapper(self.model, self.table)
         self._monkey_patch_model(self.model)
@@ -116,11 +125,20 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
                   "this issue"
 
         elif isinstance(field, TimeField):
-            return Column(name, Time,
-                          primary_key=field.primary_key)
+            raise TypeError, \
+                  "SQLAlchemy does not support datetime.date " \
+                  "and datetime.time, use datetime.datetime " \
+                  "instead. With deadparrot you must use " \
+                  "deadparrot.models.DateTimeField to resolve " \
+                  "this issue"
+            
         elif isinstance(field, BooleanField):
             return Column(name, Boolean,
                           primary_key=field.primary_key)
+        elif isinstance(field, ForeignKey):
+            return Column(name, SqlalchemyFK,
+                          primary_key=field.primary_key)
+        
         else:
             raise TypeError, \
                   "Unknown type of field: %r %r" % (type(field), field)

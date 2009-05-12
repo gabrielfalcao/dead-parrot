@@ -16,10 +16,10 @@
 # License along with this program; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
-
+import os
 import unittest
 import pmock
-
+import sqlite3
 from datetime import datetime, date
 from sqlalchemy.exc import InvalidRequestError
 
@@ -68,6 +68,26 @@ class TestSQLAlchemyManager(unittest.TestCase):
         self.assert_(issubclass(Builder, models.SQLAlchemyManagerBuilder))
         self.assert_(isinstance(objects, models.SQLAlchemyManagerBuilder))
 
+    def test_engine_setup(self):
+        class House(models.Model):
+            id = models.IntegerField(primary_key=True)
+            address = models.TextField()
+            objects = models.SQLAlchemyManager(engine="sqlite:///test.db",
+                                               create_schema=True)
+            
+        House.objects.create(address=u'Test 1')
+        House.objects.create(address=u'Test 2')
+        
+        connection = sqlite3.Connection('test.db')
+        cursor = connection.cursor()
+        
+        results = list(cursor.execute('select address from house;'))
+        
+        self.assertEquals(results[0][0], 'Test 1')
+        self.assertEquals(results[1][0], 'Test 2')
+        
+        os.remove('test.db')
+        
     def test_create(self):
         john = self.Person.objects.create(name=u'John Doe',
                                           creation_date=datetime.now(),
