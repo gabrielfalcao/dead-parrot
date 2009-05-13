@@ -22,6 +22,7 @@ import pmock
 import sqlite3
 from datetime import datetime, date
 from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy.orm import clear_mappers
 
 from deadparrot import models
 
@@ -42,7 +43,7 @@ class TestSQLAlchemyManager(unittest.TestCase):
             biography = models.TextField()
             blog = models.URLField(verify_exists=False)
 
-            objects = models.SQLAlchemyManager(create_schema=True, engine="sqlite:///test.db")
+            objects = models.SQLAlchemyManager(create_schema=True, engine="sqlite:///:memory:")
 
             @property
             def age(self):
@@ -200,26 +201,27 @@ class TestSQLAlchemyManager(unittest.TestCase):
         self.assertEquals(john1, john2)
 
     def test_foreign_key(self):
-        john = self.Person.objects.create(name=u'John Doe',
-                                          creation_date=datetime.now(),
-                                          email=u"john@doe.net",
-                                          weight=74.35,
-                                          married=False,
-                                          childrens=2,
-                                          cellphone=u"(21) 9988-7766",
-                                          biography=u"blabla",
-                                          blog=u"http://blog.john.doe.net")
-        
+        class PetShop(models.Model):
+            id = models.IntegerField(primary_key=True)
+            name = models.CharField(max_length=40)
+            objects = models.SQLAlchemyManager(create_schema=True,
+                                               engine="sqlite:///test.db")
+
         class Pet(models.Model):
             id = models.IntegerField(primary_key=True)
             animal = models.CharField(max_length=40)
-            owner = models.ForeignKey(self.Person) 
-            objects = models.SQLAlchemyManager(create_schema=True, engine="sqlite:///test.db")
+            home = models.ForeignKey(self.Person) 
+            objects = models.SQLAlchemyManager(create_schema=True,
+                                               engine="sqlite:///test.db")
+
             def __unicode__(self):
                 return unicode(u"%s of %s"% (self.animal, self.owner.name))
             
-        Pet.objects.create(animal=u'Dog', owner=john)
+        dogstore = PetShop.objects.create(name=u'Dog Store')            
+        dog1 = Pet.objects.create(animal=u'Dog', home=dogstore)
+        
         rex = Pet.objects.filter(Pet.animal==u'Dog')[0]
-        self.assert_(rex.owner is not None, "The pet owner should not be None")
-        self.assertEquals(rex.owner.name, u'John Doe')
-        self.assertEquals(rex.owner, john)        
+        
+        self.assert_(rex.petshop is not None)
+        self.assertEquals(rex.petshop.name, u'Dog Store')
+        self.assertEquals(rex.petshop, dogstore)        

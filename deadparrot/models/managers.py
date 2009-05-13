@@ -18,14 +18,15 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-from sqlalchemy.orm import sessionmaker, mapper, relation, backref
+from sqlalchemy.orm import clear_mappers, mapper
+from sqlalchemy.orm import sessionmaker, relation, backref
 
 from sqlalchemy import String, MetaData, Unicode, UnicodeText
 from sqlalchemy import Table, Column, Integer, DateTime, Date, Time, Float
 from sqlalchemy import create_engine, Boolean, Numeric
 from sqlalchemy import ForeignKey as SqlalchemyFK
+
 from deadparrot.models.fields import *
-from deadparrot.models.fields import ForeignKey
 
 METADATA = MetaData()
 
@@ -70,16 +71,24 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
         else:
             self.session = session
 
-        tablename = model.__name__.lower()
+        tablename = self._get_table_name()
         self.table = Table(tablename, self.metadata, useexisting=True, *fields)
         if create_schema:
             self.metadata.create_all(self.session.bind)
 
-        # TODO: add the relationships in the mapping: properties={'addresses':relation(Address, backref='user', cascade="all, delete, delete-orphan")
-
-        self.mapper = mapper(self.model, self.table)
+        properties = {}
+        properties.update(self._eval_relationships(self.model))
+        self.mapper = mapper(self.model, self.table, properties=properties)
         self._monkey_patch_model(self.model)
 
+    def _eval_relationships(self, model):
+        d = {}
+        for k, rel in model._meta._relationships.items():
+            sqlrelation = self._parrot_relationship_to_alchemy_relation(k, rel)
+            d[k] = sqlrelation
+
+        return d
+    
     def _monkey_patch_model(self, model):
         # I really do not like this method, but it works for now.
         model._sqlalchemy_manager = self
@@ -105,7 +114,14 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
         Set = self.model.Set()
         return Set(*args, **kw)
 
-    def _parrot_field_to_alchemy_column(self, name, field):
+    def _get_table_name(self):
+        return self.model.__name__.lower()
+    
+    def _parrot_relationship_to_alchemy_relation(self, name, rel):
+        if isinstance(rel, ForeignKey):
+            return relation(rel.model, backref=self.model.__name__.lower())
+                      
+    def _parrot_field_to_alchemy_column(self, name, field):        
         if isinstance(field, (CharField,
                               URLField,
                               EmailField,
@@ -149,7 +165,7 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
 
         # heandling relationships
         elif isinstance(field, ForeignKey):
-            return Column(name, SqlalchemyFK('%s.id' % (field.model.__name__.lower())))
+            return Column("%s_id" % name, SqlalchemyFK('%s.id' % (field.model.__name__.lower())))
         
         else:
             raise TypeError, \
