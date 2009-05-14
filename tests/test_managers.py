@@ -210,18 +210,19 @@ class TestSQLAlchemyManager(unittest.TestCase):
         class Pet(models.Model):
             id = models.IntegerField(primary_key=True)
             animal = models.CharField(max_length=40)
-            home = models.ForeignKey(self.Person) 
+            home = models.ForeignKey(PetShop) 
             objects = models.SQLAlchemyManager(create_schema=True,
                                                engine="sqlite:///test.db")
 
             def __unicode__(self):
-                return unicode(u"%s of %s"% (self.animal, self.owner.name))
+                return unicode(u"%s of %s"% (self.animal, self.home.name))
             
         dogstore = PetShop.objects.create(name=u'Dog Store')            
-        dog1 = Pet.objects.create(animal=u'Dog', home=dogstore)
+        dog1 = Pet.objects.create(animal=u'Dog',
+                                  home=dogstore)
         
         rex = Pet.objects.filter(Pet.animal==u'Dog')[0]
         
-        self.assert_(rex.petshop is not None)
-        self.assertEquals(rex.petshop.name, u'Dog Store')
-        self.assertEquals(rex.petshop, dogstore)        
+        self.assert_(rex.home is not None)
+        self.assertEquals(rex.home.name, u'Dog Store')
+        self.assertEquals(rex.home, dogstore)        
