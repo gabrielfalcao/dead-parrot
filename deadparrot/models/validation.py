@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8; -*-
 #
 # Copyright (C) 2009 Gabriel Falcão <gabriel@nacaolivre.org>
@@ -17,20 +18,10 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-import os
-import re
-import sys
-import unittest
+VALIDATE_NONE = "The model won't validate any fields"
+VALIDATE_ALL = """
+    The model will validate all fields, unless
+    those which have the validate parameter set
+    to False
+"""
 
-from glob import glob
-
-def get_test_modules():
-    for sub in 'unit', 'functional':
-        for filename in glob("tests/%s/test_*.py" % sub):
-            filename = os.path.split(filename)[1][:-3]
-            module = __import__('tests.%s.%s' % (sub, filename))
-            print module
-            yield unittest.TestLoader().loadTestsFromModule(getattr(getattr(module, sub), filename))
-
-def test_suite():
-    return unittest.TestSuite([t for t in get_test_modules()])
