@@ -69,6 +69,9 @@ class TestSQLAlchemyManager(unittest.TestCase):
         self.assert_(isinstance(objects, models.SQLAlchemyManagerBuilder))
 
     def test_engine_setup(self):
+        if os.path.exists('test.db'):
+            os.remove('test.db')
+        
         class House(models.Model):
             id = models.IntegerField(primary_key=True)
             address = models.TextField()
@@ -77,7 +80,7 @@ class TestSQLAlchemyManager(unittest.TestCase):
             
         House.objects.create(address=u'Test 1')
         House.objects.create(address=u'Test 2')
-        
+
         connection = sqlite3.Connection('test.db')
         cursor = connection.cursor()
         
