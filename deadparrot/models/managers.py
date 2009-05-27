@@ -19,7 +19,7 @@
 # Boston, MA 02111-1307, USA.
 
 from sqlalchemy.orm import clear_mappers, mapper
-from sqlalchemy.orm import sessionmaker, relation, backref
+from sqlalchemy.orm import sessionmaker, relation, backref, scoped_session
 
 from sqlalchemy import String, MetaData, Unicode, UnicodeText
 from sqlalchemy import Table, Column, Integer, DateTime, Date, Time, Float
@@ -29,6 +29,8 @@ from sqlalchemy import ForeignKey as SqlalchemyFK
 from deadparrot.models.fields import *
 
 METADATA = MetaData()
+
+Session = sessionmaker()
 
 class ModelManager(object):
     pass
@@ -60,13 +62,9 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
         global METADATA
         self.metadata = METADATA
 
+        engine = create_engine(engine)
         if not session:
-            if not engine:
-                engine = create_engine('sqlite:///:memory:')
-            else:
-                engine = create_engine(engine)
-                
-            Session = sessionmaker(bind=engine)
+            Session.configure(bind=engine)
             self.session = Session()
         else:
             self.session = session
@@ -74,7 +72,7 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
         tablename = self._get_table_name()
         self.table = Table(tablename, self.metadata, useexisting=True, *fields)
         if create_schema:
-            self.metadata.create_all(self.session.bind)
+            self.metadata.create_all(engine)
 
         properties = {}
         properties.update(self._eval_relationships(self.model))
@@ -88,7 +86,7 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
             d[k] = sqlrelation
 
         return d
-    
+
     def _monkey_patch_model(self, model):
         # I really do not like this method, but it works for now.
         model._sqlalchemy_manager = self
@@ -96,14 +94,14 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
             this._sqlalchemy_manager.session.delete(this)
             if commit:
                 this._sqlalchemy_manager.session.commit()
-                
+
         def save_model(this, commit=True):
             this._sqlalchemy_manager.session.add(this)
             if commit:
                 this._sqlalchemy_manager.session.commit()
-                
+
         model.delete = delete_model
-        model.save = save_model        
+        model.save = save_model
         return model
 
     @property
@@ -116,12 +114,12 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
 
     def _get_table_name(self):
         return self.model.__name__.lower()
-    
+
     def _parrot_relationship_to_alchemy_relation(self, name, rel):
         if isinstance(rel, ForeignKey):
             return relation(rel.model, backref=self.model.__name__.lower())
-                      
-    def _parrot_field_to_alchemy_column(self, name, field):        
+
+    def _parrot_field_to_alchemy_column(self, name, field):
         if isinstance(field, (CharField,
                               URLField,
                               EmailField,
@@ -158,7 +156,7 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
                   "instead. With deadparrot you must use " \
                   "deadparrot.models.DateTimeField to resolve " \
                   "this issue"
-            
+
         elif isinstance(field, BooleanField):
             return Column(name, Boolean,
                           primary_key=field.primary_key)
@@ -166,19 +164,20 @@ class SQLAlchemyManagerBuilderBase(ModelManagerBuilder):
         # heandling relationships
         elif isinstance(field, ForeignKey):
             return Column("%s_id" % name, SqlalchemyFK('%s.id' % (field.model.__name__.lower())))
-        
+
         else:
             raise TypeError, \
                   "Unknown type of field: %r %r" % (type(field), field)
 
-    def _build_sqlalchemy_filter_params(self, *args, **kw):
+    @classmethod
+    def build_sqlalchemy_filter_params(cls, model, *args, **kw):
         """
         SQLAlchemy takes just the "args", so I need to get the kwargs and transform it in alchemy-compatible args.
         I.e.: kw = {'name': 'Foo'} becomes (Model.name == 'Foo')
         """
         params = list(args)
         for k, v in kw.items():
-            params.append(getattr(self.model, k) == v)
+            params.append(getattr(model, k) == v)
             del kw[k]
         return params
 
@@ -188,19 +187,22 @@ class SQLAlchemyManagerBuilder(SQLAlchemyManagerBuilderBase):
         return self._model_set(*results)
 
     def create(self, *args, **kw):
+        for k, v in kw.items():
+            if hasattr(v, '_sqlalchemy_manager'):
+                v._sqlalchemy_manager.session.expunge(v)
         mobject = self.model(*args, **kw)
         self.session.add(mobject)
         self.session.commit()
         return mobject
 
     def filter(self, *args, **kw):
-        params = self._build_sqlalchemy_filter_params(*args, **kw)
-        
+        params = SQLAlchemyManagerBuilderBase.build_sqlalchemy_filter_params(self.model, *args, **kw)
+
         results = self._query.filter(*params)
         return self._model_set(*results)
 
     def get(self, *args, **kw):
-        params = self._build_sqlalchemy_filter_params(*args, **kw)
+        params = SQLAlchemyManagerBuilderBase.build_sqlalchemy_filter_params(self.model, *args, **kw)
         result = self._query.filter(*params).scalar()
 
         return result

@@ -43,21 +43,21 @@ class TestSQLAlchemyManager(unittest.TestCase):
             biography = models.TextField()
             blog = models.URLField(verify_exists=False)
 
-            objects = models.SQLAlchemyManager(create_schema=True, engine="sqlite:///:memory:")
+            objects = models.SQLAlchemyManager(create_schema=True, engine="sqlite://")
 
             @property
             def age(self):
                 return (datetime.now().date() - self.birthdate).days / 365
 
         self.Person = Person
-        
+
     def tearDown(self):
         for person in self.Person.objects.all():
             person.delete()
-        
+
     def test_construction(self):
         FooModel = type('FooModel', (models.Model,), {})
-        Builder, args, kw = models.SQLAlchemyManager(create_schema=False)
+        Builder, args, kw = models.SQLAlchemyManager(create_schema=False, engine='sqlite://')
         self.assertRaises(AttributeError,
                           Builder, model=FooModel, *args, **kw)
 
@@ -69,28 +69,22 @@ class TestSQLAlchemyManager(unittest.TestCase):
         self.assert_(isinstance(objects, models.SQLAlchemyManagerBuilder))
 
     def test_engine_setup(self):
-        if os.path.exists('test.db'):
-            os.remove('test.db')
-        
         class House(models.Model):
             id = models.IntegerField(primary_key=True)
             address = models.TextField()
-            objects = models.SQLAlchemyManager(engine="sqlite:///test.db",
+            objects = models.SQLAlchemyManager(engine="sqlite:///test_engine.db",
                                                create_schema=True)
-            
+
         House.objects.create(address=u'Test 1')
         House.objects.create(address=u'Test 2')
-
-        connection = sqlite3.Connection('test.db')
+        connection = sqlite3.Connection('test_engine.db')
         cursor = connection.cursor()
-        
+
         results = list(cursor.execute('select address from house;'))
-        
+
         self.assertEquals(results[0][0], 'Test 1')
         self.assertEquals(results[1][0], 'Test 2')
-        
-        os.remove('test.db')
-        
+
     def test_create(self):
         john = self.Person.objects.create(name=u'John Doe',
                                           creation_date=datetime.now(),
@@ -128,7 +122,7 @@ class TestSQLAlchemyManager(unittest.TestCase):
         self.assertEquals(len(self.Person.objects.all()), 1)
         p.delete()
         self.assertEquals(len(self.Person.objects.all()), 0)
-        
+
     def test_filter(self):
         self.assertEquals(len(self.Person.objects.all()), 0)
         john = self.Person.objects.create(name="John Doe")
@@ -143,13 +137,13 @@ class TestSQLAlchemyManager(unittest.TestCase):
         self.assertEquals(len(self.Person.objects.all()), 0)
         john1 = self.Person.objects.create(name="John Doe", married=True)
         john2 = self.Person.objects.create(name="John Doe", married=False)
-        john3 = self.Person.objects.create(name="John Doe", married=False)        
+        john3 = self.Person.objects.create(name="John Doe", married=False)
 
         people = self.Person.objects.filter(name=u'John Doe')
         self.assertEquals(len(people), 3)
         self.assert_(john1 in people)
         self.assert_(john2 in people)
-        self.assert_(john3 in people)        
+        self.assert_(john3 in people)
 
     def test_serialization_xml(self):
         dtime = datetime.now()
@@ -180,7 +174,7 @@ class TestSQLAlchemyManager(unittest.TestCase):
         self.assertEquals(one_line_xml(john.serialize(to='xml')),
                           one_line_xml(xml))
 
-    
+
     def test_deserialization_xml(self):
         dtime = datetime.now()
         xml = '''
@@ -197,7 +191,7 @@ class TestSQLAlchemyManager(unittest.TestCase):
               <childrens>2</childrens>
             </Person>
         ''' % dtime.strftime("%Y-%m-%d %H:%M:%S")
-        
+
         john1 = self.Person.deserialize(xml, format='xml')
         john1.save()
         john2 = self.Person.objects.get(name=u'John Doe')
@@ -208,24 +202,27 @@ class TestSQLAlchemyManager(unittest.TestCase):
             id = models.IntegerField(primary_key=True)
             name = models.CharField(max_length=40)
             objects = models.SQLAlchemyManager(create_schema=True,
-                                               engine="sqlite:///test.db")
+                                               engine="sqlite:///test_fk.db")
 
         class Pet(models.Model):
             id = models.IntegerField(primary_key=True)
             animal = models.CharField(max_length=40)
-            home = models.ForeignKey(PetShop) 
+            home = models.ForeignKey(PetShop)
             objects = models.SQLAlchemyManager(create_schema=True,
-                                               engine="sqlite:///test.db")
+                                               engine="sqlite:///test_fk.db")
 
             def __unicode__(self):
                 return unicode(u"%s of %s"% (self.animal, self.home.name))
-            
-        dogstore = PetShop.objects.create(name=u'Dog Store')            
+
+        dogstore = PetShop.objects.create(name=u'Dog Store')
         dog1 = Pet.objects.create(animal=u'Dog',
                                   home=dogstore)
-        
+
         rex = Pet.objects.filter(Pet.animal==u'Dog')[0]
-        
+
         self.assert_(rex.home is not None)
         self.assertEquals(rex.home.name, u'Dog Store')
-        self.assertEquals(rex.home, dogstore)        
+        self.assertEquals(rex.home, dogstore)
+
+        if os.path.exists('test_fk.db'):
+            os.remove('test_fk.db')
