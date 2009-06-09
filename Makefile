@@ -15,19 +15,20 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-green :=
-blue :=
-red :=
-yellow :=
-white :=
-normal :=
 ifeq ($(shell echo $$TERM),xterm)
-blue   := "\e[1;34m"
-red    := "\e[1;31m"
-green  := "\e[1;32m"
-yellow := "\e[1;33m"
-white  := "\e[1;37m"
-normal := "\e[0m"
+    normal := "\e[0m"
+    red    := "\e[1;31m"
+    green  := "\e[1;32m"
+    yellow := "\e[1;33m"
+    blue   := "\e[1;34m"
+    white  := "\e[1;37m"
+else
+    normal :=
+    red    :=
+    green  :=
+    yellow :=
+    blue   :=
+    white  :=
 endif
 
 clean:
