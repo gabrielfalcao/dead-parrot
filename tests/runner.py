@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8; -*-
 #
 # Copyright (C) 2009 Gabriel Falcão <gabriel@nacaolivre.org>
@@ -19,16 +18,19 @@
 # Boston, MA 02111-1307, USA.
 
 import os
+import re
 import sys
-from setuptools import setup, find_packages
+import unittest
 
-setup(name='Dead Parrot',
-    version='0.1',
-    description='A model-based Django(ish) and SQLAlchemy-powered RESTful server/client',
-    author=u'Gabriel Falcão',
-    author_email='gabriel@nacaolivre.org',
-    url='http://deadparrot.gabrielfalcao.com',
-    packages=['deadparrot'],
-    test_suite="tests.runner.test_suite",
-)
+from glob import glob
 
+def get_test_modules():
+    for sub in 'unit', 'functional':
+        for filename in glob("tests/%s/test_*.py" % sub):
+            filename = os.path.split(filename)[1][:-3]
+            module = __import__('tests.%s.%s' % (sub, filename))
+            print module
+            yield unittest.TestLoader().loadTestsFromModule(getattr(getattr(module, sub), filename))
+
+def test_suite():
+    return unittest.TestSuite([t for t in get_test_modules()])
