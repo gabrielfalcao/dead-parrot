@@ -88,4 +88,9 @@ What about doing some serialization ? ::
    >>> car2.serialize(to="xml")
    '<Car><color>red</color><website>http://www.theoscarproject.org</website><brand>OSCar</brand></Car>'
 
+Building
+========
+* In GNU/Linux: make build
+* In other systems: python setup.py test && python setup.py build
+
 .. _CherryPy: http://www.cherrypy.org/

@@ -18,7 +18,12 @@
 unitandfunctionaltest:
 	@nosetests --with-coverage --cover-package tests
 doctest:
-	@echo "Running doctests..."
+	@echo -ne "\e[1;34mRunning doctests...\e[0m\n"
 	@python -c "import doctest;doctest.testfile('./README.rst', verbose=False, report=True)"
 
 test: unitandfunctionaltest doctest
+
+build: test
+	@echo -ne "\e[1;33mBuiding dead-parrot...\e[0m\n"
+	@python setup.py build
+	@echo -ne "\e[1;37mBuilt sucessfully. \e[1;32mGet it in `pwd`/build/lib/\e[0m\n"
