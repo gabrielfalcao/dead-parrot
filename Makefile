@@ -15,6 +15,21 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
+green :=
+blue :=
+red :=
+yellow :=
+white :=
+normal :=
+ifeq ($(shell echo $$TERM),xterm)
+blue   := "\e[1;34m"
+red    := "\e[1;31m"
+green  := "\e[1;32m"
+yellow := "\e[1;33m"
+white  := "\e[1;37m"
+normal := "\e[0m"
+endif
+
 clean:
 	@echo "Cleaning up build and *.pyc files..."
 	@find . -name '*.pyc' -exec rm -rf {} \;
@@ -29,23 +44,23 @@ functional:
 	@nosetests -s --with-coverage --cover-package tests/functional
 
 doctest:
-	@test $$TERM == 'xterm' && echo -ne "\e[1;34m"
+	@echo -ne $(blue)
 	@echo "Running doctests..."
-	@test $$TERM == 'xterm' && echo -ne "\e[1;31m"
+	@echo -ne $(red)
 	@python -c "import doctest;doctest.testfile('./README.rst', verbose=False, report=True)"
-	@test $$TERM == 'xterm' && echo -ne "\e[1;32m"
+	@echo -ne $(green)
 	@echo "tests passed!"
-	@test $$TERM == 'xterm' && echo -ne "\e[0m"
+	@echo -ne $(normal)
 
 test: unit functional doctest
 
 build: clean test
-	@test $$TERM == 'xterm' && echo -ne "\e[1;33m"
+	@echo -ne $(yellow)
 	@echo "Buiding dead-parrot..."
-	@test $$TERM == 'xterm' && echo -ne "\e[1;31m"
+	@echo -r $(red)
 	@python setup.py build
-	@test $$TERM == 'xterm' && echo -ne "\e[1;37m"
-	@echo "Built sucessfully."
-	@test $$TERM == 'xterm' && echo -ne "\e[1;32m"
+	@echo -ne $(white)
+	@echo "Built successfully."
+	@echo -ne $(green)
 	@echo "Get it in `pwd`/build/lib/"
-	@test $$TERM == 'xterm' && echo -ne "\e[0m"
+	@echo -ne $(normal)
