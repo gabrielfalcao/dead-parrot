@@ -16,9 +16,9 @@
 # Boston, MA 02111-1307, USA.
 
 unitandfunctionaltest:
-	@python setup.py test
+	@nosetests --with-coverage --cover-package tests
 doctest:
 	@echo "Running doctests..."
-	@python -c "import doctest;doctest.testfile('./README.rst', verbose=True)" | egrep '(tests|items)'
+	@python -c "import doctest;doctest.testfile('./README.rst', verbose=False, report=True)"
 
 test: unitandfunctionaltest doctest
