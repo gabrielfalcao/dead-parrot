@@ -30,7 +30,7 @@ class Cage(models.Model):
     color = models.CharField(max_length=30, blank=False)
 
 class Parrot(models.Model):
-    id = models.IntegerField(primary_key=True)            
+    id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=40, primary_key=True)
     is_dead = models.BooleanField(negatives=['false'],
                                   positives=['true'])
@@ -49,7 +49,7 @@ class TestRelationShipBase(unittest.TestCase):
                    name=u"Polly",
                    is_dead=True,
                    cage=Cage(id=1))
-        
+
         self.assertEquals(p.cage._to_model, Cage)
 
 class TestForeignKey(unittest.TestCase):
@@ -93,7 +93,7 @@ class TestForeignKey(unittest.TestCase):
                        cage=Cage(id=1))
         self.assertEquals(polly.cage, pollys_cage)
         self.assertEquals(polly.cage._from_model, Parrot)
-        
+
 
     def test_relation_has_to_model_class_as_attribute(self):
         pollys_cage = Cage(id=1, color=u'black')
@@ -115,7 +115,7 @@ class TestForeignKeySerialization(unittest.TestCase):
       </cage>
       <id>1</id>
       <name>Polly</name>
-    </Parrot>    
+    </Parrot>
     """
     evaluated_xml = """
     <Parrot>
@@ -123,12 +123,12 @@ class TestForeignKeySerialization(unittest.TestCase):
       <cage>
         <Cage>
           <color>black</color>
-          <id>1</id>          
+          <id>1</id>
         </Cage>
       </cage>
       <id>1</id>
       <name>Polly</name>
-    </Parrot>    
+    </Parrot>
     """
     unevaluated_json = simplejson.dumps({
         'Parrot': {
@@ -155,7 +155,7 @@ class TestForeignKeySerialization(unittest.TestCase):
             }
         }
     })
-    
+
     def test_to_xml_unevaluated(self):
         pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
@@ -192,7 +192,7 @@ class TestForeignKeySerialization(unittest.TestCase):
         self.assertEquals(polly.serialize(to='json'),
                           self.evaluated_json)
 
-    def _test_from_xml_unevaluated(self):
+    def test_from_xml_unevaluated(self):
         polly = Parrot(id=1,
                        name=u"Polly",
                        is_dead=True,
