@@ -17,39 +17,43 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-import unittest
 import pmock
+
+from nose.tools import *
+
 from urllib2 import URLError
+
 from deadparrot import models
 from deadparrot.models import fields
 from deadparrot.models import Model
-from datetime import date, time, datetime
-from decimal import Decimal
 
-class TestFieldsBasicBehavior(unittest.TestCase):
+from decimal import Decimal
+from datetime import date, time, datetime
+
+class TestFieldsBasicBehavior:
     """
     Tests if the fields works with the simpliest uses: to/from a dict
     which means "meta-serialization", and tests if
     their values are working well when getting/setting
     """
     def test_field_fail(self):
-        self.assertRaises(TypeError, fields.Field, validate=None)
-        self.assertRaises(TypeError, fields.Field, primary_key=None)
-        self.assertRaises(TypeError, fields.Field, null=None)
-        self.assertRaises(TypeError, fields.Field, blank=None)                
+        assert_raises(TypeError, fields.Field, validate=None)
+        assert_raises(TypeError, fields.Field, primary_key=None)
+        assert_raises(TypeError, fields.Field, null=None)
+        assert_raises(TypeError, fields.Field, blank=None)
 
     def test_field_success_null_and_blank(self):
         class Person(Model):
             first_name = fields.CharField(max_length=40)
 
         john = Person(first_name=u'John')
-        self.assertEquals(john._meta._fields['first_name'].null, True)
-        self.assertEquals(john._meta._fields['first_name'].blank, True)        
+        assert_equals(john._meta._fields['first_name'].null, True)
+        assert_equals(john._meta._fields['first_name'].blank, True)
     def test_charfield_fail_construct(self):
-        self.assertRaises(TypeError, fields.CharField, max_length=None)
+        assert_raises(TypeError, fields.CharField, max_length=None)
 
     def test_datetimefield_fail_construct(self):
-        self.assertRaises(TypeError, fields.DateTimeField, format=None)
+        assert_raises(TypeError, fields.DateTimeField, format=None)
 
     def test_charfield_success(self):
         class Person(Model):
@@ -60,8 +64,8 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         person_dict = {'Person': {'first_name': u'John Doe'}}
         john = Person.from_dict(person_dict)
-        self.assertEquals(john.first_name, u'John Doe')
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.first_name, u'John Doe')
+        assert_equals(john.to_dict(), person_dict)
 
     def test_charfield_success_metadata(self):
         class Person(Model):
@@ -70,9 +74,9 @@ class TestFieldsBasicBehavior(unittest.TestCase):
                                           null=False,
                                           blank=False)
 
-        self.assertEquals(Person._meta._fields['first_name'].primary_key, True)
-        self.assertEquals(Person._meta._fields['first_name'].null, False)
-        self.assertEquals(Person._meta._fields['first_name'].blank, False)        
+        assert_equals(Person._meta._fields['first_name'].primary_key, True)
+        assert_equals(Person._meta._fields['first_name'].null, False)
+        assert_equals(Person._meta._fields['first_name'].blank, False)
 
     def test_charfield_success_validate(self):
         class Person(Model):
@@ -87,10 +91,10 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         car_dict = {'Car': {'brand': u'Chevy'}}
         john = Person.from_dict(person_dict)
         chevy = Car.from_dict(car_dict)
-        self.assertEquals(john.first_name, u'John Doe')
-        self.assertEquals(john.to_dict(), person_dict)
-        self.assertEquals(chevy.brand, u'Chevy')
-        self.assertEquals(chevy.to_dict(), car_dict)
+        assert_equals(john.first_name, u'John Doe')
+        assert_equals(john.to_dict(), person_dict)
+        assert_equals(chevy.brand, u'Chevy')
+        assert_equals(chevy.to_dict(), car_dict)
 
     def test_charfield_fail(self):
         class Person(Model):
@@ -100,12 +104,12 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         fail_int_dict = {'Person': {'first_name': 0000000}}
         fail_none_dict = {'Person': {'first_name': None}}
         fail_type_dict = {'Person': {'first_name': unicode}}
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           Person.from_dict,
                           fail_unicode_dict)
-        self.assertRaises(TypeError, Person.from_dict, fail_int_dict)
-        self.assertRaises(TypeError, Person.from_dict, fail_none_dict)
-        self.assertRaises(TypeError, Person.from_dict, fail_type_dict)
+        assert_raises(TypeError, Person.from_dict, fail_int_dict)
+        assert_raises(TypeError, Person.from_dict, fail_none_dict)
+        assert_raises(TypeError, Person.from_dict, fail_type_dict)
 
     def test_datetimefield_success(self):
         class Person(Model):
@@ -115,11 +119,11 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         expected_dict = {'Person': {'creation_date':
                                     u'2009-03-29 14:38:20'}}
         john = Person.from_dict(expected_dict)
-        self.assertEquals(john.creation_date,
+        assert_equals(john.creation_date,
                           datetime.strptime("2009-03-29 14:38:20",
                                             "%Y-%m-%d %H:%M:%S"))
-        self.assertEquals(john.to_dict(), expected_dict)
-        self.assertEquals(john._meta._fields['creation_date'].primary_key,
+        assert_equals(john.to_dict(), expected_dict)
+        assert_equals(john._meta._fields['creation_date'].primary_key,
                           False)
 
     def test_datetimefield_fail_format(self):
@@ -129,7 +133,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         expected_dict = {'Person': {'creation_date':
                                     u'2009-03-29 14:38:20'}}
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           Person.from_dict,
                           expected_dict)
 
@@ -138,14 +142,14 @@ class TestFieldsBasicBehavior(unittest.TestCase):
             creation_date = fields.DateTimeField(format="%Y%m%d")
 
         fail_dict_int = {'Person': {'creation_date': 100000}}
-        self.assertRaises(TypeError, Person.from_dict, fail_dict_int)
+        assert_raises(TypeError, Person.from_dict, fail_dict_int)
 
     def test_datetimefield_fail_format_type(self):
         def make_class():
             class Person(Model):
                 creation_time = fields.DateTimeField(format=None)
 
-        self.assertRaises(TypeError, make_class)
+        assert_raises(TypeError, make_class)
 
 
     def test_datefield_success(self):
@@ -155,10 +159,10 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         expected_dict = {'Person': {'creation_date':
                                     u'2009-03-29'}}
         john = Person.from_dict(expected_dict)
-        self.assertEquals(john.creation_date,
+        assert_equals(john.creation_date,
                           datetime.strptime("2009-03-29",
                                             "%Y-%m-%d").date())
-        self.assertEquals(john.to_dict(), expected_dict)
+        assert_equals(john.to_dict(), expected_dict)
 
     def test_datefield_fail_format(self):
         class Person(Model):
@@ -167,7 +171,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         expected_dict = {'Person': {'creation_date':
                                     u'2009-03-29 14:38:20'}}
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           Person.from_dict,
                           expected_dict)
 
@@ -176,7 +180,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
             creation_date = fields.DateField(format="%Y%m%d")
 
         fail_dict_int = {'Person': {'creation_date': 100000}}
-        self.assertRaises(TypeError, Person.from_dict, fail_dict_int)
+        assert_raises(TypeError, Person.from_dict, fail_dict_int)
 
     def test_timefield_success(self):
         class Person(Model):
@@ -185,10 +189,10 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         expected_dict = {'Person': {'creation_time':
                                     u'15:54:56'}}
         john = Person.from_dict(expected_dict)
-        self.assertEquals(john.creation_time,
+        assert_equals(john.creation_time,
                           datetime.strptime("15:54:56",
                                             "%H:%M:%S").time())
-        self.assertEquals(john.to_dict(), expected_dict)
+        assert_equals(john.to_dict(), expected_dict)
 
     def test_timefield_fail_format(self):
         class Person(Model):
@@ -197,7 +201,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         expected_dict = {'Person': {'creation_time':
                                     u'2009-03-29 14:38:20'}}
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           Person.from_dict,
                           expected_dict)
 
@@ -206,7 +210,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
             creation_time = fields.TimeField(format="%Y%m%d")
 
         fail_dict_int = {'Person': {'creation_time': "10:10:10"}}
-        self.assertRaises(ValueError, Person.from_dict, fail_dict_int)
+        assert_raises(ValueError, Person.from_dict, fail_dict_int)
 
     def test_decimalfield_success(self):
         class Person(Model):
@@ -217,9 +221,9 @@ class TestFieldsBasicBehavior(unittest.TestCase):
                                   'wage': '4000.55'}}
 
         john = Person.from_dict(person_dict)
-        self.assertEquals(john.first_name, u'John Doe')
-        self.assertEquals(john.wage, Decimal("4000.55"))
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.first_name, u'John Doe')
+        assert_equals(john.wage, Decimal("4000.55"))
+        assert_equals(john.to_dict(), person_dict)
 
     def test_decimalfield_metadata(self):
         class Person(Model):
@@ -228,9 +232,9 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         person_dict = {'Person': {'wage': '4000.55'}}
 
         john = Person.from_dict(person_dict)
-        self.assertEquals(john.wage, Decimal("4000.55"))
-        self.assertEquals(john._meta._fields['wage'].max_digits, 6)
-        self.assertEquals(john._meta._fields['wage'].decimal_places, 2)
+        assert_equals(john.wage, Decimal("4000.55"))
+        assert_equals(john._meta._fields['wage'].max_digits, 6)
+        assert_equals(john._meta._fields['wage'].decimal_places, 2)
 
     def test_decimalfield_fail(self):
         class Person(Model):
@@ -240,11 +244,11 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         person_dict = {'Person': {'first_name': u'John Doe',
                                   'wage': '4000.55'}}
 
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           Person.from_dict, person_dict)
 
     def test_decimalfield_raises_on_construct(self):
-        self.assertRaises(TypeError, fields.DecimalField,
+        assert_raises(TypeError, fields.DecimalField,
                           max_digits="two", decimal_places=None)
 
     def test_decimalfield_raises_on_setattr(self):
@@ -253,7 +257,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         expected_dict = {'Person': {'wage': None}}
 
-        self.assertRaises(TypeError,
+        assert_raises(TypeError,
                           Person.from_dict,
                           expected_dict)
 
@@ -264,7 +268,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         person_dict = {'Person': {'wage': '4000.55'}}
 
         man = Person.from_dict(person_dict)
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           setattr, man, 'wage', '10:10:10')
 
     def test_decimalfield_fail_from_dict(self):
@@ -272,7 +276,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
             wage = fields.DecimalField(max_digits=2, decimal_places=2)
 
         fail_dict_weird = {'Person': {'wage': "10:10:10"}}
-        self.assertRaises(fields.FieldValidationError, Person.from_dict, fail_dict_weird)
+        assert_raises(fields.FieldValidationError, Person.from_dict, fail_dict_weird)
 
     def test_emailfield_success(self):
         class Person(Model):
@@ -283,9 +287,9 @@ class TestFieldsBasicBehavior(unittest.TestCase):
                                   'email': 'johndoe@jdfake.net'}}
 
         john = Person.from_dict(person_dict)
-        self.assertEquals(john.first_name, u'John Doe')
-        self.assertEquals(john.email, 'johndoe@jdfake.net')
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.first_name, u'John Doe')
+        assert_equals(john.email, 'johndoe@jdfake.net')
+        assert_equals(john.to_dict(), person_dict)
 
     def test_emailfield_validate_fail_on_set(self):
         class Person(Model):
@@ -294,7 +298,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         person_dict = {'Person': {'email': 'johndoe@jdfake.net'}}
 
         john = Person.from_dict(person_dict)
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           setattr, john, 'email',
                           'testesadasdsad.sdsad.asdasd')
 
@@ -321,10 +325,10 @@ class TestFieldsBasicBehavior(unittest.TestCase):
             email = fields.EmailField()
 
         person_dict = {'Person': {'email': None}}
-        self.assertRaises(TypeError, Person.from_dict, person_dict)
+        assert_raises(TypeError, Person.from_dict, person_dict)
 
     def test_emailfield_fail_construct(self):
-        self.assertRaises(TypeError, fields.EmailField, max_length=None)
+        assert_raises(TypeError, fields.EmailField, max_length=None)
 
     def test_integerfield_success(self):
         class Person(Model):
@@ -333,15 +337,15 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         person_dict = {'Person': {'childrens': 3}}
 
         john = Person.from_dict(person_dict)
-        self.assertEquals(john.childrens, 3)
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.childrens, 3)
+        assert_equals(john.to_dict(), person_dict)
 
     def test_integerfield_fail_on_validate(self):
         class Person(Model):
             childrens = fields.IntegerField()
 
         person_dict = {'Person': {'childrens': None}}
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           Person.from_dict,
                           person_dict)
 
@@ -352,15 +356,15 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         person_dict = {'Person': {'weight': 3.2}}
 
         john = Person.from_dict(person_dict)
-        self.assertEquals(john.weight, 3.2)
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.weight, 3.2)
+        assert_equals(john.to_dict(), person_dict)
 
     def test_floatfield_fail_on_validate(self):
         class Person(Model):
             weight = fields.FloatField()
 
         person_dict = {'Person': {'weight': None}}
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           Person.from_dict,
                           person_dict)
 
@@ -372,8 +376,8 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         person_dict = {'Person': {'married': True}}
 
         john = Person.from_dict(person_dict)
-        self.assertEquals(john.married, True)
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.married, True)
+        assert_equals(john.to_dict(), person_dict)
 
     def test_booleanfield_success_with_stringified_boolean_type_true(self):
         class Person(Model):
@@ -382,7 +386,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         person_dict = {'Person': {'married': 'True'}}
         john = Person.from_dict(person_dict)
-        self.assertEquals(john.married, True)
+        assert_equals(john.married, True)
 
     def test_booleanfield_success_with_stringified_boolean_type_false(self):
         class Person(Model):
@@ -391,7 +395,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         person_dict = {'Person': {'married': 'False'}}
         john = Person.from_dict(person_dict)
-        self.assertEquals(john.married, False)
+        assert_equals(john.married, False)
 
     def test_booleanfield_fail(self):
         class Person(Model):
@@ -400,10 +404,10 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         person_dict = {'Person': {'married': None}}
 
-        self.assertRaises(TypeError, Person.from_dict, person_dict)
+        assert_raises(TypeError, Person.from_dict, person_dict)
 
     def test_booleanfield_fail_construct(self):
-        self.assertRaises(TypeError,
+        assert_raises(TypeError,
                           fields.BooleanField,
                           negatives=None,
                           positives=None)
@@ -418,8 +422,8 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         person_dict = {'Person': {'cellphone': "(21) 9966-6699"}}
 
         john = Person.from_dict(person_dict)
-        self.assertEquals(john.cellphone, "(21) 9966-6699")
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.cellphone, "(21) 9966-6699")
+        assert_equals(john.to_dict(), person_dict)
 
     def test_phonenumberfield_success(self):
         class Person(Model):
@@ -428,19 +432,19 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         person_dict = {'Person': {'cellphone': "(21) 9966-6699"}}
 
         john = Person.from_dict(person_dict)
-        self.assertEquals(john.cellphone, "(21) 9966-6699")
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.cellphone, "(21) 9966-6699")
+        assert_equals(john.to_dict(), person_dict)
 
 
     def test_phonenumberfield_fail_construct(self):
-        self.assertRaises(TypeError,
+        assert_raises(TypeError,
                           fields.PhoneNumberField,
                           format=None,
                           charfield=None)
-        self.assertRaises(TypeError,
+        assert_raises(TypeError,
                           fields.PhoneNumberField,
                           charfield=None)
-        self.assertRaises(TypeError,
+        assert_raises(TypeError,
                           fields.PhoneNumberField,
                           format=None)
 
@@ -451,11 +455,11 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         person_dict1 = {'Person': {'cellphone': "(21)99666699"}}
         person_dict2 = {'Person': {'cellphone': 2199666699}}
 
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           Person.from_dict,
                           person_dict1)
 
-        self.assertRaises(TypeError,
+        assert_raises(TypeError,
                           Person.from_dict,
                           person_dict2)
 
@@ -467,15 +471,15 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         person_dict = {'Person': {'biography': bio}}
         john = Person.from_dict(person_dict)
 
-        self.assertEquals(john.biography, bio)
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.biography, bio)
+        assert_equals(john.to_dict(), person_dict)
 
     def test_textfield_fail(self):
         class Person(Model):
             biography = fields.TextField()
 
         person_dict = {'Person': {'biography': 00}}
-        self.assertRaises(TypeError,
+        assert_raises(TypeError,
                           Person.from_dict,
                           person_dict)
 
@@ -503,8 +507,8 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         john = Person.from_dict(person_dict)
 
-        self.assertEquals(john.blog, blog_url)
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.blog, blog_url)
+        assert_equals(john.to_dict(), person_dict)
         checker_mock.verify()
 
     def test_urlfield_success_no_verify(self):
@@ -530,8 +534,8 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         john = Person.from_dict(person_dict)
 
-        self.assertEquals(john.blog, blog_url)
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.blog, blog_url)
+        assert_equals(john.to_dict(), person_dict)
         checker_mock.verify()
 
     def test_urlfield_success_no_verify_maxlength(self):
@@ -546,8 +550,8 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         john = Person.from_dict(person_dict)
 
-        self.assertEquals(john.blog, blog_url)
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.blog, blog_url)
+        assert_equals(john.to_dict(), person_dict)
 
     def test_urlfield_success_validate_url(self):
         blog_url = "http://foo.bar.com/blog"
@@ -559,8 +563,8 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         john = Person.from_dict(person_dict)
 
-        self.assertEquals(john.blog, blog_url)
-        self.assertEquals(john.to_dict(), person_dict)
+        assert_equals(john.blog, blog_url)
+        assert_equals(john.to_dict(), person_dict)
 
     def test_urlfield_fail_validate_url(self):
         blog_url = "http://foo&*(.bar.com/b897698&%log"
@@ -570,7 +574,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         person_dict = {'Person': {'blog': blog_url}}
 
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           Person.from_dict,
                           person_dict)
 
@@ -595,7 +599,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
             .does_exists() \
             .will(pmock.return_value(False))
 
-        self.assertRaises(fields.FieldValidationError,
+        assert_raises(fields.FieldValidationError,
                           Person.from_dict,
                           person_dict)
 
@@ -604,7 +608,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
             class Person(Model):
                 blog = fields.URLField(verify_exists=None)
 
-        self.assertRaises(TypeError, make_class)
+        assert_raises(TypeError, make_class)
 
     def test_urlfield_fail_value_nonstring(self):
         class Person(Model):
@@ -612,7 +616,7 @@ class TestFieldsBasicBehavior(unittest.TestCase):
 
         person_dict = {'Person': {'blog': None}}
 
-        self.assertRaises(TypeError,
+        assert_raises(TypeError,
                           Person.from_dict,
                           person_dict)
 
@@ -628,9 +632,9 @@ class TestFieldsBasicBehavior(unittest.TestCase):
         checker = fields.URLChecker()
         checker.set_url("http://foo.bar.com")
 
-        self.assertEquals(checker.url, "http://foo.bar.com")
-        self.assertTrue(checker.is_valid())
-        self.assertTrue(checker.does_exists())
+        assert_equals(checker.url, "http://foo.bar.com")
+        assert (checker.is_valid())
+        assert (checker.does_exists())
 
         urlmock.verify()
 
