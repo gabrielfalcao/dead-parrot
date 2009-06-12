@@ -28,7 +28,13 @@ setup(name='Dead Parrot',
     author=u'Gabriel Falcão',
     author_email='gabriel@nacaolivre.org',
     url='http://deadparrot.gabrielfalcao.com',
-    packages=['deadparrot'],
+    packages=[
+          'deadparrot',
+          'deadparrot.models',
+          'deadparrot.serialization',
+          'deadparrot.serialization.plugins',
+          'deadparrot.server'
+    ],
     test_suite="tests.runner.test_suite",
 )
 

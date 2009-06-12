@@ -57,8 +57,17 @@ test: unit functional doctest
 build: clean test
 	@echo -ne $(yellow)
 	@echo "Buiding dead-parrot..."
-	@echo -r $(red)
-	@python setup.py build
+	@echo -ne $(red)
+	@python setup.py build > /dev/null
+	@echo -ne $(yellow)
+	@echo "DONE."
+	@echo -ne $(blue)
+	@echo "Ensuring that the build is fine ..."
+	@echo -ne $(red)
+	@cp -drf tests `pwd`/build/lib/
+	@cd `pwd`/build/lib/ && nosetests tests && rm -rf tests
+	@echo -ne $(yellow)
+	@echo "DONE."
 	@echo -ne $(white)
 	@echo "Built successfully."
 	@echo -ne $(green)
