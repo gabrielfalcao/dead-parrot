@@ -70,7 +70,7 @@ class TestBasicModel(unittest.TestCase):
                 verbose_name_plural = 'People'
 
         self.assertEquals(Person._meta.has_pk, True)
-        
+
     def test_construction(self):
         class Person(Model):
             name = fields.CharField(max_length=20)
@@ -165,19 +165,19 @@ class TestModelInternals(unittest.TestCase):
     def setUp(self):
         class Foo(Model):
             bar = fields.CharField(max_length=10, blank=False)
-            foobar = fields.CharField(max_length=10, blank=True)            
+            foobar = fields.CharField(max_length=10, blank=True)
         self.Foo = Foo
-        
+
     def test_is_valid(self):
         foo2 = self.Foo(bar=u'boo')
-        foo3 = self.Foo(foobar=u'meh', bar=u'boo')        
+        foo3 = self.Foo(foobar=u'meh', bar=u'boo')
         self.assertEquals(foo2._is_valid, True)
         self.assertEquals(foo3._is_valid, True)
 
     def test_is_not_valid(self):
         foo1 = self.Foo(foobar=u'boo')
         self.assertEquals(foo1._is_valid, False)
-        
+
 class TestModelInstrospection(unittest.TestCase):
     def test_field_names(self):
         class Foo(Model):
@@ -313,12 +313,12 @@ class TestModelSerialization(unittest.TestCase):
        <first_name>John Doe</first_name>
        <metadata>
           <many>People</many>
-          <foo>Bar</foo>          
-       </metadata>       
+          <foo>Bar</foo>
+       </metadata>
        <birthdate>10/02/1988</birthdate>
     </Person>
     """
-    
+
     def test_model_serialization_json(self):
 
         john = self.Person(first_name=u'John Doe',
@@ -578,14 +578,14 @@ class TestModelRegistry(unittest.TestCase):
                           app_label='foo',
                           classname=123)
 
-class TestModelOperations(unittest.TestCase):    
+class TestModelOperations(unittest.TestCase):
     def test_equals_raises(self):
         class Person(Model):
             name = fields.CharField(max_length=20)
             birthdate = fields.DateField(format="%d/%m/%Y")
 
         person1 = Person(name=u"blaj", birthdate=u'10/10/2000')
-        person2 = Person(name=u"blaj", birthdate=u'10/10/2000')        
+        person2 = Person(name=u"blaj", birthdate=u'10/10/2000')
         self.assertRaises(TypeError, person1, range(10))
 
     def test_all_fields_equals_success(self):
@@ -596,8 +596,8 @@ class TestModelOperations(unittest.TestCase):
             birthdate = fields.DateField(format="%d/%m/%Y")
 
         person1 = Person(name=u"blaj", birthdate=u'10/10/2000')
-        person2 = Person(name=u"blaj", birthdate=u'10/10/2000')        
-        self.assertEquals(person1, person2)        
+        person2 = Person(name=u"blaj", birthdate=u'10/10/2000')
+        self.assertEquals(person1, person2)
 
     def test_all_primary_keys_equals_success(self):
         """Here I will test a special behavior: at least all
@@ -608,8 +608,8 @@ class TestModelOperations(unittest.TestCase):
             birthdate = fields.DateField(format="%d/%m/%Y")
 
         person1 = Person(id=1, name=u"blaj", birthdate=u'10/10/2000')
-        person2 = Person(id=1, name=u"blu", birthdate=u'10/10/1988')        
-        self.assertEquals(person1, person2)        
+        person2 = Person(id=1, name=u"blu", birthdate=u'10/10/1988')
+        self.assertEquals(person1, person2)
 
     def test_notequals_success(self):
         class Person(Model):
@@ -617,8 +617,8 @@ class TestModelOperations(unittest.TestCase):
             birthdate = fields.DateField(format="%d/%m/%Y")
 
         person1 = Person(name=u"blaj", birthdate=u'10/10/2000')
-        person2 = Person(name=u"polly", birthdate=u'20/01/1988')        
-        self.assertNotEquals(person1, person2)        
+        person2 = Person(name=u"polly", birthdate=u'20/01/1988')
+        self.assertNotEquals(person1, person2)
 
 class TestAllFieldsSerialization(unittest.TestCase):
     def setUp(self):
@@ -640,13 +640,13 @@ class TestAllFieldsSerialization(unittest.TestCase):
                 return (datetime.now().date() - self.birthdate).days / 365
 
         self.Person = Person
-        
+
     def test_all_kinds_of_fields_serialization_to_json(self):
         dtime = datetime.now()
         json = simplejson.dumps({
             "Person":
             {
-                "id": 1,                
+                "id": 1,
                 "cellphone": "(21) 9988-7766",
                 "name": "John Doe",
                 "weight": 74.349999999999994,
@@ -670,7 +670,7 @@ class TestAllFieldsSerialization(unittest.TestCase):
                            blog=u"http://blog.john.doe.net")
 
         self.assertEquals(john.serialize(to='json'), json)
-              
+
     def test_all_kinds_of_fields_deserialization_to_json(self):
         dtime = datetime.now()
         json = simplejson.dumps({
@@ -700,7 +700,7 @@ class TestAllFieldsSerialization(unittest.TestCase):
                             blog=u"http://blog.john.doe.net")
         john2 = self.Person.deserialize(json, format="json")
         self.assertEquals(john1, john2)
-              
+
     def test_all_kinds_of_fields_serialization_to_xml(self):
         dtime = datetime.now()
         xml = '''
@@ -757,3 +757,123 @@ class TestAllFieldsSerialization(unittest.TestCase):
                            blog=u"http://blog.john.doe.net")
         john2 = self.Person.deserialize(xml, format='xml')
         self.assertEquals(john1, john2)
+
+class TestModelSpecialMethods:
+    def test_has_method_fill_from_object(self):
+        class Person(models.Model):
+            pass
+        assert hasattr(Person, 'fill_from_object'), 'A deadparrot model should have the method "fill_from_object"'
+
+    def test_method_fill_from_object_is_callable(self):
+        class Person(models.Model):
+            pass
+        assert callable(Person.fill_from_object), 'A deadparrot model should have the method "fill_from_object"'
+
+    def test_fill_from_object_success_with_unicode(self):
+        class Person(models.Model):
+            name = models.CharField(max_length=40)
+            creation_date = models.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+            email = models.EmailField()
+
+        class FooBarJohn:
+            name = u'John Doe'
+            email = u'john@doe.net'
+
+        john1 = Person.fill_from_object(FooBarJohn)
+        john2 = Person.fill_from_object(FooBarJohn())
+
+        assert john1.name == u'John Doe', 'john1.name should be u"John Doe", got %r' % john1.name
+        assert john1.email == u'john@doe.net', 'john1.email should be u"john@doe.net", got %r' % john1.email
+        assert john2.name == u'John Doe', 'john2.name should be u"John Doe", got %r' % john2.name
+        assert john2.email == u'john@doe.net', 'john2.email should be u"john@doe.net", got %r' % john2.email
+
+    def test_fill_from_object_success_with_string(self):
+        class Person(models.Model):
+            name = models.CharField(max_length=40)
+            creation_date = models.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+            email = models.EmailField()
+
+        class FooBarJohn:
+            name = 'John Doe'
+            email = 'john@doe.net'
+
+        john1 = Person.fill_from_object(FooBarJohn)
+        john2 = Person.fill_from_object(FooBarJohn())
+
+        assert john1.name == u'John Doe', 'john1.name should be u"John Doe", got %r' % john1.name
+        assert john1.email == u'john@doe.net', 'john1.email should be u"john@doe.net", got %r' % john1.email
+        assert john2.name == u'John Doe', 'john2.name should be u"John Doe", got %r' % john2.name
+        assert john2.email == u'john@doe.net', 'john2.email should be u"john@doe.net", got %r' % john2.email
+
+    def test_fill_from_object_success_with_string_new_style_class(self):
+        class Person(models.Model):
+            name = models.CharField(max_length=40)
+            creation_date = models.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+            email = models.EmailField()
+
+        class FooBarJohn(object):
+            name = 'John Doe'
+            email = 'john@doe.net'
+
+        john1 = Person.fill_from_object(FooBarJohn)
+        john2 = Person.fill_from_object(FooBarJohn())
+
+        assert john1.name == u'John Doe', 'john1.name should be u"John Doe", got %r' % john1.name
+        assert john1.email == u'john@doe.net', 'john1.email should be u"john@doe.net", got %r' % john1.email
+        assert john2.name == u'John Doe', 'john2.name should be u"John Doe", got %r' % john2.name
+        assert john2.email == u'john@doe.net', 'john2.email should be u"john@doe.net", got %r' % john2.email
+
+    def test_fill_from_object_success_retrieve_callable_results_string(self):
+        '''If the object we are retrieving attributes from, has a
+        callable with the same name as an attribute of deadparrot,
+        then I try to get its value'''
+
+        class Person(models.Model):
+            name = models.CharField(max_length=40)
+            email = models.EmailField()
+
+        class FooBarJohn(object):
+            name = 'John Doe'
+
+            def email(self):
+                return 'john@doe.net'
+
+        john1 = Person.fill_from_object(FooBarJohn)
+        assert john1.name == u'John Doe', 'john1.name should be u"John Doe", got %r' % john1.name
+        assert john1.email == u'john@doe.net', 'john1.email should be u"john@doe.net", got %r' % john1.email
+
+    def test_fill_from_object_success_retrieve_callable_results_string(self):
+        '''If the object we are retrieving attributes from, has a
+        callable with the same name as an attribute of deadparrot,
+        then I try to get its value'''
+
+        class Person(models.Model):
+            name = models.CharField(max_length=40)
+            email = models.EmailField()
+
+        class FooBarJohn(object):
+            name = u'John Doe'
+
+            def email(self):
+                return u'john@doe.net'
+
+        john1 = Person.fill_from_object(FooBarJohn())
+        assert john1.name == u'John Doe', 'john1.name should be u"John Doe", got %r' % john1.name
+        assert john1.email == u'john@doe.net', 'john1.email should be u"john@doe.net", got %r' % john1.email
+
+    def test_fill_from_object_success_retrieve_callable_with_params_does_not_work(self):
+        '''If the callable takes parameters, I just ignore it'''
+
+        class Person(models.Model):
+            name = models.CharField(max_length=40)
+            email = models.EmailField()
+
+        class FooBarJohn(object):
+            name = u'John Doe'
+
+            def email(self, param1):
+                return u'john@doe.net'
+
+        john1 = Person.fill_from_object(FooBarJohn())
+        assert john1.name == u'John Doe', 'john1.name should be u"John Doe", got %r' % john1.name
+        assert john1.email == None, 'john1.email should be None, got %r' % john1.email

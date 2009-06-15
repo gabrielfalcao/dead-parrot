@@ -75,23 +75,23 @@ class ModelMeta(type):
                             if isinstance(v, Field)])
             relationships =  dict([(k, v) for k, v in attrs.items() \
                                    if isinstance(v, RelationShip)])
-            
+
             metadata_params = hasattr(cls, 'Meta') and \
                               vars(cls.Meta) or {}
-            
+
             metadata_params['_fields'] = fields
-            metadata_params['_relationships'] = relationships            
+            metadata_params['_relationships'] = relationships
 
             cls._meta = build_metadata(cls, metadata_params)
             cls._data = {}
             cls._meta.has_pk = False
-            
+
             for k, v in fields.items():
                 cls._data[k] = v
-                
+
                 if v.primary_key:
                     cls._meta.has_pk = True
-                    
+
                 setattr(cls, k, None)
 
             for k, v in relationships.items():
@@ -129,7 +129,7 @@ class ModelMeta(type):
             for k, manager_tup in manager_classes.items():
                 manager_klass, args, kw = manager_tup
                 setattr(cls, k, manager_klass(model=cls, *args, **kw))
-                
+
         super(ModelMeta, cls).__init__(name, bases, attrs)
 
 class ModelSet(object):
@@ -187,7 +187,7 @@ class ModelSet(object):
 class Model(object):
     __metaclass__ = ModelMeta
     __dead_parrot__ = __module__
-    
+
     def __init__(self, **kw):
         for k, v in kw.items():
             if k not in self._meta._fields.keys() and \
@@ -206,7 +206,7 @@ class Model(object):
         fields = []
 
         for k in self._data.keys():
-            value = getattr(self, k)            
+            value = getattr(self, k)
             field = None
             is_relation = None
             for x in '_fields', '_relationships':
@@ -218,7 +218,7 @@ class Model(object):
             if not is_relation or value is not None:
                 tup = (k, field.serialize(value))
                 fields.append(tup)
-                
+
         return dict(fields)
 
     def to_dict(self):
@@ -229,7 +229,7 @@ class Model(object):
             raise TypeError, "%s can be compared only with %s or its subclasses instances." \
                   " Got %r" % (self.__class__.__name__, self.__class__.__name__, other)
 
-        # ok, "other" is the same type than self, gonna iterate through its attributes and compare them                
+        # ok, "other" is the same type than self, gonna iterate through its attributes and compare them
         if not self._meta.has_pk:
             mine = [getattr(self, field_name) for field_name in self._meta._fields.keys()]
             from_other = [getattr(other, field_name) for field_name in self._meta._fields.keys()]
@@ -237,9 +237,9 @@ class Model(object):
         else:
             mine = [getattr(self, field_name) for field_name, field in self._meta._fields.items() if field.primary_key]
             from_other = [getattr(other, field_name) for field_name, field in self._meta._fields.items() if field.primary_key]
-        
+
         return mine == from_other
-    
+
     @property
     def _is_valid(self):
         """Check if all non-blank fields are filled"""
@@ -254,14 +254,14 @@ class Model(object):
             elif attr in self._meta._relationships.keys():
                 field = self._meta._relationships[attr]
                 setattr(val, '_from_model', field.from_model)
-                setattr(val, '_to_model', field.to_model)                
+                setattr(val, '_to_model', field.to_model)
             if isinstance(field, Field):
                 if self._meta.fields_validation_policy != VALIDATE_NONE:
                     # raising the field-specific exceptions
                     field.validate(val)
                 val = field.convert_type(val)
             self._data[attr] = val
-            
+
         super(Model, self).__setattr__(attr, val)
 
     @classmethod
@@ -300,3 +300,24 @@ class Model(object):
         serializer = Registry.get(format)
         my_dict = serializer.deserialize(data)
         return cls.from_dict(my_dict)
+
+    @classmethod
+    def fill_from_object(cls, obj):
+        """Takes an python object to retrieve data from, and return a
+        new deadparrot's model object"""
+        kwargs = {}
+        for field_name in cls._meta._fields.keys():
+            if hasattr(obj, field_name):
+                pre_value = getattr(obj, field_name)
+                if callable(pre_value):
+                    try:
+                        value = pre_value()
+                    except TypeError:
+                        continue
+                else:
+                    value = pre_value
+
+                kwargs[field_name] = value
+
+        return cls(**kwargs)
+
