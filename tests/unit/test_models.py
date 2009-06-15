@@ -877,3 +877,34 @@ class TestModelSpecialMethods:
         john1 = Person.fill_from_object(FooBarJohn())
         assert john1.name == u'John Doe', 'john1.name should be u"John Doe", got %r' % john1.name
         assert john1.email == None, 'john1.email should be None, got %r' % john1.email
+
+    def test_fill_from_object_success_none_will_be_ignored(self):
+        from datetime import date, datetime
+        class Person(models.Model):
+            name = models.CharField(max_length=40)
+            email = models.EmailField()
+            age = models.IntegerField()
+            birthdate = models.DateField()
+
+        class FooBarJohn(object):
+            name = None
+            birthdate = date(2000, 10, 10)
+
+            def age(self):
+                delta = datetime.now().date() - self.birthdate
+                return delta.days / 365
+
+            def email(self):
+                return None
+
+        john1 = Person.fill_from_object(FooBarJohn())
+        expected_age = (datetime.now().date() - date(2000, 10, 10)).days / 365
+
+        assert john1.name == None, \
+               'john1.name should be None, got %r' % john1.name
+        assert john1.email == None, \
+               'john1.email should be None, got %r' % john1.email
+        assert john1.age == expected_age, \
+               'john1.age should be %d, got %r' % (expected_age, john1.email)
+        assert john1.birthdate == date(2000, 10, 10), \
+               'john1.birthdate should be datetime.date(2000, 10, 10) got %r' % (datetime.now().year - 2000, john1.email)

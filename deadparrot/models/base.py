@@ -317,7 +317,8 @@ class Model(object):
                 else:
                     value = pre_value
 
-                kwargs[field_name] = value
+                if value is not None:
+                    kwargs[field_name] = value
 
         return cls(**kwargs)
 
