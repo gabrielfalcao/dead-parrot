@@ -18,19 +18,7 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-from sqlalchemy.orm import clear_mappers, mapper
-from sqlalchemy.orm import sessionmaker, relation, backref, scoped_session
-
-from sqlalchemy import String, MetaData, Unicode, UnicodeText
-from sqlalchemy import Table, Column, Integer, DateTime, Date, Time, Float
-from sqlalchemy import create_engine, Boolean, Numeric
-from sqlalchemy import ForeignKey as SqlalchemyFK
-
 from deadparrot.models.fields import *
-
-METADATA = MetaData()
-
-Session = sessionmaker()
 
 class ModelManager(object):
     pass
