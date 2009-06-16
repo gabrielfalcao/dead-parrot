@@ -53,11 +53,11 @@ class TestAutoForeignKey:
         assert p.mother._to_model is TotallyNewNameClassToModel, \
                'The model should be %r got %r' % (TotallyNewNameClassToModel, p.mother._to_model)
 
-    def _test_set_from_model_through_self(self):
+    def test_set_from_model_through_self(self):
         class Software(models.Model):
             name = models.CharField(max_length=40, primary_key=True)
             os = models.ForeignKey('self')
 
         s = Software(name='GNOME', os=Software(name="GNU/Linux"))
 
-        assert s.so._from_model is Software
+        assert s.os._from_model is Software

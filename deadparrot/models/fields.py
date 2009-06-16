@@ -408,6 +408,11 @@ class ForeignKey(RelationShip):
         model_list = ModelRegistry.get_all(by_class=self.model)
         if model_list:
             self.model = model_list[0]
+        else:
+            err = 'The model %r does not exist or is ' \
+                  'not registered, did you import it ?'
+            raise AttributeError(err % self.model)
+
         self.set_to_model(self.model)
         self.set_lazy(False)
 

@@ -116,6 +116,9 @@ class ModelMeta(type):
 
             for k, v in relationships.items():
                 if v.is_lazy:
+                    if v.is_self_referenced:
+                        v.model = name
+
                     v.resolve()
 
                 if not v.model._meta.has_pk:
@@ -259,6 +262,7 @@ class Model(object):
                 field = self._meta._fields[attr]
             elif attr in self._meta._relationships.keys():
                 field = self._meta._relationships[attr]
+
                 setattr(val, '_from_model', field.from_model)
                 setattr(val, '_to_model', field.to_model)
             if isinstance(field, Field):

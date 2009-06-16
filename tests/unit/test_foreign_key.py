@@ -21,6 +21,8 @@ import unittest
 import pmock
 import simplejson
 
+from nose.tools import *
+
 from utils import one_line_xml
 
 from deadparrot import models
@@ -68,6 +70,10 @@ class TestForeignKey(unittest.TestCase):
         fk.resolve()
         assert fk.to_model is DummyModelFk3
         assert not fk.is_lazy
+
+    def test_resolve_fail_unknown_class(self):
+        fk = models.ForeignKey('dasdDSdsa2er3')
+        assert_raises(AttributeError, fk.resolve)
 
     def test_relation_with_class_object(self):
         pollys_cage = Cage(id=1, color=u'black')
