@@ -36,23 +36,39 @@ class Parrot(models.Model):
                                   positives=['true'])
     cage = models.ForeignKey(Cage)
 
-class TestRelationShipBase(unittest.TestCase):
-    def test_set_from_model(self):
-        p = Parrot(id=1,
-                   name=u"Polly",
-                   is_dead=True,
-                   cage=Cage(id=1))
-        self.assertEquals(p.cage._from_model, Parrot)
-
-    def test_set_to_model(self):
-        p = Parrot(id=1,
-                   name=u"Polly",
-                   is_dead=True,
-                   cage=Cage(id=1))
-
-        self.assertEquals(p.cage._to_model, Cage)
-
 class TestForeignKey(unittest.TestCase):
+    def test_not_lazy_not_referenced(self):
+        class DummyModelFk1(models.Model):
+            pass
+
+        fk = models.ForeignKey(DummyModelFk1)
+        assert not fk.is_lazy
+        assert not fk.is_self_referenced
+
+    def test_lazy_not_referenced(self):
+        class DummyModelFk2(models.Model):
+            pass
+
+        fk = models.ForeignKey('DummyModelFk2')
+        assert fk.is_lazy
+        assert not fk.is_self_referenced
+
+    def test_lazy_and_self_referenced(self):
+        fk = models.ForeignKey('self')
+        assert fk.is_lazy
+        assert fk.is_self_referenced
+
+    def test_resolve_sucess(self):
+        class DummyModelFk3(models.Model):
+            pass
+
+        fk = models.ForeignKey('DummyModelFk3')
+        assert fk.from_model is None
+        assert fk.is_lazy
+        fk.resolve()
+        assert fk.to_model is DummyModelFk3
+        assert not fk.is_lazy
+
     def test_relation_with_class_object(self):
         pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,

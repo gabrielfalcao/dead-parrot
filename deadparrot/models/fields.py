@@ -47,7 +47,7 @@ class Field(Attribute):
     must_validate = True
     primary_key = False
     null = True
-    blank = True    
+    blank = True
     vartype = None
     def __init__(self, *args, **kw):
         d = {'blank': 'blank', 'null': 'null', 'validate': 'must_validate'}
@@ -236,7 +236,7 @@ class BooleanField(Field):
             val = __builtins__.get(val, val)
 
         return val
-    
+
     def validate(self, value):
         # if val is a string in "False" or "True", I will resolve it
         # as a boolean type
@@ -333,18 +333,50 @@ class URLField(CharField):
 class RelationShip(object):
     from_model = None
     to_model = None
+    is_lazy = False
+    is_self_referenced = False
+
+    def resolve(self):
+        raise NotImplementedError
+
+    def set_lazy(self, lazy):
+        err = '%s.set_lazy takes a boolean as parameter, got %r'
+        if not isinstance(lazy, bool):
+            raise TypeError(err % (self.__class__.__name__, lazy))
+
+        self.is_lazy = lazy
+
+    def set_self_referenced(self, self_referenced):
+        err = '%s.set_self_referenced takes a boolean as parameter, got %r'
+        if not isinstance(self_referenced, bool):
+            raise TypeError(err % (self.__class__.__name__, self_referenced))
+
+        self.is_self_referenced = self_referenced
+
     def set_from_model(self, from_model):
+        err = '%s.set_from_model takes a deadparrot.models.Model ' \
+              'subclass as parameter, got %r'
+        if not hasattr(from_model, '__dead_parrot__'):
+            raise TypeError(err % (self.__class__.__name__, from_model))
+
         self.from_model = from_model
-        
+
     def set_to_model(self, to_model):
+        err = '%s.set_to_model takes a deadparrot.models.Model ' \
+              'subclass as parameter, got %r'
+        if not hasattr(to_model, '__dead_parrot__'):
+            raise TypeError(err % (self.__class__.__name__, to_model))
+
         self.to_model = to_model
 
     def serialize(self, val):
         return val.to_dict()
-    
+
 class ForeignKey(RelationShip):
     def __init__(self, model):
+
         if isinstance(model, basestring):
+            self.set_lazy(True)
             # ok, it is a string, so I got to look for it in the
             # registry
             if "." in model:
@@ -361,15 +393,24 @@ class ForeignKey(RelationShip):
                     model = [m for m in \
                              ModelRegistry.get_all(by_module=modulename) \
                              if m.__name__ == classname][0]
-            else:
-                model = ModelRegistry.get_all(by_class=model)[0]
-        
-        if not hasattr(model, '__dead_parrot__'):
+
+            elif model == 'self':
+                self.set_self_referenced(True)
+
+        if not self.is_lazy and not hasattr(model, '__dead_parrot__'):
             raise TypeError, "%r is not a valid model" % model
-        
+
         self.model = model
-        self.set_to_model(model)
-        
+        if not self.is_lazy:
+            self.set_to_model(model)
+
+    def resolve(self):
+        model_list = ModelRegistry.get_all(by_class=self.model)
+        if model_list:
+            self.model = model_list[0]
+        self.set_to_model(self.model)
+        self.set_lazy(False)
+
     def validate(self, val):
         pass
 

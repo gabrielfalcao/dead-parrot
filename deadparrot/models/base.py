@@ -70,21 +70,41 @@ def build_metadata(klass, params):
 class ModelMeta(type):
     def __init__(cls, name, bases, attrs):
         if name not in ('ModelMeta', 'Model'):
+            metadata_params = hasattr(cls, 'Meta') and \
+                              vars(cls.Meta) or {}
+
+            almost_meta = build_metadata(cls, metadata_params)
+
+            # registering the class in my dicts
+            if not _APP_REGISTRY.get(almost_meta.app_label):
+                _APP_REGISTRY[almost_meta.app_label] = {}
+            _APP_REGISTRY[almost_meta.app_label][cls.__name__] = cls
+            if not _MODULE_REGISTRY.get(cls.__module__):
+                _MODULE_REGISTRY[cls.__module__] = {}
+            _MODULE_REGISTRY[cls.__module__][cls.__name__] = cls
+
+            if not _REGISTRY.get(cls.__module__):
+                _REGISTRY[cls.__module__] = {}
+
+            if not _REGISTRY[cls.__module__].get(almost_meta.app_label):
+                _REGISTRY[cls.__module__][almost_meta.app_label] = {}
+
+            # the global dict
+            gdict = _REGISTRY[cls.__module__][almost_meta.app_label]
+            gdict[cls.__name__] = cls
+
             # handling fields
             fields =  dict([(k, v) for k, v in attrs.items() \
                             if isinstance(v, Field)])
             relationships =  dict([(k, v) for k, v in attrs.items() \
                                    if isinstance(v, RelationShip)])
 
-            metadata_params = hasattr(cls, 'Meta') and \
-                              vars(cls.Meta) or {}
-
             metadata_params['_fields'] = fields
             metadata_params['_relationships'] = relationships
+            metadata_params['has_pk'] = False
 
             cls._meta = build_metadata(cls, metadata_params)
             cls._data = {}
-            cls._meta.has_pk = False
 
             for k, v in fields.items():
                 cls._data[k] = v
@@ -95,6 +115,9 @@ class ModelMeta(type):
                 setattr(cls, k, None)
 
             for k, v in relationships.items():
+                if v.is_lazy:
+                    v.resolve()
+
                 if not v.model._meta.has_pk:
                     raise InvalidRelationShipError, \
                           "A model need to have at least " \
@@ -103,23 +126,6 @@ class ModelMeta(type):
                 cls._data[k] = v
                 v.set_from_model(cls)
                 setattr(cls, k, None)
-
-            # registering the class in my dicts
-            if not _APP_REGISTRY.get(cls._meta.app_label):
-                _APP_REGISTRY[cls._meta.app_label] = {}
-            _APP_REGISTRY[cls._meta.app_label][cls.__name__] = cls
-            if not _MODULE_REGISTRY.get(cls.__module__):
-                _MODULE_REGISTRY[cls.__module__] = {}
-            _MODULE_REGISTRY[cls.__module__][cls.__name__] = cls
-
-            if not _REGISTRY.get(cls.__module__):
-                _REGISTRY[cls.__module__] = {}
-
-            if not _REGISTRY[cls.__module__].get(cls._meta.app_label):
-                _REGISTRY[cls.__module__][cls._meta.app_label] = {}
-
-            gdict = _REGISTRY[cls.__module__][cls._meta.app_label]
-            gdict[cls.__name__] = cls
 
             # handling managers
             manager_classes = dict([(k, v) for k, v in attrs.items() \
