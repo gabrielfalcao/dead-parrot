@@ -93,6 +93,3 @@ class TestRelationShipBaseInternals:
 
         assert rl1.is_self_referenced is True
         assert rl2.is_self_referenced is False
-
-    def test_resolve_raises(self):
-        assert_raises(NotImplementedError, models.RelationShip().resolve)

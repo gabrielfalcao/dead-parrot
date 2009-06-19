@@ -262,7 +262,6 @@ class Model(object):
                 field = self._meta._fields[attr]
             elif attr in self._meta._relationships.keys():
                 field = self._meta._relationships[attr]
-
                 setattr(val, '_from_model', field.from_model)
                 setattr(val, '_to_model', field.to_model)
             if isinstance(field, Field):

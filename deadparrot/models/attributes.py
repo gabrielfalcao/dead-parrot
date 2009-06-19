@@ -75,9 +75,6 @@ class DateTimeAttribute(Attribute):
     def convert_type(self, val):
         if isinstance(val, basestring):
             if val:
-                if "." in val:
-                    val = val.split(".")[0]
-
                 return datetime.strptime(val, self.vartype)
 
         elif isinstance(val, datetime):

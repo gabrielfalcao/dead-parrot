@@ -28,6 +28,9 @@ from deadparrot.models.registry import ModelRegistry
 class FieldValidationError(Exception):
     pass
 
+class InvalidRelationShipError(Exception):
+    pass
+
 class URLChecker(object):
     def set_url(self, url):
         self.url = url
@@ -336,6 +339,37 @@ class RelationShip(object):
     is_lazy = False
     is_self_referenced = False
 
+    def set_model_object(self, model):
+
+        if isinstance(model, basestring):
+            self.set_lazy(True)
+            # ok, it is a string, so I got to look for it in the
+            # registry
+            if "." in model:
+                items = model.split(".")
+                dots = len(items)
+                if dots == 2:
+                    # got the app_label
+                    app_label, classname = items
+                    model = ModelRegistry.get_model(app_label, classname)
+                else: # more than 2 dots
+                    # got the module name
+                    modulename = ".".join(items[:-1])
+                    classname = items[-1]
+                    model = [m for m in \
+                             ModelRegistry.get_all(by_module=modulename) \
+                             if m.__name__ == classname][0]
+
+            elif model == 'self':
+                self.set_self_referenced(True)
+
+        if not self.is_lazy and not hasattr(model, '__dead_parrot__'):
+            raise TypeError, "%r is not a valid model" % model
+
+        self.model = model
+        if not self.is_lazy:
+            self.set_to_model(model)
+
     def resolve(self):
         raise NotImplementedError
 
@@ -372,38 +406,6 @@ class RelationShip(object):
     def serialize(self, val):
         return val.to_dict()
 
-class ForeignKey(RelationShip):
-    def __init__(self, model):
-
-        if isinstance(model, basestring):
-            self.set_lazy(True)
-            # ok, it is a string, so I got to look for it in the
-            # registry
-            if "." in model:
-                items = model.split(".")
-                dots = len(items)
-                if dots == 2:
-                    # got the app_label
-                    app_label, classname = items
-                    model = ModelRegistry.get_model(app_label, classname)
-                else: # more than 2 dots
-                    # got the module name
-                    modulename = ".".join(items[:-1])
-                    classname = items[-1]
-                    model = [m for m in \
-                             ModelRegistry.get_all(by_module=modulename) \
-                             if m.__name__ == classname][0]
-
-            elif model == 'self':
-                self.set_self_referenced(True)
-
-        if not self.is_lazy and not hasattr(model, '__dead_parrot__'):
-            raise TypeError, "%r is not a valid model" % model
-
-        self.model = model
-        if not self.is_lazy:
-            self.set_to_model(model)
-
     def resolve(self):
         model_list = ModelRegistry.get_all(by_class=self.model)
         if model_list:
@@ -416,8 +418,10 @@ class ForeignKey(RelationShip):
         self.set_to_model(self.model)
         self.set_lazy(False)
 
-    def validate(self, val):
-        pass
+class ForeignKey(RelationShip):
+    def __init__(self, model):
+        self.set_model_object(model)
 
-class InvalidRelationShipError(Exception):
-    pass
+class ManyToManyField(RelationShip):
+    def __init__(self, model):
+        self.set_model_object(model)

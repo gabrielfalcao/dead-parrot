@@ -38,11 +38,11 @@ clean:
 
 unit:
 	@echo "Running unit tests..."
-	@nosetests -s --with-coverage --cover-package tests/unit
+	@nosetests -s --with-coverage --cover-package=deadparrot tests/unit
 
 functional:
 	@echo "Running functional tests..."
-	@nosetests -s --with-coverage --cover-package tests/functional
+	@nosetests -s --with-coverage --cover-package=deadparrot tests/functional
 
 doctest:
 	@echo -ne $(blue)
