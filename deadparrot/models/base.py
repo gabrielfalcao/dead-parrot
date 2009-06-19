@@ -128,7 +128,10 @@ class ModelMeta(type):
 
                 cls._data[k] = v
                 v.set_from_model(cls)
-                setattr(cls, k, None)
+                if isinstance(v, ManyToManyField):
+                    setattr(cls, k, ModelSetManager(v.to_model))
+                else:
+                    setattr(cls, k, None)
 
             # handling managers
             manager_classes = dict([(k, v) for k, v in attrs.items() \
@@ -331,3 +334,19 @@ class Model(object):
 
         return cls(**kwargs)
 
+class ModelSetManager(object):
+    model = None
+    objects = None
+
+    def __init__(self, model):
+        if not isinstance(model, type) or not issubclass(model, Model):
+            raise TypeError, 'ModelSetManager takes a models.Model subclass as construction parameter, got %r' % model
+        self.model = model
+        self.objects = {}
+
+    def add(self, instance):
+        if not isinstance(instance, self.model):
+            raise TypeError, 'ModelSetManager.add takes a instance of %r ' \
+                             'as parameter, got %r' % (self.model, instance)
+
+        self.objects[hash(instance)] = instance

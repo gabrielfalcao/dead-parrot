@@ -56,3 +56,39 @@ class TestManyToManyField:
     def test_resolve_fail_unknown_class(self):
         fk = models.ManyToManyField('dasdDSdsa2er3')
         assert_raises(AttributeError, fk.resolve)
+
+    def test_auto_resolve_with_model_objects(self):
+        def create_model(self):
+            class TestM2MSlave1(models.Model):
+                id = models.IntegerField(primary_key=True)
+
+            class TestM2MMaster1(models.Model):
+                id = models.IntegerField(primary_key=True)
+                slaves = models.ManyToManyField(TestM2MSlave1)
+
+            assert fk.from_model is TestM2MMaster1
+            assert fk.to_model is TestM2MSlave1
+
+    def test_value_is_a_model_set_manager(self):
+        class TestM2MSlave2(models.Model):
+            id = models.IntegerField(primary_key=True)
+
+        class TestM2MMaster2(models.Model):
+            id = models.IntegerField(primary_key=True)
+            slaves = models.ManyToManyField(TestM2MSlave2)
+
+        master = TestM2MMaster2()
+        message = 'TestM2MMaster2.slaves should be a models.ModelSetManager,' \
+                  ' once this attribute was created through a models.ManyToManyField. Got %r'
+        assert isinstance(master.slaves, models.ModelSetManager), message % master.slaves
+
+    def test_model_set_manager_manages_correct_model(self):
+        class TestM2MSlave3(models.Model):
+            id = models.IntegerField(primary_key=True)
+
+        class TestM2MMaster3(models.Model):
+            id = models.IntegerField(primary_key=True)
+            slaves = models.ManyToManyField(TestM2MSlave3)
+
+        master = TestM2MMaster3()
+        assert master.slaves.model == TestM2MSlave3, 'The ModelSetManager in TestM2MMaster3().slaves should manage the model Testm2mslave3. But actually it manages %r' % master.slaves.model
