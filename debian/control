@@ -1,0 +1,22 @@
+Source: python-deadparrot
+Section: python
+Priority: optional
+Maintainer: Gabriel Falcão <gabriel@nacaolivre.org>
+Uploaders: Gabriel Falcão <gabriel@nacaolivre.org>
+Standards-Version: 3.8.0
+Build-Depends: debhelper (>= 7), python, cdbs, python-setuptools, python-support, python-nose, python-pmock, python-simplejson, python-lxml
+Build-Depends-Indep: python-sphinx
+Homepage: http://www.deadparrot.org/
+Vcs-Git: git://github.com/gabrielfalcao/deadparrot.git
+Vcs-Browser: http://github.com/gabrielfalcao/deadparrot/tree/master
+
+Package: python-deadparrot
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}, python-simplejson, python-lxml
+Recommends:
+Suggests:
+Description: Deadparrot is a django-ish model-driven RESTful framework.
+ Dead Parrot is a RESTful framework with the declarative approach of
+ Django Models in mind. Describing a class and its fields, you can
+ tailor the serialization/deserialization of your model in several
+ formats, including xml and json.
