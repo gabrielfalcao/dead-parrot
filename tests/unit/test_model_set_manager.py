@@ -81,7 +81,7 @@ def test_model_set_manager_has_method_add():
     assert hasattr(methods_test_manager, 'add'), 'models.ModelSetManager should have the method "add"'
     assert callable(methods_test_manager.add), 'models.ModelSetManager.add should be callable'
 
-def test_model_set_manager_add_fails_when_param_is_not_correspondent_model():
+def test_model_set_manager_add_fails_when_param_is_not_corresponcent_model():
     should_raise_assertion = "calling ModelSetManager.add with any parameter " \
                              "different its managed model's instance " \
                              "should raise a TypeError"
@@ -111,7 +111,7 @@ def test_model_set_manager_add_include_object_in_its_objects():
     model3 = ModelSetModelTestMethods()
 
     message1 = '%s should be in add_method_manager, ' \
-               'onde it was added through ModelSetManager.add method'
+               'once it was added through ModelSetManager.add method'
 
     message2 = 'The length of objects should be %d, but is %d'
     add_method_manager.add(model1)
@@ -129,7 +129,7 @@ def test_model_set_manager_add_replaces_when_model_is_same():
     model1 = ModelSetModelTestMethods()
 
     message1 = '%s should be in add_method_manager, ' \
-               'onde it was added through ModelSetManager.add method'
+               'once it was added through ModelSetManager.add method'
     message2 = 'The length of objects should be %d, but is %d'
     message3 = "The model1 should be replaced in " \
                "add_method_manager.objects, but was just appended"
@@ -138,3 +138,73 @@ def test_model_set_manager_add_replaces_when_model_is_same():
     assert len(add_method_manager.objects) == 1, message2 % (1, len(add_method_manager.objects))
     add_method_manager.add(model1)
     assert len(add_method_manager.objects) == 1, message3
+
+def test_model_set_manager_has_method_remove():
+    methods_test_manager = models.ModelSetManager(ModelSetModelTestMethods)
+    assert hasattr(methods_test_manager, 'remove'), 'models.ModelSetManager should have the method "remove"'
+    assert callable(methods_test_manager.remove), 'models.ModelSetManager.remove should be callable'
+
+def test_model_set_manager_remove_fails_when_param_is_not_corresponcent_model():
+    should_raise_assertion = "calling ModelSetManager.remove with any parameter " \
+                             "different its managed model's instance " \
+                             "should raise a TypeError"
+    expected_error_message = 'ModelSetManager.remove takes a instance of %r ' \
+                             'as parameter, got None'
+    unexpected_error_message_assertion = 'Unexpected message when expecting ' \
+                                         'TypeError: "%s"'
+
+    manager = models.ModelSetManager(ModelSetModelTestMethods)
+
+    try:
+        manager.remove(None)
+        assert False, should_raise_assertion
+    except TypeError, e:
+        assert unicode(e) == expected_error_message % ModelSetModelTestMethods, \
+        unexpected_error_message_assertion % e
+
+def test_model_set_manager_method_remove_takes_a_model_instance_as_parameter():
+    methods_test_manager = models.ModelSetManager(ModelSetModelTestMethods)
+    assert hasattr(methods_test_manager, 'remove'), 'models.ModelSetManager should have the method "remove"'
+    assert callable(methods_test_manager.remove), 'models.ModelSetManager.remove should be callable'
+
+def test_model_set_manager_remove_remove_object_from_its_objects():
+    remove_method_manager = models.ModelSetManager(ModelSetModelTestMethods)
+    model1 = ModelSetModelTestMethods()
+
+    message1 = '%s should be in remove_method_manager, ' \
+               'once it was removed through ModelSetManager.remove method'
+
+    message2 = 'The length of objects should be %d, but is %d'
+    remove_method_manager.add(model1)
+    assert model1 in remove_method_manager.objects.values(), message1 % 'model1'
+    assert len(remove_method_manager.objects) == 1, message2 % (1, len(remove_method_manager.objects))
+    remove_method_manager.remove(model1)
+    assert model1 not in remove_method_manager.objects.values(), message1 % 'model1'
+    assert len(remove_method_manager.objects) == 0, message2 % (2, len(remove_method_manager.objects))
+
+def test_model_set_manager_remover_raises_when_object_not_within():
+    remove_method_manager = models.ModelSetManager(ModelSetModelTestMethods)
+    model = ModelSetModelTestMethods()
+    try:
+        remove_method_manager.remove(model)
+        assert False, 'ModelSetManager.remove removing a model '\
+               'that is not inside it, should raise ValueError. But did not!'
+    except ValueError, e:
+        assert unicode(e) == '<ModelSetModelTestMethods object> not in ' \
+               '<ModelSetManager for ModelSetModelTestMethods object>', \
+               'Unexpected message when expecting ValueError: "%s"' % unicode(e)
+
+def _test_model_set_manager_remove_replaces_when_model_is_same():
+    remove_method_manager = models.ModelSetManager(ModelSetModelTestMethods)
+    model1 = ModelSetModelTestMethods()
+
+    message1 = '%s should be in remove_method_manager, ' \
+               'once it was removed through ModelSetManager.remove method'
+    message2 = 'The length of objects should be %d, but is %d'
+    message3 = "The model1 should be replaced in " \
+               "remove_method_manager.objects, but was just appended"
+
+    remove_method_manager.remove(model1)
+    assert len(remove_method_manager.objects) == 1, message2 % (1, len(remove_method_manager.objects))
+    remove_method_manager.remove(model1)
+    assert len(remove_method_manager.objects) == 1, message3

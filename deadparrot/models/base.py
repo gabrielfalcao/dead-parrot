@@ -265,6 +265,9 @@ class Model(object):
                 field = self._meta._fields[attr]
             elif attr in self._meta._relationships.keys():
                 field = self._meta._relationships[attr]
+                if not isinstance(val, field.to_model):
+                    raise TypeError('%r is not a %s instance, it is actually a %r' % (val, field.to_model.__name__, type(val)))
+
                 setattr(val, '_from_model', field.from_model)
                 setattr(val, '_to_model', field.to_model)
             if isinstance(field, Field):
@@ -344,9 +347,22 @@ class ModelSetManager(object):
         self.model = model
         self.objects = {}
 
+    def __repr__(self):
+        return '<ModelSetManager for %s object>' % self.model.__name__
+
     def add(self, instance):
         if not isinstance(instance, self.model):
             raise TypeError, 'ModelSetManager.add takes a instance of %r ' \
                              'as parameter, got %r' % (self.model, instance)
 
         self.objects[hash(instance)] = instance
+
+    def remove(self, instance):
+        if not isinstance(instance, self.model):
+            raise TypeError, 'ModelSetManager.remove takes a instance of %r ' \
+                             'as parameter, got %r' % (self.model, instance)
+
+        try:
+            del self.objects[hash(instance)]
+        except KeyError:
+            raise ValueError('%r not in %r' % (instance, self))

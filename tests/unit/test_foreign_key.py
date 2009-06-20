@@ -91,6 +91,19 @@ class TestForeignKey(unittest.TestCase):
                        cage=Cage(id=1))
         self.assertEquals(polly.cage, pollys_cage)
 
+    def test_raises_when_not_model(self):
+        try:
+            Parrot(id=1,
+                   name=u"Polly",
+                   is_dead=True,
+                   cage='cage')
+            raise AssertionError('deadparrot should not allow setting ' \
+                                 'a fk value as anything, but its fk '\
+                                 'model correspondent instance')
+        except TypeError, e:
+            assert unicode(e) == "'cage' is not a Cage instance, it is actually a <type 'str'>", \
+                   'Error description does not match: %r' % unicode(e)
+
     def test_relation_with_class_and_app_label_string(self):
         pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
