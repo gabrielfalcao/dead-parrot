@@ -31,6 +31,8 @@ else
     white  :=
 endif
 
+all: build
+
 clean:
 	@echo "Cleaning up build and *.pyc files..."
 	@find . -name '*.pyc' -exec rm -rf {} \;
