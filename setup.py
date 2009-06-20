@@ -23,7 +23,7 @@ import sys
 from setuptools import setup, find_packages
 
 setup(name='Dead Parrot',
-    version='0.1',
+    version='0.1.1',
     description='A model-based Django(ish) and SQLAlchemy-powered RESTful server/client',
     author=u'Gabriel Falcão',
     author_email='gabriel@nacaolivre.org',

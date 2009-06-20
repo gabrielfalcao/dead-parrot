@@ -1,3 +1,9 @@
+python-deadparrot (0.1.1) HelloPolly; urgency=low
+
+  * Minor bug fix release.
+
+ -- Gabriel Falcão Gonçalves de Moura <gabriel@nacaolivre.org>  Sat, 20 Jun 2009 01:27:34 -0300
+
 python-deadparrot (0.1) HelloPolly; urgency=low
 
   * Initial release.
