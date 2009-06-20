@@ -49,6 +49,7 @@ class TestFieldsBasicBehavior:
         john = Person(first_name=u'John')
         assert_equals(john._meta._fields['first_name'].null, True)
         assert_equals(john._meta._fields['first_name'].blank, True)
+
     def test_charfield_fail_construct(self):
         assert_raises(TypeError, fields.CharField, max_length=None)
 
