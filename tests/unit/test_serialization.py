@@ -136,7 +136,7 @@ class TestSerializersRegistry(unittest.TestCase):
         try:
             Registry.get('invalid-meh')
         except NotImplementedError, e:
-            assert unicode(e) == 'The format "invalid-meh" was not implemented ' \
+            assert unicode(e) == "The format 'invalid-meh' was not implemented " \
                    "as a serializer plugin for DeadParrot", \
                    'Unexpected exception message %r' % unicode(e)
 
