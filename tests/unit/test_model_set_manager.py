@@ -194,17 +194,13 @@ def test_model_set_manager_remover_raises_when_object_not_within():
                '<ModelSetManager for ModelSetModelTestMethods object>', \
                'Unexpected message when expecting ValueError: "%s"' % unicode(e)
 
-def _test_model_set_manager_remove_replaces_when_model_is_same():
-    remove_method_manager = models.ModelSetManager(ModelSetModelTestMethods)
-    model1 = ModelSetModelTestMethods()
 
-    message1 = '%s should be in remove_method_manager, ' \
-               'once it was removed through ModelSetManager.remove method'
-    message2 = 'The length of objects should be %d, but is %d'
-    message3 = "The model1 should be replaced in " \
-               "remove_method_manager.objects, but was just appended"
+def test_model_set_manager_has_method_as_modelset():
+    methods_test_manager = models.ModelSetManager(ModelSetModelTestMethods)
+    assert hasattr(methods_test_manager, 'as_modelset'), 'models.ModelSetManager should have the method "as_modelset"'
+    assert callable(methods_test_manager.as_modelset), 'models.ModelSetManager.as_modelset should be callable'
 
-    remove_method_manager.remove(model1)
-    assert len(remove_method_manager.objects) == 1, message2 % (1, len(remove_method_manager.objects))
-    remove_method_manager.remove(model1)
-    assert len(remove_method_manager.objects) == 1, message3
+def test_model_set_managet_method_as_modelset_returns_a_modelset():
+    methods_test_manager = models.ModelSetManager(ModelSetModelTestMethods)
+    assert methods_test_manager.as_modelset().__class__.__name__ == ModelSetModelTestMethods.Set().__name__, \
+           'Should return a instance of ModelSetModelTestMethods.Set() but got a %r' % methods_test_manager.as_modelset()

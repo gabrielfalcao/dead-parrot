@@ -366,3 +366,8 @@ class ModelSetManager(object):
             del self.objects[hash(instance)]
         except KeyError:
             raise ValueError('%r not in %r' % (instance, self))
+
+    def as_modelset(self):
+        SetClass = self.model.Set()
+        return SetClass(*self.objects)
+
