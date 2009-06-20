@@ -428,3 +428,6 @@ class ForeignKey(RelationShip):
 class ManyToManyField(RelationShip):
     def __init__(self, model):
         self.set_model_object(model)
+
+class OneToOneField(ForeignKey):
+    pass
