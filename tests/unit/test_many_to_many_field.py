@@ -18,7 +18,10 @@
 # Boston, MA 02111-1307, USA.
 
 from nose.tools import *
+
 from deadparrot import models
+
+from utils import one_line_xml
 
 class TestManyToManyField:
     def test_not_lazy_not_referenced(self):
@@ -92,3 +95,93 @@ class TestManyToManyField:
 
         master = TestM2MMaster3()
         assert master.slaves.model == TestM2MSlave3, 'The ModelSetManager in TestM2MMaster3().slaves should manage the model Testm2mslave3. But actually it manages %r' % master.slaves.model
+
+    def test_filling_model_with_m2m(self):
+        class TestM2MSlave4(models.Model):
+            id = models.IntegerField(primary_key=True)
+
+        class TestM2MMaster4(models.Model):
+            id = models.IntegerField(primary_key=True)
+            slaves = models.ManyToManyField(TestM2MSlave4)
+
+        master = TestM2MMaster4(id=1, slaves=[TestM2MSlave4(id=1)])
+
+class TestManyToManyFieldMetaSerialization:
+    unevaluated_dict = {
+        'Parrot': {
+            'is_dead': True,
+            'id': 1,
+            'name': u'Polly',
+            'cages': [
+                {
+                    'Cage': {
+                        'id': 1
+                    }
+                },
+                {
+                    'Cage': {
+                        'id': 2
+                    }
+                }
+            ]
+        }
+    }
+    evaluated_dict = {
+        'Parrot': {
+            'is_dead': True,
+            'id': 1,
+            'name': u'Polly',
+            'cages': [
+                {
+                    'Cage': {
+                        'id': 1,
+                        'color': u'black'
+                    }
+                },
+                {
+                    'Cage': {
+                        'id': 2,
+                        'color': u'black'
+                    }
+                }
+            ]
+        }
+    }
+
+    def test_as_dict_unevaluated(self):
+        class Cage(models.Model):
+            id = models.IntegerField(primary_key=True)
+            color = models.CharField(max_length=30, blank=False)
+
+        class Parrot(models.Model):
+            id = models.IntegerField(primary_key=True)
+            name = models.CharField(max_length=40, primary_key=True)
+            is_dead = models.BooleanField(negatives=['false'],
+                                          positives=['true'])
+            cages = models.ManyToManyField(Cage)
+
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cages=[Cage(id=1), Cage(id=2)])
+
+        assert polly.to_dict() == self.unevaluated_dict
+
+    def test_as_dict_evaluated(self):
+        class Cage(models.Model):
+            id = models.IntegerField(primary_key=True)
+            color = models.CharField(max_length=30, blank=False)
+
+        class Parrot(models.Model):
+            id = models.IntegerField(primary_key=True)
+            name = models.CharField(max_length=40, primary_key=True)
+            is_dead = models.BooleanField(negatives=['false'],
+                                          positives=['true'])
+            cages = models.ManyToManyField(Cage)
+
+        polly = Parrot(id=1,
+                       name=u"Polly",
+                       is_dead=True,
+                       cages=[Cage(id=1, color='black'), Cage(id=2, color='black')])
+
+        assert polly.to_dict() == self.evaluated_dict

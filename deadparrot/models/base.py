@@ -99,8 +99,12 @@ class ModelMeta(type):
             relationships =  dict([(k, v) for k, v in attrs.items() \
                                    if isinstance(v, RelationShip)])
 
+            relationships_plural = dict([(v.to_model._meta.verbose_name_plural, k) \
+                                         for k, v in relationships.items() if v.to_model])
+
             metadata_params['_fields'] = fields
             metadata_params['_relationships'] = relationships
+            metadata_params['_relationships_plural'] = relationships_plural
             metadata_params['has_pk'] = False
 
             cls._meta = build_metadata(cls, metadata_params)
@@ -265,11 +269,17 @@ class Model(object):
                 field = self._meta._fields[attr]
             elif attr in self._meta._relationships.keys():
                 field = self._meta._relationships[attr]
-                if not isinstance(val, field.to_model):
-                    raise TypeError('%r is not a %s instance, it is actually a %r' % (val, field.to_model.__name__, type(val)))
 
-                setattr(val, '_from_model', field.from_model)
-                setattr(val, '_to_model', field.to_model)
+
+                if not isinstance(val, field.to_model) and not isinstance(field, ManyToManyField):
+                    raise TypeError('%r is not a %s instance, it is actually a %r' % (val, field.to_model.__name__, type(val)))
+                elif isinstance(field, ManyToManyField):
+                    if not isinstance(val, list):
+                        raise TypeError('%r is not a %s list, it is actually a %r' % (val, field.to_model.__name__, type(val)))
+                else:
+                    setattr(val, '_from_model', field.from_model)
+                    setattr(val, '_to_model', field.to_model)
+
             if isinstance(field, Field):
                 if self._meta.fields_validation_policy != VALIDATE_NONE:
                     # raising the field-specific exceptions

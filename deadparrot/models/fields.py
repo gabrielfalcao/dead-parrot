@@ -404,7 +404,10 @@ class RelationShip(object):
         self.to_model = to_model
 
     def serialize(self, val):
-        return val.to_dict()
+        if isinstance(val, list):
+            return [v.to_dict() for v in val]
+        else:
+            return val.to_dict()
 
     def resolve(self):
         model_list = ModelRegistry.get_all(by_class=self.model)

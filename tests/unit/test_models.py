@@ -36,6 +36,72 @@ class TestBasicModel(unittest.TestCase):
         self.assertEquals(build_metadata(Car, {}).verbose_name, 'Car')
         self.assertEquals(build_metadata(Car, {}).verbose_name_plural, 'Cars')
 
+    def test_model_metadata_has_fields_attr(self):
+        class Car(Model):
+            one = models.IntegerField()
+            two = models.TextField()
+
+        assert hasattr(Car()._meta, '_fields'), 'model._meta should have attribute _fields'
+
+    def test_model_metadata_fields_attr_is_dict(self):
+        class Car(Model):
+            one = models.IntegerField()
+            two = models.TextField()
+
+        assert isinstance(Car()._meta._fields, dict), 'model._meta._fields should be a dictionary'
+
+    def test_model_metadata_fields_attr_keys(self):
+        class Car(Model):
+            aa = models.IntegerField()
+            bb = models.TextField()
+
+        assert sorted(Car()._meta._fields.keys()) == ['aa', 'bb'], \
+               'model._meta._fields should have ' \
+               'the keys "aa" and "bb", but got %r' % \
+               Car()._meta._fields.keys()
+
+    def test_model_metadata_has_relationships_attr(self):
+        class Car(Model):
+            one = models.IntegerField()
+            two = models.TextField()
+
+        assert hasattr(Car()._meta, '_relationships'), 'model._meta should have attribute _relationships'
+
+    def test_model_metadata_relationships_attr_is_dict(self):
+        class Car(Model):
+            one = models.IntegerField()
+            two = models.TextField()
+
+        assert isinstance(Car()._meta._relationships, dict), 'model._meta._relationships should be a dictionary'
+
+    def test_model_metadata_relationships_attr_keys(self):
+        class Bar(Model):
+            aa = models.IntegerField(primary_key=True)
+
+        class Foo(Model):
+            zz = models.IntegerField(primary_key=True)
+            aa = models.ForeignKey(Bar)
+            bb = models.ManyToManyField(Bar)
+
+        keys = sorted(Foo()._meta._relationships.keys())
+        assert keys == ['aa', 'bb'], \
+               'model._meta._relationships should have ' \
+               'the keys "aa" and "bb", but got %r' % keys
+
+    def test_model_metadata_has_relationships_plural_attr(self):
+        class Car(Model):
+            one = models.IntegerField()
+            two = models.TextField()
+
+        assert hasattr(Car()._meta, '_relationships_plural'), 'model._meta should have attribute _relationships_plural'
+
+    def test_model_metadata_relationships_plural_attr_is_dict(self):
+        class Car(Model):
+            one = models.IntegerField()
+            two = models.TextField()
+
+        assert isinstance(Car()._meta._relationships_plural, dict), 'model._meta._relationships_plural should be a dictionary'
+
     def test_build_metadata_app_label(self):
         class Car(Model):
             __module__ = 'rentalsys.vehicles'
