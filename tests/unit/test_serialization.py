@@ -133,6 +133,13 @@ class TestSerializersRegistry(unittest.TestCase):
                           self.my_dict)
 
     def test_fail_get_unknown(self):
+        try:
+            Registry.get('invalid-meh')
+        except NotImplementedError, e:
+            assert unicode(e) == 'The format "invalid-meh" was not implemented ' \
+                   "as a serializer plugin for DeadParrot", \
+                   'Unexpected exception message %r' % unicode(e)
+
         self.assertRaises(NotImplementedError, Registry.get, 'blabows')
 
     def test_registry_requires_implementation(self):
