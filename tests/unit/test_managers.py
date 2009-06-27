@@ -43,7 +43,7 @@ def test_manager_construction_tuple_third_item_is_kwargs_passed_to_manager():
     msg = 'models.ModelManager()[2] should be %r, got %s instead' % (repr(kwargs), repr(manager))
     assert manager[2] == kwargs, msg
 
-def __test_manager_construction_within_a_model_is_instance_of_objects_manager():
+def test_manager_construction_within_a_model_is_instance_of_objects_manager():
     class Parrot(models.Model):
         objects = models.ModelManager('first', 'arg', first='kwargs', second='wee')
 

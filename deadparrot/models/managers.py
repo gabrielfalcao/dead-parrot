@@ -25,4 +25,7 @@ class ModelManager(object):
         return (ObjectsManager, args, kw)
 
 class ObjectsManager(object):
-    pass
+    def __init__(self, model, *args, **kw):
+        self.model = model
+        self.args = tuple(args)
+        self.kw = dict(kw)

@@ -144,7 +144,8 @@ class ModelMeta(type):
                                     issubclass(v[0], ObjectsManager)])
             for k, manager_tup in manager_classes.items():
                 manager_klass, args, kw = manager_tup
-                setattr(cls, k, manager_klass(model=cls, *args, **kw))
+                manager_object = manager_klass(cls, *args, **kw)
+                setattr(cls, k, manager_object)
 
         super(ModelMeta, cls).__init__(name, bases, attrs)
 
