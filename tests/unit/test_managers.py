@@ -27,9 +27,9 @@ def test_manager_construction_returns_a_tuple_with_3_items():
 def test_manager_construction_tuple_first_item_is_a_class():
     manager = models.ModelManager()
     msg1 = 'models.ModelManager()[0] should return a class, got %s instead' % repr(manager)
-    msg2 = 'models.ModelManager()[0] should be a subclass of models.ModelManagerBuilder, got %s instead' % repr(manager)
+    msg2 = 'models.ModelManager()[0] should be a subclass of models.ObjectsManager, got %s instead' % repr(manager)
     assert isinstance(manager[0], type), msg1
-    assert issubclass(manager[0], models.ModelManagerBuilder), msg2
+    assert issubclass(manager[0], models.ObjectsManager), msg2
 
 def test_manager_construction_tuple_second_item_is_args_passed_to_manager():
     args = 'one', 2, u'three'
@@ -42,3 +42,10 @@ def test_manager_construction_tuple_third_item_is_kwargs_passed_to_manager():
     manager = models.ModelManager(**kwargs)
     msg = 'models.ModelManager()[2] should be %r, got %s instead' % (repr(kwargs), repr(manager))
     assert manager[2] == kwargs, msg
+
+def __test_manager_construction_within_a_model_is_instance_of_objects_manager():
+    class Parrot(models.Model):
+        objects = models.ModelManager('first', 'arg', first='kwargs', second='wee')
+
+    msg = 'Parrot.objects should be a models.ObjectsManager instance, got %r' % Parrot.objects
+    assert isinstance(Parrot.objects, models.ObjectsManager), msg

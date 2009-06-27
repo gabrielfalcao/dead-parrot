@@ -22,7 +22,7 @@ from deadparrot.models.fields import *
 
 class ModelManager(object):
     def __new__(cls, *args, **kw):
-        return (ModelManagerBuilder, args, kw)
+        return (ObjectsManager, args, kw)
 
-class ModelManagerBuilder(object):
+class ObjectsManager(object):
     pass

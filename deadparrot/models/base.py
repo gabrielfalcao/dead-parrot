@@ -141,7 +141,7 @@ class ModelMeta(type):
             manager_classes = dict([(k, v) for k, v in attrs.items() \
                                     if isinstance(v, tuple) and \
                                     len(v) == 3 and \
-                                    issubclass(v[0], ModelManagerBuilder)])
+                                    issubclass(v[0], ObjectsManager)])
             for k, manager_tup in manager_classes.items():
                 manager_klass, args, kw = manager_tup
                 setattr(cls, k, manager_klass(model=cls, *args, **kw))
