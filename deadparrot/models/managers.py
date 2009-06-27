@@ -21,7 +21,8 @@
 from deadparrot.models.fields import *
 
 class ModelManager(object):
-    pass
+    def __new__(cls, *args, **kw):
+        return (ModelManagerBuilder, args, kw)
 
 class ModelManagerBuilder(object):
     pass
