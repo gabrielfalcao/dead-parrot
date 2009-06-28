@@ -70,18 +70,60 @@ def test_file_manager_checks_basepath_existence_raises():
 
     managers.os = os_module
 
+def test_model_file_manager_gets_filename_based_on_model_name():
+    from deadparrot.models.base import Model
+    from deadparrot.models import managers
+
+    path_mock = Mock()
+
+    exists_func = managers.os.path.exists
+    my_path = '/my/path'
+    path_mock.expects(once()).exists(eq(my_path)).will(return_value(True))
+    managers.os.path.exists = path_mock.exists
+
+    class FooBarFSModelWee(Model):
+        objects = managers.FileSystemModelManager(base_path=my_path)
+
+    managers.os.path.exists = exists_func
+
+    msg = 'FooBarFSModelWee.objects._filename should be FooBarFSModelWee.json, ' \
+          'got %r' % FooBarFSModelWee.objects._filename
+
+    assert FooBarFSModelWee.objects._filename == 'FooBarFSModelWee.json', msg
+    path_mock.verify()
+
+def test_model_file_manager_gets_fullpath_based_on_model_name_and_basepath():
+    from deadparrot.models.base import Model
+    from deadparrot.models import managers
+
+    path_mock = Mock()
+
+    exists_func = managers.os.path.exists
+    my_path = '/my/path'
+    path_mock.expects(once()).exists(eq(my_path)).will(return_value(True))
+    managers.os.path.exists = path_mock.exists
+
+    class FooBarFSModelWee(Model):
+        objects = managers.FileSystemModelManager(base_path=my_path)
+
+    managers.os.path.exists = exists_func
+
+    msg = 'FooBarFSModelWee.objects._filename should be /my/path/FooBarFSModelWee.json, ' \
+          'got %r' % FooBarFSModelWee.objects._filename
+
+    assert FooBarFSModelWee.objects._fullpath == '/my/path/FooBarFSModelWee.json', msg
+    path_mock.verify()
+
 def test_model_file_manager_has_method_create():
     from deadparrot.models.base import Model
     from deadparrot.models import managers
 
-    class os_mock(object):
-        class path(object):
-            @classmethod
-            def exists(*args, **kw):
-                return True
+    class os_mock:
+        path = Mock()
 
     os_module = managers.os
     managers.os = os_mock
+    managers.os.path.expects(once()).exists(eq('/home/wee')).will(return_value(True))
 
     class Wee(Model):
         objects = managers.FileSystemModelManager(base_path='/home/wee')

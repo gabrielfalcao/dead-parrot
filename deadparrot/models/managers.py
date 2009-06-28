@@ -43,6 +43,14 @@ class FileObjectsManager(ObjectsManager):
             raise OSError('The path %s does not exist' % base_path)
         self.base_path = base_path
 
+    @property
+    def _filename(self):
+        return "%s.json" % self.model.__name__
+
+    @property
+    def _fullpath(self):
+        return os.path.join(self.base_path, self._filename)
+
     def create():
         pass
 
