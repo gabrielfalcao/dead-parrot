@@ -17,6 +17,8 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 import re
+from pmock import *
+
 from deadparrot import models
 from utils import assert_raises
 
@@ -45,10 +47,46 @@ def test_model_file_manager_construction_with_basepath_nonstring_raises():
     assert_raises(TypeError, make_class_number, exc_pattern='FileSystemModelManager "base_path" parameter should be string, got %r' % 10)
     assert_raises(TypeError, make_class_list, exc_pattern='FileSystemModelManager "base_path" parameter should be string, got %s' % re.escape(repr([])))
 
-def test_model_file_manager_has_method_create():
-    class Parrot(models.Model):
-        objects = models.FileSystemModelManager(base_path='/home/wee')
+def test_file_manager_checks_basepath_existence_raises():
+    from deadparrot.models.base import Model
+    from deadparrot.models import managers
 
-    classname = Parrot.objects.__class__.__name__
-    assert hasattr(Parrot.objects, 'create'), '%s should have the method "create"' % classname
-    assert callable(Parrot.objects.create), '%s.create should be callable' % classname
+    my_path = '/my/invalid/path'
+
+    class os_mock:
+        path = Mock()
+
+    def make_class():
+        class FooBarFSModel(Model):
+            objects = managers.FileSystemModelManager(base_path=my_path)
+
+    os_module = managers.os
+    managers.os = os_mock
+
+    os_mock.path.expects(once()).exists(eq(my_path)).will(return_value(False))
+
+    assert_raises(OSError, make_class, exc_pattern=r'The path %s does not exist' % my_path)
+    os_mock.path.verify()
+
+    managers.os = os_module
+
+def test_model_file_manager_has_method_create():
+    from deadparrot.models.base import Model
+    from deadparrot.models import managers
+
+    class os_mock(object):
+        class path(object):
+            @classmethod
+            def exists(*args, **kw):
+                return True
+
+    os_module = managers.os
+    managers.os = os_mock
+
+    class Wee(Model):
+        objects = managers.FileSystemModelManager(base_path='/home/wee')
+
+    classname = Wee.objects.__class__.__name__
+    assert hasattr(Wee.objects, 'create'), '%s should have the method "create"' % classname
+    assert callable(Wee.objects.create), '%s.create should be callable' % classname
+    managers.os = os_module

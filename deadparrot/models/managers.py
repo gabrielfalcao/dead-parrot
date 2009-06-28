@@ -17,6 +17,7 @@
 # License along with this program; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
+import os
 
 from deadparrot.models.fields import *
 
@@ -38,6 +39,8 @@ class FileObjectsManager(ObjectsManager):
         if not isinstance(base_path, basestring):
             raise TypeError('FileSystemModelManager "base_path" parameter should be string, got %r' % base_path)
 
+        if not os.path.exists(base_path):
+            raise OSError('The path %s does not exist' % base_path)
         self.base_path = base_path
 
     def create():
