@@ -19,6 +19,7 @@
 # Boston, MA 02111-1307, USA.
 
 from deadparrot import models
+
 def test_manager_construction_returns_a_tuple_with_3_items():
     manager = models.ModelManager()
     assert isinstance(manager, tuple), 'models.ModelManager() should return a tuple, got %s' % repr(manager)
@@ -49,3 +50,17 @@ def test_manager_construction_within_a_model_is_instance_of_objects_manager():
 
     msg = 'Parrot.objects should be a models.ObjectsManager instance, got %r' % Parrot.objects
     assert isinstance(Parrot.objects, models.ObjectsManager), msg
+
+def test_manager_within_model_has_model_attribute():
+    class Parrot(models.Model):
+        objects = models.ModelManager('first', 'arg', first='kwargs', second='wee')
+
+    msg = 'Parrot.objects should have the attribute "model"'
+    assert hasattr(Parrot.objects, 'model'), msg
+
+def test_manager_within_model_attribute_model_should_be_respective_model():
+    class Parrot(models.Model):
+        objects = models.ModelManager('first', 'arg', first='kwargs', second='wee')
+
+    msg = 'Parrot.objects.model should be %r, but got %r.' % (Parrot, Parrot.objects.model)
+    assert Parrot.objects.model is Parrot, msg

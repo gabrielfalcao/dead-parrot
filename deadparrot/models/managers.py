@@ -20,12 +20,29 @@
 
 from deadparrot.models.fields import *
 
-class ModelManager(object):
-    def __new__(cls, *args, **kw):
-        return (ObjectsManager, args, kw)
-
 class ObjectsManager(object):
     def __init__(self, model, *args, **kw):
         self.model = model
-        self.args = tuple(args)
-        self.kw = dict(kw)
+        self.__setup__(*args, **kw)
+
+    def __setup__(self, *args, **kw):
+        pass
+
+class ModelManager(object):
+    manager = ObjectsManager
+    def __new__(cls, *args, **kw):
+        return (cls.manager, args, kw)
+
+class FileObjectsManager(ObjectsManager):
+    def __setup__(self, base_path):
+        if not isinstance(base_path, basestring):
+            raise TypeError('FileSystemModelManager "base_path" parameter should be string, got %r' % base_path)
+
+        self.base_path = base_path
+
+    def create():
+        pass
+
+class FileSystemModelManager(ModelManager):
+    manager = FileObjectsManager
+
