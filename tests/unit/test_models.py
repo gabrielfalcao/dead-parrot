@@ -824,6 +824,66 @@ class TestAllFieldsSerialization(unittest.TestCase):
         john2 = self.Person.deserialize(xml, format='xml')
         self.assertEquals(john1, john2)
 
+    def test_positives_serialization_to_json(self):
+        dtime = datetime.now()
+        json = simplejson.dumps({
+            "Person":
+            {
+                "id": 1,
+                "cellphone": "(21) 9988-7766",
+                "name": "John Doe",
+                "weight": 74.349999999999994,
+                "married": True,
+                "creation_date": dtime.strftime("%Y-%m-%d %H:%M:%S"),
+                "blog": "http://blog.john.doe.net",
+                "email": "john@doe.net",
+                "biography": "blabla",
+                "childrens": 2
+            }
+        })
+        john = self.Person(id=1,
+                           name=u'John Doe',
+                           creation_date=dtime,
+                           email=u"john@doe.net",
+                           weight=74.349999999999994,
+                           married="yes",
+                           childrens=2,
+                           cellphone=u"(21) 9988-7766",
+                           biography=u"blabla",
+                           blog=u"http://blog.john.doe.net")
+
+        self.assertEquals(john.serialize(to='json'), json)
+
+    def test_negatives_serialization_to_json(self):
+        dtime = datetime.now()
+        json = simplejson.dumps({
+            "Person":
+            {
+                "id": 1,
+                "cellphone": "(21) 9988-7766",
+                "name": "John Doe",
+                "weight": 74.349999999999994,
+                "married": False,
+                "creation_date": dtime.strftime("%Y-%m-%d %H:%M:%S"),
+                "blog": "http://blog.john.doe.net",
+                "email": "john@doe.net",
+                "biography": "blabla",
+                "childrens": 2
+            }
+        })
+        john = self.Person(id=1,
+                           name=u'John Doe',
+                           creation_date=dtime,
+                           email=u"john@doe.net",
+                           weight=74.349999999999994,
+                           married="no",
+                           childrens=2,
+                           cellphone=u"(21) 9988-7766",
+                           biography=u"blabla",
+                           blog=u"http://blog.john.doe.net")
+
+        self.assertEquals(john.serialize(to='json'), json)
+
 class TestModelSpecialMethods:
     def test_has_method_fill_from_object(self):
         class Person(models.Model):

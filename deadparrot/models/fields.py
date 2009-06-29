@@ -233,16 +233,20 @@ class BooleanField(Field):
         super(BooleanField, self).__init__(*args, **kw)
 
     def convert_type(self, val):
-        # if val is a string in "False" or "True", I will resolve it
-        # as a boolean type
+        if val in self.positives:
+            return True
+
+        if val in self.negatives:
+            return False
+
         if isinstance(val, basestring):
             val = __builtins__.get(val, val)
 
         return val
 
     def validate(self, value):
-        # if val is a string in "False" or "True", I will resolve it
-        # as a boolean type
+        if value in self.positives or value in self.negatives:
+            return
 
         if not isinstance(value, bool) \
                and value not in ('True', 'False'):
