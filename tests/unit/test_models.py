@@ -694,8 +694,8 @@ class TestAllFieldsSerialization(unittest.TestCase):
             creation_date = models.DateTimeField(format="%Y-%m-%d %H:%M:%S")
             email = models.EmailField()
             weight = models.FloatField()
-            married = models.BooleanField(positives=["true", "yes"],
-                                          negatives=["false", "no"])
+            married = models.BooleanField(positives=["true", "yes", 1],
+                                          negatives=["false", "no", 0])
             childrens = models.IntegerField()
             cellphone = models.PhoneNumberField(format="(00) 0000-0000")
             biography = models.TextField()
@@ -854,6 +854,37 @@ class TestAllFieldsSerialization(unittest.TestCase):
 
         self.assertEquals(john.serialize(to='json'), json)
 
+    def test_positives_serialization_to_json_with_integers(self):
+        dtime = datetime.now()
+        json = simplejson.dumps({
+            "Person":
+            {
+                "id": 1,
+                "cellphone": "(21) 9988-7766",
+                "name": "John Doe",
+                "weight": 74.349999999999994,
+                "married": True,
+                "creation_date": dtime.strftime("%Y-%m-%d %H:%M:%S"),
+                "blog": "http://blog.john.doe.net",
+                "email": "john@doe.net",
+                "biography": "blabla",
+                "childrens": 2
+            }
+        })
+        john = self.Person(id=1,
+                           name=u'John Doe',
+                           creation_date=dtime,
+                           email=u"john@doe.net",
+                           weight=74.349999999999994,
+                           married=1,
+                           childrens=2,
+                           cellphone=u"(21) 9988-7766",
+                           biography=u"blabla",
+                           blog=u"http://blog.john.doe.net")
+
+        self.assertEquals(john.serialize(to='json'), json)
+
+
     def test_negatives_serialization_to_json(self):
         dtime = datetime.now()
         json = simplejson.dumps({
@@ -877,6 +908,36 @@ class TestAllFieldsSerialization(unittest.TestCase):
                            email=u"john@doe.net",
                            weight=74.349999999999994,
                            married="no",
+                           childrens=2,
+                           cellphone=u"(21) 9988-7766",
+                           biography=u"blabla",
+                           blog=u"http://blog.john.doe.net")
+
+        self.assertEquals(john.serialize(to='json'), json)
+
+    def test_negatives_serialization_to_json_with_integers(self):
+        dtime = datetime.now()
+        json = simplejson.dumps({
+            "Person":
+            {
+                "id": 1,
+                "cellphone": "(21) 9988-7766",
+                "name": "John Doe",
+                "weight": 74.349999999999994,
+                "married": False,
+                "creation_date": dtime.strftime("%Y-%m-%d %H:%M:%S"),
+                "blog": "http://blog.john.doe.net",
+                "email": "john@doe.net",
+                "biography": "blabla",
+                "childrens": 2
+            }
+        })
+        john = self.Person(id=1,
+                           name=u'John Doe',
+                           creation_date=dtime,
+                           email=u"john@doe.net",
+                           weight=74.349999999999994,
+                           married=0,
                            childrens=2,
                            cellphone=u"(21) 9988-7766",
                            biography=u"blabla",
