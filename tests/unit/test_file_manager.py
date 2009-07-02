@@ -19,30 +19,33 @@
 import re
 from pmock import *
 
-from deadparrot import models
+from deadparrot.models.base import Model
+from deadparrot.models import managers
+
 from utils import assert_raises
+from nose import with_setup
 
 def test_model_file_manager_class_exists():
     msg1 = 'deadparrot.models should have the class FileSystemManager'
-    assert hasattr(models, 'FileSystemModelManager'), msg1
-    msg2 = 'deadparrot.models.FileSystemManager should have the class FileSystemManager'
-    assert issubclass(models.FileSystemModelManager, models.ModelManager), msg2
+    assert hasattr(managers, 'FileSystemModelManager'), msg1
+    msg2 = 'deadparrot.managers.FileSystemManager should have the class FileSystemManager'
+    assert issubclass(managers.FileSystemModelManager, managers.ModelManager), msg2
 
 def test_model_file_manager_construction_without_basepath_raises():
     def make_class():
-        class Parrot(models.Model):
-            objects = models.FileSystemModelManager()
+        class Parrot(Model):
+            objects = managers.FileSystemModelManager()
 
     assert_raises(TypeError, make_class, exc_pattern='__setup__.. takes exactly 2 arguments .1 given.')
 
 def test_model_file_manager_construction_with_basepath_nonstring_raises():
     def make_class_number():
-        class Parrot(models.Model):
-            objects = models.FileSystemModelManager(base_path=10)
+        class Parrot(Model):
+            objects = managers.FileSystemModelManager(base_path=10)
 
     def make_class_list():
-        class Parrot(models.Model):
-            objects = models.FileSystemModelManager(base_path=[])
+        class Parrot(Model):
+            objects = managers.FileSystemModelManager(base_path=[])
 
     assert_raises(TypeError, make_class_number, exc_pattern='FileSystemModelManager "base_path" parameter should be string, got %r' % 10)
     assert_raises(TypeError, make_class_list, exc_pattern='FileSystemModelManager "base_path" parameter should be string, got %s' % re.escape(repr([])))
@@ -113,6 +116,7 @@ def test_model_file_manager_gets_fullpath_based_on_model_name_and_basepath():
 
     assert FooBarFSModelWee.objects._fullpath == '/my/path/FooBarFSModelWee.json', msg
     path_mock.verify()
+
 
 def test_model_file_manager_has_method_create():
     from deadparrot.models.base import Model
