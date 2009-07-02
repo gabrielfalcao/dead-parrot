@@ -73,3 +73,14 @@ def assert_raises(exception, callable, *args, **kwargs):
                   % (callsig, exception, traceback.format_exc(e))
     else:
         assert False, "%s did not raise %s" % (callsig, exception)
+
+class FakeGetter(object):
+    def __call__(self, *args, **kw):
+        return self
+
+    def __getattr__(self, attr):
+        if not attr.startswith('_') and not attr.endswith('_'):
+            return self
+        else:
+            return super(FakeGetter, self).__getattr__(attr)
+

@@ -18,8 +18,10 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 import os
+import codecs
 
 from deadparrot.models.fields import *
+from os.path import join
 
 class ObjectsManager(object):
     def __init__(self, model, *args, **kw):
@@ -49,11 +51,14 @@ class FileObjectsManager(ObjectsManager):
 
     @property
     def _fullpath(self):
-        return os.path.join(self.base_path, self._filename)
+        return join(self.base_path, self._filename)
 
-    def create():
-        pass
+    def create(self, **kw):
+        model = self.model(**kw)
+        fobj = codecs.open(self._fullpath, 'w', 'utf-8')
+        fobj.write(model.serialize('json'))
+        fobj.close()
+        return model
 
 class FileSystemModelManager(ModelManager):
     manager = FileObjectsManager
-

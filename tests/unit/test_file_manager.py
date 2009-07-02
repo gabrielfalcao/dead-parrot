@@ -20,9 +20,10 @@ import re
 from pmock import *
 
 from deadparrot.models.base import Model
+from deadparrot.models.fields import CharField
 from deadparrot.models import managers
 
-from utils import assert_raises
+from utils import assert_raises, FakeGetter
 from nose import with_setup
 
 def test_model_file_manager_class_exists():
@@ -119,9 +120,6 @@ def test_model_file_manager_gets_fullpath_based_on_model_name_and_basepath():
 
 
 def test_model_file_manager_has_method_create():
-    from deadparrot.models.base import Model
-    from deadparrot.models import managers
-
     class os_mock:
         path = Mock()
 
@@ -136,3 +134,36 @@ def test_model_file_manager_has_method_create():
     assert hasattr(Wee.objects, 'create'), '%s should have the method "create"' % classname
     assert callable(Wee.objects.create), '%s.create should be callable' % classname
     managers.os = os_module
+
+os_module = managers.os
+def setup_fake_os():
+    managers.os = FakeGetter()
+
+def teardown_fake_os():
+    managers.os = os_module
+
+@with_setup(setup_fake_os, teardown_fake_os)
+def test_model_file_manager_create_uses_codecs_utf8():
+    codecs_mock = Mock()
+    file_mock = Mock()
+
+    codecs_module = managers.codecs
+    managers.codecs = codecs_mock
+    class Wee(Model):
+        name = CharField(max_length=100)
+        objects = managers.FileSystemModelManager(base_path='/home/wee')
+
+    foobar = Wee(name='foo bar')
+    expected_json = foobar.serialize('json')
+    codecs_mock.expects(once()).open(eq('/home/wee/Wee.json'),
+                                     eq('w'),
+                                     eq('utf-8')).will(return_value(file_mock))
+    file_mock.expects(once()).write(eq(expected_json))
+    file_mock.expects(once()).close()
+
+    got = Wee.objects.create(name='foo bar')
+    assert got == foobar, 'Expected %r, got %r' % (foobar, got)
+
+    file_mock.verify()
+    codecs_mock.verify()
+    managers.codecs = codecs_module
