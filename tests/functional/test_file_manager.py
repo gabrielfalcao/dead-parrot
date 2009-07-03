@@ -19,7 +19,7 @@
 import os
 from deadparrot import models
 
-def test_model_file_manager_create():
+def __test_model_file_manager_create():
     class FooBarSerial(models.Model):
         name = models.CharField(max_length=100)
         objects = models.FileSystemModelManager(base_path=os.path.abspath('.'))
