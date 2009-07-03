@@ -55,8 +55,9 @@ class FileObjectsManager(ObjectsManager):
 
     def create(self, **kw):
         model = self.model(**kw)
+        json = self.model.Set()(*[model]).serialize('json')
         fobj = codecs.open(self._fullpath, 'w', 'utf-8')
-        fobj.write(model.serialize('json'))
+        fobj.write(json)
         fobj.close()
         return model
 

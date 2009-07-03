@@ -154,7 +154,7 @@ def test_model_file_manager_create_uses_codecs_utf8():
         objects = managers.FileSystemModelManager(base_path='/home/wee')
 
     foobar = Wee(name='foo bar')
-    expected_json = foobar.serialize('json')
+    expected_json = Wee.Set()(*[foobar]).serialize('json')
     codecs_mock.expects(once()).open(eq('/home/wee/Wee.json'),
                                      eq('w'),
                                      eq('utf-8')).will(return_value(file_mock))
