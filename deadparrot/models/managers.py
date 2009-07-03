@@ -55,10 +55,16 @@ class FileObjectsManager(ObjectsManager):
 
     def create(self, **kw):
         model = self.model(**kw)
-        json = self.model.Set()(*[model]).serialize('json')
-        fobj = codecs.open(self._fullpath, 'w', 'utf-8')
-        fobj.write(json)
+
+        fobj = codecs.open(self._fullpath, 'a', 'utf-8')
+        json = fobj.read()
+
+        modelset = self.model.Set()().deserialize(json, 'json')
+        modelset.add(model)
+
+        fobj.write(modelset.serialize('json'))
         fobj.close()
+
         return model
 
 class FileSystemModelManager(ModelManager):
