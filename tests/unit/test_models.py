@@ -344,7 +344,7 @@ class TestModelSet(unittest.TestCase):
         self.assertEquals(people.to_dict(), self.my_dict)
         self.assertEquals(unicode(people), 'Person.Set([Person(name="John Doe", birthdate="10/02/1988"), Person(name="Mary Doe", birthdate="20/10/1989")])')
 
-    def test_to_list_operations(self):
+    def test_to_list_operations_getitem(self):
         class Person(Model):
             name = fields.CharField(max_length=10)
             birthdate = fields.DateField(format="%d/%m/%Y")
@@ -356,18 +356,67 @@ class TestModelSet(unittest.TestCase):
         PersonSet = Person.Set()
         people = PersonSet(person1, person2)
 
-        # getitem
         self.assertEquals(people[0].name, u'John Doe')
-        # length
+
+    def test_to_list_operations_length(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            class Meta:
+                verbose_name_plural = 'People'
+
+        person1 = Person(name=u'John Doe', birthdate=u'10/02/1988')
+        person2 = Person(name=u'Mary Doe', birthdate=u'20/10/1989')
+        PersonSet = Person.Set()
+        people = PersonSet(person1, person2)
+
         self.assertEquals(len(people), 2)
+
+    def test_to_list_operations_nonzero(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            class Meta:
+                verbose_name_plural = 'People'
+
+        person1 = Person(name=u'John Doe', birthdate=u'10/02/1988')
+        person2 = Person(name=u'Mary Doe', birthdate=u'20/10/1989')
+        PersonSet = Person.Set()
+        people = PersonSet(person1, person2)
+
         # nonzero
         self.assertEquals(bool(people), True)
         self.assertEquals(bool(PersonSet()), False)
-        # iteration
+
+    def test_to_list_operations_iteration(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            class Meta:
+                verbose_name_plural = 'People'
+
+        person1 = Person(name=u'John Doe', birthdate=u'10/02/1988')
+        person2 = Person(name=u'Mary Doe', birthdate=u'20/10/1989')
+        PersonSet = Person.Set()
+        people = PersonSet(person1, person2)
+
         self.assertEquals([u'John Doe', u'Mary Doe'],
                           [x.name for x in people])
-        # equality
+
+    def test_to_list_operations_equality(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            class Meta:
+                verbose_name_plural = 'People'
+
+        person1 = Person(name=u'John Doe', birthdate=u'10/02/1988')
+        person2 = Person(name=u'Mary Doe', birthdate=u'20/10/1989')
+        PersonSet = Person.Set()
+        people = PersonSet(person1, person2)
+
         self.assertEquals(people, PersonSet(person1, person2))
+        self.assertNotEquals(people, PersonSet(person2, person1))
 
     def test_from_dict(self):
         class Person(Model):

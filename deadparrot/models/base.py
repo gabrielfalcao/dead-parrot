@@ -163,6 +163,9 @@ class ModelSet(object):
 
     def __eq__(self, other):
         return self.items == other
+    def __nq__(self, other):
+        return self.items != other
+
     def __getitem__(self, *a, **kw):
         return self.items.__getitem__(*a, **kw)
     def __setitem__(self, *a, **kw):
