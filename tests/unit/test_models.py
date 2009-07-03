@@ -338,6 +338,55 @@ class TestModelSet(unittest.TestCase):
         assert_raises(TypeError, foos.add, 5, exc_pattern=r'add\(\) takes a Foo model instance as parameter, got 5')
         assert_raises(TypeError, bars.add, 10, exc_pattern=r'add\(\) takes a Bar model instance as parameter, got 10')
 
+    def test_remove_exists(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            def __unicode__(self):
+                return u'Person(name="%s", birthdate="%s")' % \
+                        (self.name, self.birthdate.strftime("%d/%m/%Y"))
+
+            class Meta:
+                verbose_name_plural = 'People'
+        PersonSet = Person.Set()
+        people = PersonSet()
+        assert hasattr(people, 'remove'), '%r should have the attribute remove' % PersonSet
+        assert callable(people.remove), '%r.remove should be a method (callable)' % PersonSet
+
+    def test_remove_success(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            def __unicode__(self):
+                return u'Person(name="%s")' % self.name
+
+            class Meta:
+                verbose_name_plural = 'People'
+        PersonSet = Person.Set()
+
+        person1 = Person(name='Wee1')
+        person2 = Person(name='Wee2')
+        person3 = Person(name='Wee3')
+        people1 = PersonSet(*[person1, person2, person3])
+        people2 = PersonSet(*[person1, person3])
+        people1.remove(person2)
+
+        assert people1 == people2, '%r should be equal to %r' % (people1, people2)
+
+    def test_remove_fails_when_not_same_type(self):
+        class Foo(Model):
+            pass
+        class Bar(Model):
+            pass
+
+        FooSet = Foo.Set()
+        BarSet = Bar.Set()
+        foos = FooSet()
+        bars = BarSet()
+
+        assert_raises(TypeError, foos.remove, None, exc_pattern=r'remove\(\) takes a Foo model instance as parameter, got None')
+        assert_raises(TypeError, foos.remove, 5, exc_pattern=r'remove\(\) takes a Foo model instance as parameter, got 5')
+        assert_raises(TypeError, bars.remove, 10, exc_pattern=r'remove\(\) takes a Bar model instance as parameter, got 10')
+
     def test_to_dict(self):
         class Person(Model):
             name = fields.CharField(max_length=10)

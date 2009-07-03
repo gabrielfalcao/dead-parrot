@@ -190,6 +190,14 @@ class ModelSet(object):
 
         self.items.append(model)
 
+    def remove(self, model):
+        if not isinstance(model, self.__model_class__):
+            raise TypeError('remove() takes a %s model instance ' \
+                            'as parameter, got %r' % \
+                            (self.__model_class__.__name__, model))
+
+        self.items.remove(model)
+
     def to_dict(self):
         dicts = [m.to_dict() for m in self.items]
         ret = {self.__model_class__._meta.verbose_name_plural.title(): dicts}
