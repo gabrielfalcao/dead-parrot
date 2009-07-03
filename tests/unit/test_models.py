@@ -26,7 +26,7 @@ from deadparrot.models import Model
 from deadparrot.models import build_metadata
 from datetime import date, time, datetime
 
-from utils import one_line_xml
+from utils import one_line_xml, assert_raises
 
 class TestBasicModel(unittest.TestCase):
     def test_build_metadata_verbose_name(self):
@@ -291,6 +291,38 @@ class TestModelSet(unittest.TestCase):
     def test_construction_fail(self):
         self.assertRaises(TypeError, models.ModelSet, object(), None)
 
+    def test_append_exists(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            def __unicode__(self):
+                return u'Person(name="%s", birthdate="%s")' % \
+                        (self.name, self.birthdate.strftime("%d/%m/%Y"))
+
+            class Meta:
+                verbose_name_plural = 'People'
+        PersonSet = Person.Set()
+        people = PersonSet()
+        assert hasattr(people, 'append'), '%r should have the attribute append' % PersonSet
+        assert callable(people.append), '%r.append should be a method (callable)' % PersonSet
+
+    def test_append_success(self):
+        class Person(Model):
+            name = fields.CharField(max_length=10)
+            def __unicode__(self):
+                return u'Person(name="%s")' % self.name
+
+            class Meta:
+                verbose_name_plural = 'People'
+        PersonSet = Person.Set()
+
+        person = Person(name='Wee')
+        people1 = PersonSet(*[person])
+        people2 = PersonSet()
+        people2.append(person)
+
+        assert people1 == people2, '%r should be equal to %r' % (people1, people2)
+
     def test_to_dict(self):
         class Person(Model):
             name = fields.CharField(max_length=10)
@@ -334,6 +366,8 @@ class TestModelSet(unittest.TestCase):
         # iteration
         self.assertEquals([u'John Doe', u'Mary Doe'],
                           [x.name for x in people])
+        # equality
+        self.assertEquals(people, PersonSet(person1, person2))
 
     def test_from_dict(self):
         class Person(Model):

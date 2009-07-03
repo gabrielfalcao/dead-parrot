@@ -159,8 +159,10 @@ class ModelSet(object):
                       (self.__class__.__name__,
                        self.__model_class__.__name__,
                        type(i))
-        self.items = items
+        self.items = list(items)
 
+    def __eq__(self, other):
+        return self.items == other
     def __getitem__(self, *a, **kw):
         return self.items.__getitem__(*a, **kw)
     def __setitem__(self, *a, **kw):
@@ -176,6 +178,9 @@ class ModelSet(object):
 
     def __repr__(self):
         return "%s.Set(%r)" % (self.__model_class__.__name__, list(self))
+
+    def append(self, model):
+        self.items.append(model)
 
     def to_dict(self):
         dicts = [m.to_dict() for m in self.items]
