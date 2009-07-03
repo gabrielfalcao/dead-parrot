@@ -57,7 +57,7 @@ class FileObjectsManager(ObjectsManager):
         model = self.model(**kw)
 
         fobj = codecs.open(self._fullpath, 'a', 'utf-8')
-        json = fobj.read()
+        json = fobj.read() or self.model.Set()().serialize('json')
 
         modelset = self.model.Set()().deserialize(json, 'json')
         modelset.add(model)
