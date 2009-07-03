@@ -200,7 +200,7 @@ class ModelSet(object):
 
     def to_dict(self):
         dicts = [m.to_dict() for m in self.items]
-        ret = {self.__model_class__._meta.verbose_name_plural.title(): dicts}
+        ret = {self.__model_class__._meta.verbose_name_plural: dicts}
         return ret
 
     @classmethod

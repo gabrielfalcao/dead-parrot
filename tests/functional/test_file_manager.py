@@ -19,7 +19,7 @@
 import os
 from deadparrot import models
 
-def test_model_file_manager_create_uses_codecs_utf8():
+def test_model_file_manager_create():
     class FooBarSerial(models.Model):
         name = models.CharField(max_length=100)
         objects = models.FileSystemModelManager(base_path=os.path.abspath('.'))
@@ -30,3 +30,20 @@ def test_model_file_manager_create_uses_codecs_utf8():
     got = FooBarSerial.objects.create(name='foo bar')
 
     assert expected == got, 'Expected %r, got %r' % (expected, got)
+    os.remove(FooBarSerial.objects._fullpath)
+
+def __test_model_file_manager_create_many():
+    class WeeWooSerial(models.Model):
+        name = models.CharField(max_length=100)
+        objects = models.FileSystemModelManager(base_path=os.path.abspath('.'))
+        def __unicode__(self):
+            return u'<WeeWooSerial(name=%r)>' % self.name
+
+    f1 = WeeWooSerial.objects.create(name='foo one')
+    f2 = WeeWooSerial.objects.create(name='foo two')
+    f3 = WeeWooSerial.objects.create(name='foo three')
+
+    expected = WeeWooSerial.Set()(f1, f2, f3)
+    got = WeeWooSerial.Set().deserialize(open(WeeWooSerial.objects._fullpath).read(), 'json')
+    assert expected == got, 'Expected %r, got %r' % (expected, got)
+    os.remove(WeeWooSerial.objects._fullpath)

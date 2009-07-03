@@ -54,12 +54,12 @@ class FileObjectsManager(ObjectsManager):
         return join(self.base_path, self._filename)
 
     def create(self, **kw):
+        ModelSetClass = self.model.Set()
+
         model = self.model(**kw)
-
-        fobj = codecs.open(self._fullpath, 'w+', 'utf-8')
-        json = fobj.read() or self.model.Set()().serialize('json')
-
-        modelset = self.model.Set().deserialize(json, 'json')
+        fobj = codecs.open(self._fullpath, 'r+', 'utf-8')
+        json = fobj.read() or ModelSetClass().serialize('json')
+        modelset = ModelSetClass.deserialize(json, 'json')
 
         modelset.add(model)
 
