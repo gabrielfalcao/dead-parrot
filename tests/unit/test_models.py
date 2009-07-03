@@ -323,6 +323,21 @@ class TestModelSet(unittest.TestCase):
 
         assert people1 == people2, '%r should be equal to %r' % (people1, people2)
 
+    def test_add_fails_when_not_same_type(self):
+        class Foo(Model):
+            pass
+        class Bar(Model):
+            pass
+
+        FooSet = Foo.Set()
+        BarSet = Bar.Set()
+        foos = FooSet()
+        bars = BarSet()
+
+        assert_raises(TypeError, foos.add, None, exc_pattern=r'add\(\) takes a Foo model instance as parameter, got None')
+        assert_raises(TypeError, foos.add, 5, exc_pattern=r'add\(\) takes a Foo model instance as parameter, got 5')
+        assert_raises(TypeError, bars.add, 10, exc_pattern=r'add\(\) takes a Bar model instance as parameter, got 10')
+
     def test_to_dict(self):
         class Person(Model):
             name = fields.CharField(max_length=10)

@@ -183,6 +183,11 @@ class ModelSet(object):
         return "%s.Set(%r)" % (self.__model_class__.__name__, list(self))
 
     def add(self, model):
+        if not isinstance(model, self.__model_class__):
+            raise TypeError('add() takes a %s model instance ' \
+                            'as parameter, got %r' % \
+                            (self.__model_class__.__name__, model))
+
         self.items.append(model)
 
     def to_dict(self):
