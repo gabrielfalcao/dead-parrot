@@ -182,7 +182,7 @@ class ModelSet(object):
     def __repr__(self):
         return "%s.Set(%r)" % (self.__model_class__.__name__, list(self))
 
-    def append(self, model):
+    def add(self, model):
         self.items.append(model)
 
     def to_dict(self):

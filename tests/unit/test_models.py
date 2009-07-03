@@ -291,7 +291,7 @@ class TestModelSet(unittest.TestCase):
     def test_construction_fail(self):
         self.assertRaises(TypeError, models.ModelSet, object(), None)
 
-    def test_append_exists(self):
+    def test_add_exists(self):
         class Person(Model):
             name = fields.CharField(max_length=10)
             birthdate = fields.DateField(format="%d/%m/%Y")
@@ -303,10 +303,10 @@ class TestModelSet(unittest.TestCase):
                 verbose_name_plural = 'People'
         PersonSet = Person.Set()
         people = PersonSet()
-        assert hasattr(people, 'append'), '%r should have the attribute append' % PersonSet
-        assert callable(people.append), '%r.append should be a method (callable)' % PersonSet
+        assert hasattr(people, 'add'), '%r should have the attribute add' % PersonSet
+        assert callable(people.add), '%r.add should be a method (callable)' % PersonSet
 
-    def test_append_success(self):
+    def test_add_success(self):
         class Person(Model):
             name = fields.CharField(max_length=10)
             def __unicode__(self):
@@ -319,7 +319,7 @@ class TestModelSet(unittest.TestCase):
         person = Person(name='Wee')
         people1 = PersonSet(*[person])
         people2 = PersonSet()
-        people2.append(person)
+        people2.add(person)
 
         assert people1 == people2, '%r should be equal to %r' % (people1, people2)
 
