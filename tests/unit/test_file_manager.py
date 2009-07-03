@@ -156,7 +156,7 @@ def test_model_file_manager_create_uses_codecs_utf8():
     foobar = Wee(name='foo bar')
     expected_json = Wee.Set()(*[foobar]).serialize('json')
     codecs_mock.expects(once()).open(eq('/home/wee/Wee.json'),
-                                     eq('a'),
+                                     eq('w+'),
                                      eq('utf-8')).will(return_value(file_mock))
     file_mock.expects(once()).read().will(return_value(Wee.Set()().serialize('json')))
     file_mock.expects(once()).write(eq(expected_json))
@@ -183,7 +183,7 @@ def test_model_file_manager_create_uses_codecs_utf8_works_with_empty_string():
     foobar = Wee(name='foo bar')
     expected_json = Wee.Set()(*[foobar]).serialize('json')
     codecs_mock.expects(once()).open(eq('/home/wee/Wee.json'),
-                                     eq('a'),
+                                     eq('w+'),
                                      eq('utf-8')).will(return_value(file_mock))
     file_mock.expects(once()).read().will(return_value(''))
     file_mock.expects(once()).write(eq(expected_json))
