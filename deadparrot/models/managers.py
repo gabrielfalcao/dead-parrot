@@ -105,5 +105,21 @@ class FileObjectsManager(ObjectsManager):
 
         return modelset
 
+    def all(self):
+        ModelSetClass = self.model.Set()
+        if not os.path.exists(self._fullpath):
+            return ModelSetClass()
+
+        fobj = codecs.open(self._fullpath, 'r', 'utf-8')
+        json = fobj.read()
+        fobj.close()
+
+        try:
+            modelset = ModelSetClass.deserialize(json, 'json')
+        except ValueError:
+            modelset = ModelSetClass()
+
+        return modelset
+
 class FileSystemModelManager(ModelManager):
     manager = FileObjectsManager
