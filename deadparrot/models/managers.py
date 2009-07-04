@@ -84,24 +84,11 @@ class FileObjectsManager(ObjectsManager):
             if not key in self.model._meta._fields.keys():
                 raise TypeError('%s is not a valid field in %r' % (key, self.model))
 
-        ModelSetClass = self.model.Set()
-
-        if not os.path.exists(self._fullpath):
-            return ModelSetClass()
-
-        fobj = codecs.open(self._fullpath, 'r', 'utf-8')
-        json = fobj.read()
-        fobj.close()
-
-        modelset = ModelSetClass()
-        try:
-            for obj in ModelSetClass.deserialize(json, 'json'):
-                for k, v in params.items():
-                    if getattr(obj, k) == v:
-                        modelset.add(obj)
-
-        except ValueError:
-            pass
+        modelset = self.all()
+        for obj in modelset:
+            for k, v in params.items():
+                if getattr(obj, k) != v:
+                    modelset.remove(obj)
 
         return modelset
 
