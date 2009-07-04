@@ -19,7 +19,7 @@
 import os
 from deadparrot import models
 
-def __test_model_file_manager_create():
+def test_model_file_manager_create():
     class FooBarSerial(models.Model):
         name = models.CharField(max_length=100)
         objects = models.FileSystemModelManager(base_path=os.path.abspath('.'))
@@ -32,7 +32,7 @@ def __test_model_file_manager_create():
     assert expected == got, 'Expected %r, got %r' % (expected, got)
     os.remove(FooBarSerial.objects._fullpath)
 
-def __test_model_file_manager_create_many():
+def test_model_file_manager_create_many():
     class WeeWooSerial(models.Model):
         name = models.CharField(max_length=100)
         objects = models.FileSystemModelManager(base_path=os.path.abspath('.'))

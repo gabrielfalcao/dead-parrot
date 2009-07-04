@@ -57,12 +57,23 @@ class FileObjectsManager(ObjectsManager):
         ModelSetClass = self.model.Set()
 
         model = self.model(**kw)
-        fobj = codecs.open(self._fullpath, 'r+', 'utf-8')
-        json = fobj.read() or ModelSetClass().serialize('json')
-        modelset = ModelSetClass.deserialize(json, 'json')
+        if not os.path.exists(self._fullpath):
+            f = codecs.open(self._fullpath, 'w', 'utf-8')
+            f.write('')
+            f.close()
+
+        fobj = codecs.open(self._fullpath, 'r', 'utf-8')
+        json = fobj.read()
+        fobj.close()
+
+        try:
+            modelset = ModelSetClass.deserialize(json, 'json')
+        except ValueError:
+            modelset = ModelSetClass()
 
         modelset.add(model)
 
+        fobj = codecs.open(self._fullpath, 'w', 'utf-8')
         fobj.write(modelset.serialize('json'))
         fobj.close()
 
