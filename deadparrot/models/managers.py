@@ -124,7 +124,34 @@ class FileObjectsManager(ObjectsManager):
         return modelset and modelset[0] or None
 
     def delete(self, obj):
-        raise TypeError('delete() takes a Wee or WeeSet as parameter, got %r' % obj)
+        if not isinstance(obj, self.model):
+            raise TypeError('delete() takes a %s as parameter, got %r' % (self.model.__name__, obj))
+
+        modelset = self.all()
+        newset = self.model.Set()()
+
+        for model in modelset:
+            for k in model._meta._fields.keys():
+                v = getattr(obj, k)
+                if getattr(model, k) != v and model not in newset:
+                    newset.add(model)
+
+        f = codecs.open(self._fullpath, 'w', 'utf-8')
+        f.write(newset.serialize('json'))
+        f.close()
+
+    # def persist(self, obj):
+    #     if not isinstance(obj, self.model) and \
+    #        not isinstance(obj, self.model.Set().__bases__) and \
+    #        obj.model != obj:
+    #         raise TypeError('persist() takes a Wee or WeeSet as parameter, got %r' % obj)
+
+    #     modelset = self.all()
+    #     modelset.add(obj)
+
+    #     f = codecs.open(self._fullpath, 'w', 'utf-8')
+    #     f.write(modelset.serialize('json'))
+    #     f.close()
 
 class FileSystemModelManager(ModelManager):
     manager = FileObjectsManager

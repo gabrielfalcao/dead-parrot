@@ -558,11 +558,86 @@ def test_model_file_manager_has_method_delete():
 
 @with_setup(setup_fake_os, teardown_fake_os)
 def test_model_file_manager_method_delete_takes_model_or_modelset():
+    codecs_mock = Mock()
+    file_mock = Mock()
+    path_mock = Mock()
+
+    path_mock.expects(once()).exists(eq('/home/wee/Wee.json')).will(return_value(True))
+    path_mock.expects(once()).exists(eq('/home/wee')).will(return_value(True))
+
+    os_path_module = managers.os.path
+    codecs_module = managers.codecs
+    managers.codecs = codecs_mock
+    managers.os.path = path_mock
+
     class Wee(Model):
         objects = managers.FileSystemModelManager(base_path='/home/wee')
 
     assert_raises(TypeError, Wee.objects.delete, None,
-                  exc_pattern=r'delete\(\) takes a Wee or WeeSet as parameter, got None')
+                  exc_pattern=r'delete\(\) takes a Wee as parameter, got None')
 
     assert_raises(TypeError, Wee.objects.delete, 5,
-                  exc_pattern=r'delete\(\) takes a Wee or WeeSet as parameter, got 5')
+                  exc_pattern=r'delete\(\) takes a Wee as parameter, got 5')
+
+    file_mock.verify()
+    codecs_mock.verify()
+
+    managers.codecs = codecs_module
+    managers.os.path = os_path_module
+
+@with_setup(setup_fake_os, teardown_fake_os)
+def test_model_file_manager_delete():
+    codecs_mock = Mock()
+    file_mock = Mock()
+    path_mock = Mock()
+
+    path_mock.expects(once()).exists(eq('/home/woo')).will(return_value(True))
+    path_mock.expects(once()).exists(eq('/home/woo/Woo.json')).will(return_value(True))
+    path_mock.expects(once()).exists(eq('/home/woo/Woo.json')).will(return_value(True))
+
+    os_path_module = managers.os.path
+    codecs_module = managers.codecs
+    managers.codecs = codecs_mock
+    managers.os.path = path_mock
+
+    class Woo(Model):
+        name = CharField(max_length=100)
+        objects = managers.FileSystemModelManager(base_path='/home/woo')
+        def __unicode__(self):
+            return '<FooBar(name=%r)>' % self.name
+
+    w1 = Woo(name='foo bar')
+    w2 = Woo(name='john doe')
+    read_set = Woo.Set()(w1, w2)
+    read_json = read_set.serialize('json')
+    foobar = Woo.Set()(w2)
+    write_json = foobar.serialize('json')
+    codecs_mock.expects(once()).open(eq('/home/woo/Woo.json'),
+                                     eq('r'),
+                                     eq('utf-8')).will(return_value(file_mock))
+    file_mock.expects(once()).read().will(return_value(write_json))
+    file_mock.expects(once()).close()
+
+    codecs_mock.expects(once()).open(eq('/home/woo/Woo.json'),
+                                     eq('w'),
+                                     eq('utf-8')).will(return_value(file_mock))
+    file_mock.expects(once()).write(eq(write_json))
+    file_mock.expects(once()).close()
+
+    codecs_mock.expects(once()).open(eq('/home/woo/Woo.json'),
+                                     eq('r'),
+                                     eq('utf-8')).will(return_value(file_mock))
+    file_mock.expects(once()).read().will(return_value(read_json))
+    file_mock.expects(once()).close()
+
+    Woo.objects.delete(w1)
+    got = Woo.objects.all()
+    assert got == foobar, 'Expected %r, got %r' % (foobar, got)
+
+    path_mock.verify()
+    file_mock.verify()
+    codecs_mock.verify()
+
+    managers.codecs = codecs_module
+    managers.os.path = os_path_module
+
