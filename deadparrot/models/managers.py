@@ -137,10 +137,8 @@ class FileObjectsManager(ObjectsManager):
         newset = self.model.Set()()
 
         for model in modelset:
-            for k in model._meta._fields.keys():
-                v = getattr(obj, k)
-                if getattr(model, k) != v and model not in newset:
-                    newset.add(model)
+            if model.to_dict() != obj.to_dict():
+                newset.add(model)
 
         f = codecs.open(self._fullpath, 'w', 'utf-8')
         f.write(newset.serialize('json'))
