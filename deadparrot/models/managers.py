@@ -23,6 +23,8 @@ import codecs
 from deadparrot.models.fields import *
 from os.path import join
 
+__all__ = ['ModelManager', 'FileSystemModelManager']
+
 class ObjectsManager(object):
     def __init__(self, model, *args, **kw):
         self.model = model

@@ -21,6 +21,7 @@
 import simplejson
 
 from deadparrot.serialization import Registry
+from deadparrot.models import managers
 from deadparrot.models.attributes import Attribute
 from deadparrot.models.managers import *
 from deadparrot.models.fields import *
@@ -141,7 +142,7 @@ class ModelMeta(type):
             manager_classes = dict([(k, v) for k, v in attrs.items() \
                                     if isinstance(v, tuple) and \
                                     len(v) == 3 and \
-                                    issubclass(v[0], ObjectsManager)])
+                                    issubclass(v[0], managers.ObjectsManager)])
             for k, manager_tup in manager_classes.items():
                 manager_klass, args, kw = manager_tup
                 manager_object = manager_klass(cls, *args, **kw)
