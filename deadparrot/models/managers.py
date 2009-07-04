@@ -109,6 +109,17 @@ class FileObjectsManager(ObjectsManager):
         return modelset
 
     def get(self, **params):
-        pass
+        for key in params.keys():
+            if not key in self.model._meta._fields.keys():
+                raise TypeError('%s is not a valid field in %r' % (key, self.model))
+
+        modelset = self.all()
+        for obj in modelset:
+            for k, v in params.items():
+                if getattr(obj, k) != v:
+                    modelset.remove(obj)
+
+        return modelset and modelset[0] or None
+
 class FileSystemModelManager(ModelManager):
     manager = FileObjectsManager

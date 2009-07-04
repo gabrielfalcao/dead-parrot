@@ -432,3 +432,117 @@ def test_model_file_manager_has_method_get():
     classname = Wee.objects.__class__.__name__
     assert hasattr(Wee.objects, 'get'), '%s should have the method "get"' % classname
     assert callable(Wee.objects.get), '%s.get should be callable' % classname
+
+@with_setup(setup_fake_os, teardown_fake_os)
+def test_model_file_manager_get_when_file_exists():
+    codecs_mock = Mock()
+    file_mock = Mock()
+    path_mock = Mock()
+
+    path_mock.expects(once()).exists(eq('/home/woo')).will(return_value(True))
+    path_mock.expects(once()).exists(eq('/home/woo/Woo.json')).will(return_value(True))
+    os_path_module = managers.os.path
+    codecs_module = managers.codecs
+    managers.codecs = codecs_mock
+    managers.os.path = path_mock
+
+    class Woo(Model):
+        name = CharField(max_length=100)
+        objects = managers.FileSystemModelManager(base_path='/home/woo')
+        def __unicode__(self):
+            return '<FooBar(name=%r)>' % self.name
+
+    foobar = Woo(name='foo bar')
+
+    read_set = Woo.Set()(Woo(name='foo bar'), Woo(name='john doe'))
+    read_json = read_set.serialize('json')
+
+    codecs_mock.expects(once()).open(eq('/home/woo/Woo.json'),
+                                     eq('r'),
+                                     eq('utf-8')).will(return_value(file_mock))
+    file_mock.expects(once()).read().will(return_value(read_json))
+    file_mock.expects(once()).close()
+
+    got = Woo.objects.get(name='foo bar')
+    assert got == foobar, 'Expected %r, got %r' % (foobar, got)
+
+    file_mock.verify()
+    codecs_mock.verify()
+
+    managers.codecs = codecs_module
+    managers.os.path = os_path_module
+
+@with_setup(setup_fake_os, teardown_fake_os)
+def test_model_file_manager_get_returns_empty_set_when_wrong_json_format():
+    codecs_mock = Mock()
+    file_mock = Mock()
+    path_mock = Mock()
+
+    path_mock.expects(once()).exists(eq('/home/woo')).will(return_value(True))
+    path_mock.expects(once()).exists(eq('/home/woo/Woo.json')).will(return_value(True))
+    os_path_module = managers.os.path
+    codecs_module = managers.codecs
+    managers.codecs = codecs_mock
+    managers.os.path = path_mock
+
+    class Woo(Model):
+        name = CharField(max_length=100)
+        objects = managers.FileSystemModelManager(base_path='/home/woo')
+        def __unicode__(self):
+            return '<FooBar(name=%r)>' % self.name
+
+    foobar = None
+
+    read_json = '{[{fh3onc8c3:"""""]}]'
+
+    codecs_mock.expects(once()).open(eq('/home/woo/Woo.json'),
+                                     eq('r'),
+                                     eq('utf-8')).will(return_value(file_mock))
+    file_mock.expects(once()).read().will(return_value(read_json))
+    file_mock.expects(once()).close()
+
+    got = Woo.objects.get(name='foo bar')
+    assert got == foobar, 'Expected %r, got %r' % (foobar, got)
+
+    file_mock.verify()
+    codecs_mock.verify()
+
+    managers.codecs = codecs_module
+    managers.os.path = os_path_module
+
+@with_setup(setup_fake_os, teardown_fake_os)
+def test_model_file_manager_get_when_file_does_not_exist():
+    codecs_mock = Mock()
+    file_mock = Mock()
+    path_mock = Mock()
+
+    path_mock.expects(once()).exists(eq('/home/woo')).will(return_value(True))
+    path_mock.expects(once()).exists(eq('/home/woo/Woo.json')).will(return_value(False))
+    os_path_module = managers.os.path
+    codecs_module = managers.codecs
+    managers.codecs = codecs_mock
+    managers.os.path = path_mock
+
+    class Woo(Model):
+        name = CharField(max_length=100)
+        objects = managers.FileSystemModelManager(base_path='/home/woo')
+
+    foobar = None
+
+    got = Woo.objects.get(name='foo bar')
+    assert got == foobar, 'Expected %r, got %r' % (foobar, got)
+
+    file_mock.verify()
+    codecs_mock.verify()
+
+    managers.codecs = codecs_module
+    managers.os.path = os_path_module
+
+@with_setup(setup_fake_os, teardown_fake_os)
+def test_model_file_manager_get_raises_wrong_param():
+    class Woo(Model):
+        objects = managers.FileSystemModelManager(base_path='/home/woo')
+        def __unicode__(self):
+            return '<FooBar(name=%r)>' % self.name
+
+    assert_raises(TypeError, Woo.objects.get, blabla='x', exc_pattern=r'blabla is not a valid field in %r' % Woo)
