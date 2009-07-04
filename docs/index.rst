@@ -26,12 +26,7 @@ The model layer
 
     * **Models:**
       :ref:`Model syntax <model-syntax>` |
-      :ref:`Field types <ref-models-fields>` |
-      :ref:`Meta options <ref-models-options>`
-
-    * **Model instances:**
-      :ref:`Instance methods <ref-models-instances>` |
-      :ref:`Accessing related objects <ref-models-relations>`
+      :ref:`Serialization <serialization>`
 
 Thoughts
 ========

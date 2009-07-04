@@ -55,7 +55,16 @@ doctest:
 	@echo "tests passed!"
 	@echo -ne $(normal)
 
-test: functional unit doctest
+acceptance:
+	@echo -ne $(yellow)
+	@echo "Running acceptance tests (all codes from documentation)..."
+	@echo -ne $(red)
+	@python -c "import doctest;doctest.testfile('./docs/serialization.rst', verbose=False, report=True)"
+	@echo -ne $(green)
+	@echo "tests passed!"
+	@echo -ne $(normal)
+
+test: functional unit doctest acceptance
 
 build: clean test
 	@echo -ne $(yellow)
