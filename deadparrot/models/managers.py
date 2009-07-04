@@ -123,5 +123,8 @@ class FileObjectsManager(ObjectsManager):
 
         return modelset and modelset[0] or None
 
+    def delete(self, obj):
+        raise TypeError('delete() takes a Wee or WeeSet as parameter, got %r' % obj)
+
 class FileSystemModelManager(ModelManager):
     manager = FileObjectsManager

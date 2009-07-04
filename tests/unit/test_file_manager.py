@@ -546,3 +546,23 @@ def test_model_file_manager_get_raises_wrong_param():
             return '<FooBar(name=%r)>' % self.name
 
     assert_raises(TypeError, Woo.objects.get, blabla='x', exc_pattern=r'blabla is not a valid field in %r' % Woo)
+
+@with_setup(setup_fake_os, teardown_fake_os)
+def test_model_file_manager_has_method_delete():
+    class Wee(Model):
+        objects = managers.FileSystemModelManager(base_path='/home/wee')
+
+    classname = Wee.objects.__class__.__name__
+    assert hasattr(Wee.objects, 'delete'), '%s should have the method "delete"' % classname
+    assert callable(Wee.objects.delete), '%s.delete should be callable' % classname
+
+@with_setup(setup_fake_os, teardown_fake_os)
+def test_model_file_manager_method_delete_takes_model_or_modelset():
+    class Wee(Model):
+        objects = managers.FileSystemModelManager(base_path='/home/wee')
+
+    assert_raises(TypeError, Wee.objects.delete, None,
+                  exc_pattern=r'delete\(\) takes a Wee or WeeSet as parameter, got None')
+
+    assert_raises(TypeError, Wee.objects.delete, 5,
+                  exc_pattern=r'delete\(\) takes a Wee or WeeSet as parameter, got 5')
