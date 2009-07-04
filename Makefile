@@ -55,7 +55,7 @@ doctest:
 	@echo "tests passed!"
 	@echo -ne $(normal)
 
-test: unit functional doctest
+test: functional unit doctest
 
 build: clean test
 	@echo -ne $(yellow)
