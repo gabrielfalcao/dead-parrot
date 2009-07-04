@@ -121,5 +121,7 @@ class FileObjectsManager(ObjectsManager):
 
         return modelset
 
+    def get(self, **params):
+        pass
 class FileSystemModelManager(ModelManager):
     manager = FileObjectsManager

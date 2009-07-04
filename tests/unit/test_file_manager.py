@@ -423,3 +423,12 @@ def test_model_file_manager_all_when_file_does_not_exist():
 
     managers.codecs = codecs_module
     managers.os.path = os_path_module
+
+@with_setup(setup_fake_os, teardown_fake_os)
+def test_model_file_manager_has_method_get():
+    class Wee(Model):
+        objects = managers.FileSystemModelManager(base_path='/home/wee')
+
+    classname = Wee.objects.__class__.__name__
+    assert hasattr(Wee.objects, 'get'), '%s should have the method "get"' % classname
+    assert callable(Wee.objects.get), '%s.get should be callable' % classname
