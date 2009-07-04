@@ -79,5 +79,31 @@ class FileObjectsManager(ObjectsManager):
 
         return model
 
+    def filter(self, **params):
+        for key in params.keys():
+            if not key in self.model._meta._fields.keys():
+                raise TypeError('%s is not a valid field in %r' % (key, self.model))
+
+        ModelSetClass = self.model.Set()
+
+        if not os.path.exists(self._fullpath):
+            return ModelSetClass()
+
+        fobj = codecs.open(self._fullpath, 'r', 'utf-8')
+        json = fobj.read()
+        fobj.close()
+
+        modelset = ModelSetClass()
+        try:
+            for obj in ModelSetClass.deserialize(json, 'json'):
+                for k, v in params.items():
+                    if getattr(obj, k) == v:
+                        modelset.add(obj)
+
+        except ValueError:
+            pass
+
+        return modelset
+
 class FileSystemModelManager(ModelManager):
     manager = FileObjectsManager
