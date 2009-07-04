@@ -87,10 +87,13 @@ class FileObjectsManager(ObjectsManager):
                 raise TypeError('%s is not a valid field in %r' % (key, self.model))
 
         modelset = self.all()
+        removed = []
         for obj in modelset:
             for k, v in params.items():
                 if getattr(obj, k) != v:
-                    modelset.remove(obj)
+                    if obj not in removed:
+                        modelset.remove(obj)
+                        removed.append(obj)
 
         return modelset
 
@@ -116,10 +119,13 @@ class FileObjectsManager(ObjectsManager):
                 raise TypeError('%s is not a valid field in %r' % (key, self.model))
 
         modelset = self.all()
+        removed = []
         for obj in modelset:
             for k, v in params.items():
                 if getattr(obj, k) != v:
-                    modelset.remove(obj)
+                    if obj not in removed:
+                        modelset.remove(obj)
+                        removed.append(obj)
 
         return modelset and modelset[0] or None
 

@@ -34,15 +34,18 @@ endif
 all: build
 
 clean:
-	@echo "Cleaning up build and *.pyc files..."
-	@find . -name '*.pyc' -exec rm -rf {} \;
+	@echo "Cleaning up build files..."
 	@rm -rf build
+	@echo "Cleaning up *.pyc files..."
+	@find . -name '*.pyc' -exec rm -rf {} \;
+	@echo "Cleaning up *.json files..."
+	@find . -name '*.json' -exec rm -rf {} \;
 
 unit:
 	@echo "Running unit tests..."
 	@nosetests -s --with-coverage --cover-package=deadparrot tests/unit
 
-functional:
+functional: clean
 	@echo "Running functional tests..."
 	@nosetests -s --with-coverage --cover-package=deadparrot tests/functional
 
