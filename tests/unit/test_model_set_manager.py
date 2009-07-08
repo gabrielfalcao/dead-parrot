@@ -20,6 +20,8 @@
 from nose.tools import *
 from deadparrot import models
 
+from utils import assert_raises
+
 def test_model_set_manager_construct_fails_with_no_params():
     assert_raises(TypeError, models.ModelSetManager)
 
@@ -101,8 +103,8 @@ def test_model_set_manager_add_fails_when_param_is_not_corresponcent_model():
 
 def test_model_set_manager_method_add_takes_a_model_instance_as_parameter():
     methods_test_manager = models.ModelSetManager(ModelSetModelTestMethods)
-    assert hasattr(methods_test_manager, 'add'), 'models.ModelSetManager should have the method "add"'
-    assert callable(methods_test_manager.add), 'models.ModelSetManager.add should be callable'
+    assert_raises(TypeError, methods_test_manager.add, 'blabla', exc_pattern=r"ModelSetManager.add takes a instance of %r as parameter, got 'blabla'" % methods_test_manager.model)
+    assert_raises(TypeError, methods_test_manager.add, None, exc_pattern=r"ModelSetManager.add takes a instance of %r as parameter, got None" % methods_test_manager.model)
 
 def test_model_set_manager_add_include_object_in_its_objects():
     add_method_manager = models.ModelSetManager(ModelSetModelTestMethods)
@@ -204,3 +206,18 @@ def test_model_set_managet_method_as_modelset_returns_a_modelset():
     methods_test_manager = models.ModelSetManager(ModelSetModelTestMethods)
     assert methods_test_manager.as_modelset().__class__.__name__ == ModelSetModelTestMethods.Set().__name__, \
            'Should return a instance of ModelSetModelTestMethods.Set() but got a %r' % methods_test_manager.as_modelset()
+
+def test_model_set_manager_has_method_to_dict():
+    methods_test_manager = models.ModelSetManager(ModelSetModelTestMethods)
+    assert hasattr(methods_test_manager, 'to_dict'), 'models.ModelSetManager should have the method "to_dict"'
+    assert callable(methods_test_manager.to_dict), 'models.ModelSetManager.to_dict should be callable'
+
+def test_model_set_manager_has_method_from_dict():
+    methods_test_manager = models.ModelSetManager(ModelSetModelTestMethods)
+    assert hasattr(methods_test_manager, 'from_dict'), 'models.ModelSetManager should have the method "from_dict"'
+    assert callable(methods_test_manager.from_dict), 'models.ModelSetManager.from_dict should be callable'
+
+def test_model_set_manager_method_from_dict_takes_a_dict_as_parameter():
+    methods_test_manager = models.ModelSetManager(ModelSetModelTestMethods)
+    assert_raises(TypeError, methods_test_manager.from_dict, 'blabla', exc_pattern=r"ModelSetModelTestMethodsSet.from_dict takes a dict as parameter. Got %r" % type('blabla'))
+    assert_raises(TypeError, methods_test_manager.from_dict, None, exc_pattern=r"ModelSetModelTestMethodsSet.from_dict takes a dict as parameter. Got %r" % type(None))

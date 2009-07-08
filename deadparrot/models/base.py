@@ -402,5 +402,11 @@ class ModelSetManager(object):
 
     def as_modelset(self):
         SetClass = self.model.Set()
-        return SetClass(*self.objects)
+        return SetClass(*self.objects.values())
 
+    def to_dict(self):
+        return self.as_modelset().to_dict()
+
+    def from_dict(self, data_dict):
+        SetClass = self.model.Set()
+        return SetClass.from_dict(data_dict)

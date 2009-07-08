@@ -295,7 +295,7 @@ class TextField(Field):
     def validate(self, value):
         if not isinstance(value, basestring):
             raise TypeError, \
-                  u"%s must be a string for TextField compatibility" % value
+                  u"%s must be a string for TextField compatibility" % repr(value)
 
 class URLField(CharField):
     vartype = unicode
