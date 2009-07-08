@@ -189,6 +189,61 @@ class TestBasicModel(unittest.TestCase):
         self.assertEquals(p.name, u"John Doe")
         self.assertEquals(p.birthdate, date(1988, 02, 10))
 
+    def test_to_dict_foreign_key(self):
+        class House(Model):
+            address = fields.TextField(primary_key=True)
+
+        class Person(Model):
+            name = fields.CharField(max_length=20, primary_key=True)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            live_in = fields.ForeignKey(House)
+
+        p = Person()
+        p.name = u"John Doe"
+        p.birthdate = date(1988, 02, 10)
+        p.live_in = House(address='Franklin St.')
+        my_dict = {
+            'Person': {
+                'name': u"John Doe",
+                'birthdate': u"10/02/1988",
+                'live_in': {
+                    'House': {
+                        'address': 'Franklin St.'
+                    }
+                }
+            }
+        }
+
+        self.assertEquals(my_dict, p.to_dict())
+
+    def test_from_dict_foreign_key(self):
+        class House(Model):
+            address = fields.TextField(primary_key=True)
+
+        class Person(Model):
+            name = fields.CharField(max_length=20, primary_key=True)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            live_in = fields.ForeignKey(House)
+
+        my_dict = {
+            'Person': {
+                'name': u"John Doe",
+                'birthdate': u"10/02/1988",
+                'live_in': {
+                    'House': {
+                        'address': 'Franklin St.'
+                    }
+                }
+            }
+        }
+
+        p = Person.from_dict(my_dict)
+        assert p.name == u'John Doe', "Expected 'John Doe', got %s" % repr(p.name)
+        assert p.birthdate == date(1988, 2, 10), "Expected datetime.date(1988, 2, 10), got %s" % repr(p.birthdate)
+        expected = House(address='Franklin St.')
+        assert p.live_in is not None, '%r.live_in should not be None' % p
+        assert p.live_in == expected, "Expected %r, got %s" % (expected, repr(p.birthdate))
+
     def test_from_dict_fail(self):
         class Person(Model):
             name = fields.CharField(max_length=10)

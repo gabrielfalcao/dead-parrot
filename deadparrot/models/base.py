@@ -327,10 +327,15 @@ class Model(object):
                                                                               cls._meta.verbose_name,
                                                                               unicode(data_dict))
         keys = cls._meta._fields.keys()
+        rel_keys = cls._meta._relationships.keys()
         obj = cls()
         for k, v in d.items():
             if k in keys:
                 setattr(obj, k, v)
+
+            if k in rel_keys:
+                will_model = cls._meta._relationships[k].to_model
+                setattr(obj, k, will_model.from_dict(v))
 
         return obj
 
