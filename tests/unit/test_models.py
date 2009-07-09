@@ -244,6 +244,116 @@ class TestBasicModel(unittest.TestCase):
         assert p.live_in is not None, '%r.live_in should not be None' % p
         assert p.live_in == expected, "Expected %r, got %s" % (expected, repr(p.birthdate))
 
+    def test_to_dict_foreign_key(self):
+        class House(Model):
+            address = fields.TextField(primary_key=True)
+
+        class Person(Model):
+            name = fields.CharField(max_length=20, primary_key=True)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            live_in = fields.ForeignKey(House)
+
+        my_dict = {
+            'Person': {
+                'name': u"John Doe",
+                'birthdate': u"10/02/1988",
+                'live_in': {
+                    'House': {
+                        'address': 'Franklin St.'
+                    }
+                }
+            }
+        }
+
+        p = Person(name='John Doe', birthdate=date(1988, 2, 10), live_in=House(address='Franklin St.'))
+        assert p.to_dict() == my_dict, 'Expected %r, got %r' % (my_dict, p.to_dict())
+
+    def test_from_dict_many_to_many_field(self):
+        class Car(Model):
+            name = fields.CharField(max_length=100, primary_key=True)
+
+        class Person(Model):
+            name = fields.CharField(max_length=20, primary_key=True)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            vehicles = fields.ManyToManyField(Car)
+
+        my_dict = {
+            'Person': {
+                'name': u"John Doe",
+                'birthdate': u"10/02/1988",
+                'vehicles':  [
+                    {'Car': {'name': 'Ferrari'}},
+                    {'Car': {'name': 'Fiat'}},
+                ]
+            }
+        }
+
+        p = Person.from_dict(my_dict)
+        assert p.name == u'John Doe', "Expected 'John Doe', got %s" % repr(p.name)
+        assert p.birthdate == date(1988, 2, 10), "Expected datetime.date(1988, 2, 10), got %s" % repr(p.birthdate)
+        assert p.vehicles is not None, '%r.vehicles should not be None' % p
+        car_model_set = p.vehicles.as_modelset()
+        length = len(car_model_set)
+        assert length == 2, "Expected 2 cars within %r.vehicles.as_modelset(), got %d" % (p.vehicles, length)
+        assert car_model_set[0] == Car(name='Ferrari')
+        assert car_model_set[1] == Car(name='Fiat')
+
+    def test_to_dict_many_to_many_field(self):
+        class Car(Model):
+            name = fields.CharField(max_length=100, primary_key=True)
+
+        class Person(Model):
+            name = fields.CharField(max_length=20, primary_key=True)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            vehicles = fields.ManyToManyField(Car)
+
+        my_dict = {
+            'Person': {
+                'name': u"John Doe",
+                'birthdate': u"10/02/1988",
+                'vehicles':  [
+                    {'Car': {'name': 'Ferrari'}},
+                    {'Car': {'name': 'Fiat'}},
+                ]
+            }
+        }
+
+        p = Person(name='John Doe', birthdate=date(1988, 2, 10), vehicles=[Car(name='Ferrari'), Car(name='Fiat')])
+        assert p.name == u'John Doe', "Expected 'John Doe', got %s" % repr(p.name)
+        assert p.birthdate == date(1988, 2, 10), "Expected datetime.date(1988, 2, 10), got %s" % repr(p.birthdate)
+        assert p.vehicles is not None, '%r.vehicles should not be None' % p
+        car_model_set = p.vehicles.as_modelset()
+        length = len(car_model_set)
+        assert length == 2, "Expected 2 cars within %r.vehicles.as_modelset(), got %d" % (p.vehicles, length)
+        assert car_model_set[0] == Car(name='Ferrari')
+        assert car_model_set[1] == Car(name='Fiat')
+
+        assert p.to_dict() == my_dict, 'Expected %r, got %r' % (my_dict, p.to_dict())
+
+    def test_to_dict_many_to_many_field(self):
+        class House(Model):
+            address = fields.TextField(primary_key=True)
+
+        class Person(Model):
+            name = fields.CharField(max_length=20, primary_key=True)
+            birthdate = fields.DateField(format="%d/%m/%Y")
+            live_in = fields.ForeignKey(House)
+
+        my_dict = {
+            'Person': {
+                'name': u"John Doe",
+                'birthdate': u"10/02/1988",
+                'live_in': {
+                    'House': {
+                        'address': 'Franklin St.'
+                    }
+                }
+            }
+        }
+
+        p = Person(name='John Doe', birthdate=date(1988, 2, 10), live_in=House(address='Franklin St.'))
+        assert p.to_dict() == my_dict, 'Expected %r, got %r' % (my_dict, p.to_dict())
+
     def test_from_dict_fail(self):
         class Person(Model):
             name = fields.CharField(max_length=10)

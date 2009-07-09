@@ -297,8 +297,8 @@ class Model(object):
                 if not isinstance(val, field.to_model) and not isinstance(field, ManyToManyField):
                     raise TypeError('%r is not a %s instance, it is actually a %r' % (val, field.to_model.__name__, type(val)))
                 elif isinstance(field, ManyToManyField):
-                    if not isinstance(val, list):
-                        raise TypeError('%r is not a %s list, it is actually a %r' % (val, field.to_model.__name__, type(val)))
+                    if not isinstance(val, (list, ModelSetManager)):
+                        raise TypeError('%r is not a %s list or ModelSetManager, it is actually a %r' % (val, field.to_model.__name__, type(val)))
                 else:
                     setattr(val, '_from_model', field.from_model)
                     setattr(val, '_to_model', field.to_model)
@@ -335,7 +335,13 @@ class Model(object):
 
             if k in rel_keys:
                 will_model = cls._meta._relationships[k].to_model
-                setattr(obj, k, will_model.from_dict(v))
+                if isinstance(v, list):
+                    msetmanager = ModelSetManager(will_model)
+                    for instance in [will_model.from_dict(d) for d in reversed(v)]:
+                        msetmanager.add(instance)
+                    setattr(obj, k, msetmanager)
+                else:
+                    setattr(obj, k, will_model.from_dict(v))
 
         return obj
 
