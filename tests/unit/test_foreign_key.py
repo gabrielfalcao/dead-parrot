@@ -228,10 +228,29 @@ class TestForeignKeySerialization(unittest.TestCase):
                           self.evaluated_json)
 
     def test_from_xml_unevaluated(self):
-        polly = Parrot(id=1,
-                       name=u"Polly",
-                       is_dead=True,
-                       cage=Cage(id=1))
+        xml = """
+        <Computer>
+          <ram>2GB</ram>
+          <processor>
+            <Cpu>
+              <id>1</id>
+            </Cpu>
+          </processor>
+          <id>1</id>
+          <storage>500GB</storage>
+        </Computer>
+        """
+        class Cpu(models.Model):
+            id = models.IntegerField(primary_key=True)
 
-        xml_polly = Parrot.deserialize(self.unevaluated_xml, format='xml')
-        self.assertEquals(xml_polly, polly)
+        class Computer(models.Model):
+            id = models.IntegerField(primary_key=True)
+            ram = models.CharField(max_length=20)
+            storage = models.CharField(max_length=20)
+            processor = models.ForeignKey(Cpu)
+
+
+        balarama = Computer(id=1, ram='2GB', storage='500GB', processor=Cpu(id=1))
+
+        deserialized_balarama = Computer.deserialize(xml, format='xml')
+        self.assertEquals(balarama, deserialized_balarama)

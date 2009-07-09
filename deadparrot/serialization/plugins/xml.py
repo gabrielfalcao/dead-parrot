@@ -18,7 +18,7 @@ class XMLSerializer(Serializer):
 
     def as_object(self):
         child = self.data[self.root.tag]
-            
+
         if isinstance(child, dict):
             for k, v in child.items():
                 if v is None:
@@ -48,14 +48,22 @@ class XMLSerializer(Serializer):
     @classmethod
     def deserialize(cls, xml):
         xobject = etree.XML(xml)
-
         # I will now determine if i'm deserializing
         # a set of objects or a object
-        is_object = bool(xobject[0].text.strip())
+        try:
+            is_object = bool(xobject[0].text.strip())
+        except IndexError, e:
+            return xml
 
         if is_object:
             # I'm deserializing a object
-            values = dict([(e.tag, e.text) for e in xobject.iterchildren()])
+            values = {}
+            for e in xobject.iterchildren():
+                if not e.text.strip():
+                    values[e.tag] = cls.deserialize(etree.tostring([x for x in e.iterchildren()][0]))
+                else:
+                    values[e.tag] = e.text
+
         else:
             # I'm deserializing a set of objects
             xml_list = [etree.tostring(x) for x in xobject.iterchildren()]
