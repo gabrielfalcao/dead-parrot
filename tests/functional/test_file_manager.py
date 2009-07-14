@@ -17,6 +17,7 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 import os
+from nose.tools import assert_equals
 from deadparrot import models
 
 def test_model_file_manager_create():
@@ -124,3 +125,90 @@ def test_model_file_manager_delete():
     got = ZoomSerial.objects.all()
     assert expected == got, 'Expected %r, got %r' % (expected, got)
     os.remove(ZoomSerial.objects._fullpath)
+
+def test_model_file_manager_fk():
+    class Person1(models.Model):
+        name =  models.CharField(max_length=100, primary_key=True)
+
+    class Recipe1(models.Model):
+        title = models.CharField(max_length=100, primary_key=True)
+        baker = models.ForeignKey(Person1)
+        objects = models.FileSystemModelManager(base_path='.')
+
+
+    Recipe1.objects.create(title='Egg Cake',
+                          baker=Person1(name='Paulo'))
+    Recipe1.objects.create(title='Chocolate Cake',
+                          baker=Person1(name='Paulo'))
+
+    chocolate_cake = Recipe1.objects.filter(title='Chocolate Cake')[0]
+
+    assert_equals(chocolate_cake.title,'Chocolate Cake')
+    assert_equals(chocolate_cake.baker.name, 'Paulo')
+
+def test_model_file_manager_m2m_different_name():
+    class Item1(models.Model):
+        name =  models.CharField(max_length=200, primary_key=True)
+
+    class ToolBox1(models.Model):
+        color = models.CharField(max_length=200, primary_key=True)
+        tools = models.ManyToManyField(Item1)
+        objects = models.FileSystemModelManager(base_path='.')
+
+
+    ToolBox1.objects.create(color='blue', tools=[
+        Item1(name='screwdriver'),
+        Item1(name='hammer'),
+        ])
+
+    box = ToolBox1.objects.filter(color='blue')[0]
+
+    assert_equals(box.color,'blue')
+    assert_equals(box.tools.as_modelset()[0].name, 'screwdriver')
+
+def test_model_file_manager_m2m_same_name():
+    class Item(models.Model):
+        name =  models.CharField(max_length=200, primary_key=True)
+
+    class ToolBox(models.Model):
+        color = models.CharField(max_length=200, primary_key=True)
+        items = models.ManyToManyField(Item)
+        objects = models.FileSystemModelManager(base_path='.')
+
+
+    ToolBox.objects.create(color='blue', items=[
+        Item(name='screwdriver'),
+        Item(name='hammer'),
+        ])
+
+    box = ToolBox.objects.filter(color='blue')[0]
+
+    assert_equals(box.color,'blue')
+    assert_equals(box.items.as_modelset()[0].name, 'screwdriver')
+
+def test_model_file_manager_m2m_and_fk():
+    class Person(models.Model):
+        name = models.CharField(max_length=200, primary_key=True)
+
+    class Item(models.Model):
+        name = models.CharField(max_length=200, primary_key=True)
+
+    class Box(models.Model):
+        color = models.CharField(max_length=200, primary_key=True)
+        items = models.ManyToManyField(Item)
+        owner = models.ForeignKey(Person)
+        objects = models.FileSystemModelManager(base_path='.')
+
+
+    Box.objects.create(color='blue',
+                           owner=Person(name='John Doe'),
+                           items=[
+                               Item(name='screwdriver'),
+                               Item(name='hammer'),
+                               ])
+
+    box = Box.objects.filter(color='blue')[0]
+
+    assert_equals(box.color,'blue')
+    assert_equals(box.owner.name,'John Doe')
+    assert_equals(box.items.as_modelset()[0].name, 'screwdriver')
