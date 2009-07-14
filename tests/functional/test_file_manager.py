@@ -209,6 +209,6 @@ def test_model_file_manager_m2m_and_fk():
 
     box = Box.objects.filter(color='blue')[0]
 
-    assert_equals(box.color,'blue')
-    assert_equals(box.owner.name,'John Doe')
+    assert_equals(box.color, 'blue')
+    assert_equals(box.owner.name, 'John Doe')
     assert_equals(box.items.as_modelset()[0].name, 'screwdriver')

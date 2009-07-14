@@ -144,18 +144,5 @@ class FileObjectsManager(ObjectsManager):
         f.write(newset.serialize('json'))
         f.close()
 
-    # def persist(self, obj):
-    #     if not isinstance(obj, self.model) and \
-    #        not isinstance(obj, self.model.Set().__bases__) and \
-    #        obj.model != obj:
-    #         raise TypeError('persist() takes a Wee or WeeSet as parameter, got %r' % obj)
-
-    #     modelset = self.all()
-    #     modelset.add(obj)
-
-    #     f = codecs.open(self._fullpath, 'w', 'utf-8')
-    #     f.write(modelset.serialize('json'))
-    #     f.close()
-
 class FileSystemModelManager(ModelManager):
     manager = FileObjectsManager
