@@ -28,6 +28,9 @@ The model layer
       :ref:`Model syntax <model-syntax>` |
       :ref:`Serialization <serialization>`
 
+    * **Model managers:**
+      :ref:`FileSystem model manager <fs-modelmanager>` |
+
 Thoughts
 ========
 

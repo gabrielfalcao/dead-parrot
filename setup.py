@@ -21,9 +21,10 @@
 import os
 import sys
 from setuptools import setup, find_packages
+from deadparrot import __version__
 
 setup(name='Dead Parrot',
-    version='0.1.1',
+    version=__version__,
     description='A model-based Django(ish) and SQLAlchemy-powered RESTful server/client',
     author=u'Gabriel Falcão',
     author_email='gabriel@nacaolivre.org',
