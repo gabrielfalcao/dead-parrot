@@ -31,6 +31,17 @@ else
     white  :=
 endif
 
+
+help:
+	@echo "Available targets are:"
+	@echo "all                                          build files"
+	@echo "clean                                        removes unused files"
+	@echo "functional                                   runs functional tests"
+	@echo "doctests                                     runs doctests"
+	@echo "acceptance                                   runs acceptance tests"
+	@echo "test                                         runs unit tests"
+	@echo "build                                        build files"
+
 all: build
 
 clean:
