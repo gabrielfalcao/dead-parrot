@@ -19,6 +19,7 @@
 import os
 from nose.tools import assert_equals
 from deadparrot import models
+from utils import ignore_it
 
 @ignore_it('changing to use couch api')
 def test_couchdb_file_manager_create():
