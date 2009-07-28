@@ -23,7 +23,9 @@ import codecs
 from deadparrot.models.fields import *
 from os.path import join
 
-__all__ = ['ModelManager', 'FileSystemModelManager']
+from couchdb import Server
+
+__all__ = ['ModelManager', 'FileSystemModelManager','CouchDBModelManager']
 
 class ObjectsManager(object):
     def __init__(self, model, *args, **kw):
@@ -37,6 +39,40 @@ class ModelManager(object):
     manager = ObjectsManager
     def __new__(cls, *args, **kw):
         return (cls.manager, args, kw)
+
+class CouchDBManager (ObjectsManager):
+
+    def __setup__(self, base_uri):
+        self.__svr = Server(base_uri)
+        self.__db = self.get_or_create_db()
+
+    def get_or_create_db(self):
+        db_name = unicode(self.model._meta.verbose_name).lower()
+        if db_name not in self.__svr['_all_dbs'].info():
+            return self.__svr.create(db_name)
+        return self.__svr[db_name]
+
+    def create(self, **kw):
+        ModelSetClass = self.model.Set()
+        model = self.model(**kw)
+        modelset = ModelSetClass()
+
+        import pdb; pdb.set_trace()
+        self.__db.create(model.to_dict())
+
+        modelset.add(model)
+
+        return model
+
+##        try:
+##            modelset = ModelSetClass.deserialize(json, 'json')
+##        except ValueError:
+#        modelset = ModelSetClass()
+
+#        modelset.add(model)
+
+#        return model
+
 
 class FileObjectsManager(ObjectsManager):
     def __setup__(self, base_path):
@@ -146,3 +182,8 @@ class FileObjectsManager(ObjectsManager):
 
 class FileSystemModelManager(ModelManager):
     manager = FileObjectsManager
+
+class CouchDBModelManager (ModelManager):
+    manager = CouchDBManager
+
+
