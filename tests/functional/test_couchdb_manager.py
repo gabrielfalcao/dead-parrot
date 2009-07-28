@@ -20,9 +20,18 @@ import os
 from nose.tools import assert_equals
 from deadparrot import models
 from utils import ignore_it
+from couchdb import Server
+
+def setup():
+    try:
+        global svr
+        svr  = Server('http://localhost:5984/')
+        del svr['dead_parrot']
+    except: pass
 
 #@ignore_it('changing to use couch api')
 def test_couchdb_file_manager_create():
+    
     class FooBarSerial(models.Model):
         name = models.CharField(max_length=100)
         age = models.IntegerField()
@@ -34,3 +43,20 @@ def test_couchdb_file_manager_create():
     got = FooBarSerial.objects.create(name='foo bar', age=7)
 
     assert expected == got, 'Expected %r, got %r' % (expected, got)
+
+def test_model_file_manager_create_many():
+    class WeeWooSerial(models.Model):
+        name = models.CharField(max_length=100)
+        age = models.IntegerField()
+        objects = models.CouchDBModelManager(base_uri='http://localhost:5984/')
+        def __unicode__(self):
+            return u'<WeeWooSerial(name=%r)>' % self.name
+
+    f1 = WeeWooSerial.objects.create(name='foo one', age=40)
+    f2 = WeeWooSerial.objects.create(name='foo two', age=41)
+    f3 = WeeWooSerial.objects.create(name='foo three', age=42)
+
+    assert len(svr['dead_parrot']) == 3
+
+test_model_file_manager_create_many.setup = setup
+
