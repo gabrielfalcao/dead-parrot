@@ -41,38 +41,34 @@ class ModelManager(object):
         return (cls.manager, args, kw)
 
 class CouchDBManager (ObjectsManager):
+    __db_name = 'dead_parrot'
 
-    def __setup__(self, base_uri):
+    def __setup__(self, base_uri, db_name=None):
         self.__svr = Server(base_uri)
+        if db_name is not None:
+            self.__db_name = db_name
+
         self.__db = self.get_or_create_db()
 
     def get_or_create_db(self):
-        db_name = unicode(self.model._meta.verbose_name).lower()
-        if db_name not in self.__svr['_all_dbs'].info():
-            return self.__svr.create(db_name)
-        return self.__svr[db_name]
+        if self.__db_name not in self.__svr['_all_dbs'].info():
+            return self.__svr.create(self.__db_name)
+        return self.__svr[self.__db_name]
 
     def create(self, **kw):
+        model_name = unicode(self.model._meta.verbose_name)
+
         ModelSetClass = self.model.Set()
         model = self.model(**kw)
         modelset = ModelSetClass()
-
-        import pdb; pdb.set_trace()
-        self.__db.create(model.to_dict())
+        document = dict()
+        document['type'] = model_name
+        document['body'] = model.to_dict()
+        self.__db.create(document)
 
         modelset.add(model)
 
         return model
-
-##        try:
-##            modelset = ModelSetClass.deserialize(json, 'json')
-##        except ValueError:
-#        modelset = ModelSetClass()
-
-#        modelset.add(model)
-
-#        return model
-
 
 class FileObjectsManager(ObjectsManager):
     def __setup__(self, base_path):

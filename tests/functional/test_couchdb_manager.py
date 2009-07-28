@@ -21,15 +21,16 @@ from nose.tools import assert_equals
 from deadparrot import models
 from utils import ignore_it
 
-@ignore_it('changing to use couch api')
+#@ignore_it('changing to use couch api')
 def test_couchdb_file_manager_create():
     class FooBarSerial(models.Model):
         name = models.CharField(max_length=100)
+        age = models.IntegerField()
         objects = models.CouchDBModelManager(base_uri='http://localhost:5984/')
         def __unicode__(self):
             return u'<FooBarSerial(name=%r)>' % self.name
 
-    expected = FooBarSerial(name='foo bar')
-    got = FooBarSerial.objects.create(name='foo bar')
+    expected = FooBarSerial(name='foo bar', age=7)
+    got = FooBarSerial.objects.create(name='foo bar', age=7)
 
     assert expected == got, 'Expected %r, got %r' % (expected, got)
