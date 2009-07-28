@@ -20,6 +20,7 @@ import os
 from nose.tools import assert_equals
 from deadparrot import models
 
+@ignore_it('changing to use couch api')
 def test_couchdb_file_manager_create():
     class FooBarSerial(models.Model):
         name = models.CharField(max_length=100)
