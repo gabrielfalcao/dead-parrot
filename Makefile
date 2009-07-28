@@ -41,6 +41,7 @@ help:
 	@echo "acceptance                                   runs acceptance tests"
 	@echo "test                                         runs unit tests"
 	@echo "build                                        build files"
+	@echo "update_dependencies                          updates external depenencies"
 
 all: build
 
@@ -51,6 +52,10 @@ clean:
 	@find . -name '*.pyc' -exec rm -rf {} \;
 	@echo "Cleaning up *.json files..."
 	@find . -name '*.json' -exec rm -rf {} \;
+
+update_dependencies:
+	@echo "Updating couchdb..."
+	@sudo aptitude install python-couchdb
 
 unit:
 	@echo "Running unit tests..."
