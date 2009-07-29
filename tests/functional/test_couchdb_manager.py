@@ -29,9 +29,7 @@ def setup():
         del svr['dead_parrot']
     except: pass
 
-#@ignore_it('changing to use couch api')
 def test_couchdb_file_manager_create():
-    
     class FooBarSerial(models.Model):
         name = models.CharField(max_length=100)
         age = models.IntegerField()
@@ -60,3 +58,56 @@ def test_model_file_manager_create_many():
 
 test_model_file_manager_create_many.setup = setup
 
+
+def test_model_file_manager_all():
+    class SaaaSerial(models.Model):
+        name = models.CharField(max_length=100)
+        age = models.IntegerField()
+        objects = models.CouchDBModelManager(base_uri='http://localhost:5984/')
+        def __unicode__(self):
+            return u'<SaaaSerial(name=%r,age=%s)>' % (self.name, self.age)
+
+    w1 = SaaaSerial.objects.create(name='name1', age=10)
+    w2 = SaaaSerial.objects.create(name='name2', age=20)
+    w3 = SaaaSerial.objects.create(name='name3', age=10)
+    w4 = SaaaSerial.objects.create(name='name4', age=10)
+    w5 = SaaaSerial.objects.create(name='name5', age=50)
+
+    expected = SaaaSerial.Set()(w1, w2, w3, w4, w5)
+    got = SaaaSerial.objects.all()
+
+    assert len(expected) == len(got)
+    for item in expected: assert item in got
+
+test_model_file_manager_all.setup = setup
+
+def test_model_file_manager_all_get_only_current_model_documents():
+    class SaaaSerial(models.Model):
+        name = models.CharField(max_length=100)
+        age = models.IntegerField()
+        objects = models.CouchDBModelManager(base_uri='http://localhost:5984/')
+        def __unicode__(self):
+            return u'<SaaaSerial(name=%r,age=%s)>' % (self.name, self.age)
+
+    class InnerSerial (SaaaSerial):
+        def __unicode__(self):
+            return u'<InnerSerial(name=%r,age=%s)>' % (self.name, self.age)
+
+    w1 = SaaaSerial.objects.create(name='name1', age=10)
+    w2 = SaaaSerial.objects.create(name='name2', age=20)
+    w3 = SaaaSerial.objects.create(name='name3', age=10)
+    w4 = SaaaSerial.objects.create(name='name4', age=10)
+    w5 = InnerSerial.objects.create(name='name5', age=50)
+    w6 = InnerSerial.objects.create(name='name6', age=55)
+
+    expected = SaaaSerial.Set()(w1, w2, w3, w4)
+    not_expected = SaaaSerial.Set()(w5, w6)
+    got = SaaaSerial.objects.all()
+
+    assert len(got) == 3, 'Expected %s items, got %s items' %(3, len(got))
+
+    for item in expected: assert item in got
+    for item in not_expected: assert item not in got
+
+
+test_model_file_manager_all_get_only_current_model_documents.setup = setup

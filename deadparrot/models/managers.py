@@ -50,25 +50,40 @@ class CouchDBManager (ObjectsManager):
 
         self.__db = self.get_or_create_db()
 
+    @property
+    def model_name(self):
+        print self.model._meta.verbose_name
+        return unicode(self.model._meta.verbose_name)
+
     def get_or_create_db(self):
         if self.__db_name not in self.__svr['_all_dbs'].info():
             return self.__svr.create(self.__db_name)
         return self.__svr[self.__db_name]
 
     def create(self, **kw):
-        model_name = unicode(self.model._meta.verbose_name)
 
         ModelSetClass = self.model.Set()
         model = self.model(**kw)
         modelset = ModelSetClass()
         document = dict()
-        document['type'] = model_name
+        document['type'] = self.model_name
         document['body'] = model.to_dict()
         self.__db.create(document)
 
         modelset.add(model)
 
         return model
+
+    def all(self):
+        ModelSetClass = self.model.Set()
+        all_docs_function = "function(doc) { if (doc.type == '%s') emit(doc._id, doc.body); }" % self.model_name
+        view = self.__db.query(all_docs_function)
+        modelset = ModelSetClass()
+
+        if view.total_rows > 0:
+            for row in view.rows:
+                modelset.add(self.model.from_dict(row.value))
+        return modelset
 
 class FileObjectsManager(ObjectsManager):
     def __setup__(self, base_path):

@@ -49,25 +49,6 @@ def test_model_file_manager_create_many():
     assert expected == got, 'Expected %r, got %r' % (expected, got)
     os.remove(WeeWooSerial.objects._fullpath)
 
-def test_model_file_manager_filter():
-    class WonkaSerial(models.Model):
-        name = models.CharField(max_length=100)
-        age = models.IntegerField()
-        objects = models.FileSystemModelManager(base_path=os.path.abspath('.'))
-        def __unicode__(self):
-            return u'<WonkaSerial(name=%r)>' % self.name
-
-    w1 = WonkaSerial.objects.create(name='name1', age=10)
-    w2 = WonkaSerial.objects.create(name='name2', age=20)
-    w3 = WonkaSerial.objects.create(name='name3', age=10)
-    w4 = WonkaSerial.objects.create(name='name4', age=10)
-    w5 = WonkaSerial.objects.create(name='name5', age=50)
-
-    expected = WonkaSerial.Set()(w1, w3, w4)
-    got = WonkaSerial.objects.filter(age=10)
-    assert expected == got, 'Expected %r, got %r' % (expected, got)
-    os.remove(WonkaSerial.objects._fullpath)
-
 def test_model_file_manager_all():
     class SaaaSerial(models.Model):
         name = models.CharField(max_length=100)
@@ -86,6 +67,25 @@ def test_model_file_manager_all():
     got = SaaaSerial.objects.all()
     assert expected == got, 'Expected %r, got %r' % (expected, got)
     os.remove(SaaaSerial.objects._fullpath)
+
+def test_model_file_manager_filter():
+    class WonkaSerial(models.Model):
+        name = models.CharField(max_length=100)
+        age = models.IntegerField()
+        objects = models.FileSystemModelManager(base_path=os.path.abspath('.'))
+        def __unicode__(self):
+            return u'<WonkaSerial(name=%r)>' % self.name
+
+    w1 = WonkaSerial.objects.create(name='name1', age=10)
+    w2 = WonkaSerial.objects.create(name='name2', age=20)
+    w3 = WonkaSerial.objects.create(name='name3', age=10)
+    w4 = WonkaSerial.objects.create(name='name4', age=10)
+    w5 = WonkaSerial.objects.create(name='name5', age=50)
+
+    expected = WonkaSerial.Set()(w1, w3, w4)
+    got = WonkaSerial.objects.filter(age=10)
+    assert expected == got, 'Expected %r, got %r' % (expected, got)
+    os.remove(WonkaSerial.objects._fullpath)
 
 def test_model_file_manager_get():
     class XulSerial(models.Model):
