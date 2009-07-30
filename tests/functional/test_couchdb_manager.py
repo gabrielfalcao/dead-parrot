@@ -29,7 +29,7 @@ def setup():
         del svr['dead_parrot']
     except: pass
 
-def test_couchdb_file_manager_create():
+def test_couchdb_manager_create():
     class FooBarSerial(models.Model):
         name = models.CharField(max_length=100)
         age = models.IntegerField()
@@ -42,7 +42,7 @@ def test_couchdb_file_manager_create():
 
     assert expected == got, 'Expected %r, got %r' % (expected, got)
 
-def test_model_file_manager_create_many():
+def test_model_couchdb_manager_create_many():
     class WeeWooSerial(models.Model):
         name = models.CharField(max_length=100)
         age = models.IntegerField()
@@ -56,10 +56,10 @@ def test_model_file_manager_create_many():
 
     assert len(svr['dead_parrot']) == 3
 
-test_model_file_manager_create_many.setup = setup
+test_model_couchdb_manager_create_many.setup = setup
 
 
-def test_model_file_manager_all():
+def test_model_couchdb_manager_all():
     class SaaaSerial(models.Model):
         name = models.CharField(max_length=100)
         age = models.IntegerField()
@@ -79,9 +79,9 @@ def test_model_file_manager_all():
     assert len(expected) == len(got)
     for item in expected: assert item in got
 
-test_model_file_manager_all.setup = setup
+test_model_couchdb_manager_all.setup = setup
 
-def test_model_file_manager_all_get_only_current_model_documents():
+def test_model_couchdb_manager_all_get_only_current_model_documents():
     class SaaaSerial(models.Model):
         name = models.CharField(max_length=100)
         age = models.IntegerField()
@@ -89,7 +89,9 @@ def test_model_file_manager_all_get_only_current_model_documents():
         def __unicode__(self):
             return u'<SaaaSerial(name=%r,age=%s)>' % (self.name, self.age)
 
-    class InnerSerial (SaaaSerial):
+    class InnerSerial (models.Model):
+        name = models.CharField(max_length=100)
+        age = models.IntegerField()
         objects = models.CouchDBModelManager(base_uri='http://localhost:5984/')
         def __unicode__(self):
             return u'<InnerSerial(name=%r,age=%s)>' % (self.name, self.age)
@@ -101,14 +103,54 @@ def test_model_file_manager_all_get_only_current_model_documents():
     w5 = InnerSerial.objects.create(name='name5', age=50)
     w6 = InnerSerial.objects.create(name='name6', age=55)
 
-    expected = SaaaSerial.Set()(w1, w2, w3, w4)
-    not_expected = SaaaSerial.Set()(w5, w6)
-    got = SaaaSerial.objects.all()
+    expected_saaas = SaaaSerial.Set()(w1, w2, w3, w4)
+    expected_inner = InnerSerial.Set()(w5, w6)
+    got_saaas = SaaaSerial.objects.all()
+    got_inner = InnerSerial.objects.all()
+    expected_saaas_count = 4
+    assert len(got_saaas) == expected_saaas_count, 'Expected %s items, got %s items' %(expected_saaas_count, len(got_saaas))
 
-    assert len(got) == 3, 'Expected %s items, got %s items' %(3, len(got))
+    expected_inner_count = 2
+    assert len(got_inner) == expected_inner_count, 'Expected %s items, got %s items' %(expected_inner_count, len(got_inner))
 
-    for item in expected: assert item in got
-    for item in not_expected: assert item not in got
+    for item in expected_saaas: assert item in got_saaas
+    for item in expected_inner: assert item in got_inner
 
 
-test_model_file_manager_all_get_only_current_model_documents.setup = setup
+test_model_couchdb_manager_all_get_only_current_model_documents.setup = setup
+
+#def test_model_couchdb_manager_all_deals_with_inheritance():
+#    class SaaaSerial(models.Model):
+#        name = models.CharField(max_length=100)
+#        age = models.IntegerField()
+#        objects = models.CouchDBModelManager(base_uri='http://localhost:5984/')
+#        def __unicode__(self):
+#            return u'<SaaaSerial(name=%r,age=%s)>' % (self.name, self.age)
+
+#    class InnerSerial (SaaaSerial):
+#        objects = models.CouchDBModelManager(base_uri='http://localhost:5984/')
+#        def __unicode__(self):
+#            return u'<InnerSerial(name=%r,age=%s)>' % (self.name, self.age)
+
+#    w1 = SaaaSerial.objects.create(name='name1', age=10)
+#    w2 = SaaaSerial.objects.create(name='name2', age=20)
+#    w3 = SaaaSerial.objects.create(name='name3', age=10)
+#    w4 = SaaaSerial.objects.create(name='name4', age=10)
+#    w5 = InnerSerial.objects.create(name='name5', age=50)
+#    w6 = InnerSerial.objects.create(name='name6', age=55)
+
+#    expected_saaas = SaaaSerial.Set()(w1, w2, w3, w4)
+#    expected_inner = InnerSerial.Set()(w5, w6)
+#    got_saaas = SaaaSerial.objects.all()
+#    got_inner = InnerSerial.objects.all()
+#    expected_saaas_count = 4
+#    assert len(got_saaas) == expected_saaas_count, 'Expected %s items, got %s items' %(expected_saaas_count, len(got_saaas))
+
+#    expected_inner_count = 2
+#    assert len(got_inner) == expected_inner_count, 'Expected %s items, got %s items' %(expected_inner_count, len(got_inner))
+
+#    for item in expected_saaas: assert item in got_saaas
+#    for item in expected_inner: assert item in got_inner
+
+
+#test_model_couchdb_manager_all_deals_with_inheritance.setup = setup
