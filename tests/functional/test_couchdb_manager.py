@@ -90,6 +90,7 @@ def test_model_file_manager_all_get_only_current_model_documents():
             return u'<SaaaSerial(name=%r,age=%s)>' % (self.name, self.age)
 
     class InnerSerial (SaaaSerial):
+        objects = models.CouchDBModelManager(base_uri='http://localhost:5984/')
         def __unicode__(self):
             return u'<InnerSerial(name=%r,age=%s)>' % (self.name, self.age)
 

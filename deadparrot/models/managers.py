@@ -52,7 +52,6 @@ class CouchDBManager (ObjectsManager):
 
     @property
     def model_name(self):
-        print self.model._meta.verbose_name
         return unicode(self.model._meta.verbose_name)
 
     def get_or_create_db(self):
