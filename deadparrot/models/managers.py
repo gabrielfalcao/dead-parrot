@@ -56,9 +56,11 @@ class FileObjectsManager(ObjectsManager):
         return join(self.base_path, self._filename)
 
     def create(self, **kw):
-        ModelSetClass = self.model.Set()
-
         model = self.model(**kw)
+        return self.add(model)
+
+    def add(self, model):
+        ModelSetClass = self.model.Set()
         if not os.path.exists(self._fullpath):
             f = codecs.open(self._fullpath, 'w', 'utf-8')
             f.write('')
