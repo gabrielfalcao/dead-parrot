@@ -37,7 +37,7 @@ Actor.objects.create(name='Michael Palin')
 class ParrotController:
     @cherrypy.expose
     def actor(self, attribute=None, value=None, action=None):
-        cherrypy.response.status = 201
+        cherrypy.response.status = 200
         if not attribute:
             if cherrypy.request.method == 'POST':
                 try:
@@ -45,7 +45,7 @@ class ParrotController:
                 except TypeError, e:
                     cherrypy.response.status = 500
                     return unicode(e)
-
+                cherrypy.response.status = 201
                 Actor.objects.add(actor)
                 return actor.serialize('json')
 

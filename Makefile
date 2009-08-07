@@ -56,7 +56,7 @@ unit:
 	@echo "Running unit tests..."
 	@nosetests -s --with-coverage --cover-package=deadparrot tests/unit
 
-functional: clean
+functional: clean run_server
 	@echo "Running functional tests..."
 	@nosetests -s --with-coverage --cover-package=deadparrot tests/functional
 
@@ -99,3 +99,13 @@ build: clean test
 	@echo -ne $(green)
 	@echo "Get it in `pwd`/build/lib/"
 	@echo -ne $(normal)
+
+run_server: kill_server
+	@echo "Running builtin HTTP server ..."
+	@python tests/functional/parrot_server.py 2>&1 > log.txt &
+	@sleep 2
+
+kill_server:
+	@echo "Shutting down builtin HTTP server ..."
+	@-ps aux | egrep 'parrot_server' | egrep -v grep | awk '{ print $$2 }' | xargs kill -9 2>&1 /dev/null
+	@echo "Done."

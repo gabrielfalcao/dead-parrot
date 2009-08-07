@@ -17,6 +17,7 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 import re
+from mox import Mox
 from pmock import *
 
 from deadparrot.models.base import Model
@@ -25,6 +26,14 @@ from deadparrot.models import managers
 
 from utils import assert_raises, FakeGetter
 from nose import with_setup
+
+
+os_module = managers.os
+def setup_fake_os():
+    managers.os = FakeGetter()
+
+def teardown_fake_os():
+    managers.os = os_module
 
 def test_model_file_manager_class_exists():
     msg1 = 'deadparrot.models should have the class FileSystemManager'
@@ -135,15 +144,37 @@ def test_model_file_manager_has_method_create():
     assert callable(Wee.objects.create), '%s.create should be callable' % classname
     managers.os = os_module
 
-os_module = managers.os
-def setup_fake_os():
-    managers.os = FakeGetter()
+def test_model_file_manager_has_method_add():
+    class os_mock:
+        path = Mock()
 
-def teardown_fake_os():
+    os_module = managers.os
+    managers.os = os_mock
+    managers.os.path.expects(once()).exists(eq('/home/wee')).will(return_value(True))
+
+    class Wee(Model):
+        objects = managers.FileSystemModelManager(base_path='/home/wee')
+
+    classname = Wee.objects.__class__.__name__
+    assert hasattr(Wee.objects, 'add'), '%s should have the method "add"' % classname
+    assert callable(Wee.objects.add), '%s.add should be callable' % classname
     managers.os = os_module
 
 @with_setup(setup_fake_os, teardown_fake_os)
-def test_model_file_manager_create_uses_codecs_utf8():
+def test_create_instantiate_object_and_add():
+    mocker = Mox()
+    class Chuah(Model):
+        uuid = CharField(max_length=36)
+        objects = managers.FileSystemModelManager(base_path='/home/wee')
+
+    Chuah.objects.add = mocker.CreateMockAnything()
+    Chuah.objects.add(Chuah(uuid='aabbccdd'))
+    mocker.ReplayAll()
+    Chuah.objects.create(uuid='aabbccdd')
+    mocker.VerifyAll()
+
+@with_setup(setup_fake_os, teardown_fake_os)
+def test_model_file_manager_add_uses_codecs_utf8():
     codecs_mock = Mock()
     file_mock = Mock()
     path_mock = Mock()
@@ -180,7 +211,7 @@ def test_model_file_manager_create_uses_codecs_utf8():
     file_mock.expects(once()).write(eq(expected_json))
     file_mock.expects(once()).close()
 
-    got = Wee.objects.create(name='foo bar')
+    got = Wee.objects.add(Wee(name='foo bar'))
     assert got == foobar, 'Expected %r, got %r' % (foobar, got)
 
     file_mock.verify()
