@@ -27,7 +27,6 @@ from deadparrot.models import managers
 from utils import assert_raises, FakeGetter
 from nose import with_setup
 
-
 os_module = managers.os
 def setup_fake_os():
     managers.os = FakeGetter()

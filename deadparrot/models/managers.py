@@ -148,3 +148,13 @@ class FileObjectsManager(ObjectsManager):
 
 class FileSystemModelManager(ModelManager):
     manager = FileObjectsManager
+
+class RESTObjectsManager(ObjectsManager):
+    def __setup__(self, prefix):
+        if not isinstance(prefix, basestring):
+            raise TypeError('RESTfulModelManager "prefix" parameter should be string, got %r' % prefix)
+
+        self.prefix = prefix
+
+class RESTfulModelManager(ModelManager):
+    manager = RESTObjectsManager
