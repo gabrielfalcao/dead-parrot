@@ -53,10 +53,16 @@ class ParrotController:
             cherrypy.response.status = 404
             return 'Invalid attribute: %s' % attribute
 
+        actors = Actor.objects.all()
+        ActorSet = Actor.Set()
         if value:
             filtered = [p for p in actors.items \
                         if hasattr(p, attribute) \
                         and value in getattr(p, attribute)]
+            if len(filtered) is 0:
+                cherrypy.response.status = 404
+                return 'Actor with %s=%s was not found' % (attribute, repr(value))
+
             first = filtered[0]
 
             if cherrypy.request.method == 'PUT':
@@ -71,7 +77,7 @@ class ParrotController:
                 return actor.serialize('json')
 
             if action == 'delete':
-                actors.remove(first)
+                Actor.objects.delete(first)
                 return first.serialize('json')
 
             return ActorSet(*filtered).serialize('json')
