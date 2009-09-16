@@ -100,6 +100,12 @@ class FileObjectsManager(ObjectsManager):
         return modelset
 
     def all(self):
+        def delete_all(items):
+            def wrap():
+                for item in items:
+                    self.delete(item)
+            return wrap
+
         ModelSetClass = self.model.Set()
         if not os.path.exists(self._fullpath):
             return ModelSetClass()
@@ -113,6 +119,7 @@ class FileObjectsManager(ObjectsManager):
         except ValueError:
             modelset = ModelSetClass()
 
+        modelset.delete = delete_all(modelset)
         return modelset
 
     def get(self, **params):
