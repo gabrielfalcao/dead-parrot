@@ -102,8 +102,8 @@ build: clean test
 
 run_server: kill_server
 	@echo "Running builtin HTTP server ..."
-	@python tests/functional/parrot_server.py 2>&1 > log.txt &
-	@sleep 2
+	@cd tests/functional/parrotserver && bob go 2>&1 #> log.txt &
+	@sleep5
 
 kill_server:
 	@echo "Shutting down builtin HTTP server ..."
