@@ -88,14 +88,17 @@ class FileObjectsManager(ObjectsManager):
             if not key in self.model._meta._fields.keys():
                 raise TypeError('%s is not a valid field in %r' % (key, self.model))
 
-        modelset = self.all()
-        removed = []
-        for obj in modelset:
-            for k, v in params.items():
-                if getattr(obj, k) != v:
-                    if obj not in removed:
-                        modelset.remove(obj)
-                        removed.append(obj)
+        modelset = self.model.Set()()
+
+        for k, v in params.items():
+            for obj in self.all():
+                try:
+                    v = self.model._meta._fields[k].convert_type(v)
+                except ValueError:
+                    return self.model.Set()()
+
+                if getattr(obj, k) == v:
+                    modelset.add(obj)
 
         return modelset
 
@@ -116,19 +119,7 @@ class FileObjectsManager(ObjectsManager):
         return modelset
 
     def get(self, **params):
-        for key in params.keys():
-            if not key in self.model._meta._fields.keys():
-                raise TypeError('%s is not a valid field in %r' % (key, self.model))
-
-        modelset = self.all()
-        removed = []
-        for obj in modelset:
-            for k, v in params.items():
-                if getattr(obj, k) != v:
-                    if obj not in removed:
-                        modelset.remove(obj)
-                        removed.append(obj)
-
+        modelset = self.filter(**params)
         return modelset and modelset[0] or None
 
     def delete(self, obj):
