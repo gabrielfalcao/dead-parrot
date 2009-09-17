@@ -102,10 +102,10 @@ build: clean test
 
 run_server: kill_server
 	@echo "Running builtin HTTP server ..."
-	@cd tests/functional/parrotserver && bob go 2>&1 #> log.txt &
-	@sleep5
+	@cd tests/functional/parrotserver && bob go 2>&1 > log.txt &
+	@sleep 5
 
 kill_server:
 	@echo "Shutting down builtin HTTP server ..."
-	@-ps aux | egrep 'parrot_server' | egrep -v grep | awk '{ print $$2 }' | xargs kill -9 2>&1 /dev/null
+	@-ps aux | egrep 'bob go' | egrep -v grep | awk '{ print $$2 }' | xargs kill -9 2>&1 /dev/null
 	@echo "Done."
