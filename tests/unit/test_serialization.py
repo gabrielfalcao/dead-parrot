@@ -19,7 +19,7 @@
 
 import unittest
 import pmock
-import simplejson
+from deadparrot.lib import demjson
 
 from urllib2 import URLError
 
@@ -45,10 +45,10 @@ class TestJSONSerializer(unittest.TestCase):
     def test_serialization(self):
         jserial = JSONSerializer(self.my_dict)
         self.assertEquals(jserial.serialize(),
-                          simplejson.dumps(self.my_dict))
+                          demjson.encode(self.my_dict))
 
     def test_deserialization(self):
-        json = simplejson.dumps(self.my_dict)
+        json = demjson.encode(self.my_dict)
         self.assertEquals(JSONSerializer.deserialize(json),
                           self.my_dict)
 
@@ -128,7 +128,7 @@ class TestSerializersRegistry(unittest.TestCase):
 
     def test_get_json_serializer(self):
         json_serializer = Registry.get("json")
-        json = simplejson.dumps(self.my_dict)
+        json = demjson.encode(self.my_dict)
         self.assertEquals(json_serializer.deserialize(json),
                           self.my_dict)
 

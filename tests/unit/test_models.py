@@ -18,7 +18,7 @@
 # Boston, MA 02111-1307, USA.
 
 import unittest
-import simplejson
+from deadparrot.lib import demjson
 
 from deadparrot.models import fields, base
 from deadparrot import models
@@ -667,13 +667,13 @@ class TestModelSerialization(unittest.TestCase):
             first_name = fields.CharField(max_length=40)
             birthdate = fields.DateField(format="%d/%m/%Y")
 
-    my_json = simplejson.dumps({
+    my_json = demjson.encode({
         'Person': {
             'first_name': u"John Doe",
             'birthdate': u"10/02/1988"
         }
     })
-    extra_json = simplejson.dumps({
+    extra_json = demjson.encode({
         'Person': {
             'first_name': u"John Doe",
             'birthdate': u"10/02/1988",
@@ -740,7 +740,7 @@ class TestModelSetSerialization(unittest.TestCase):
             class Meta:
                 verbose_name_plural = 'People'
 
-    my_json = simplejson.dumps({
+    my_json = demjson.encode({
         'People':
         [
             {
@@ -1021,7 +1021,7 @@ class TestAllFieldsSerialization(unittest.TestCase):
 
     def test_all_kinds_of_fields_serialization_to_json(self):
         dtime = datetime.now()
-        json = simplejson.dumps({
+        json = demjson.encode({
             "Person":
             {
                 "id": 1,
@@ -1051,7 +1051,7 @@ class TestAllFieldsSerialization(unittest.TestCase):
 
     def test_all_kinds_of_fields_deserialization_to_json(self):
         dtime = datetime.now()
-        json = simplejson.dumps({
+        json = demjson.encode({
             u"Person":
             {
                 "id": 1,
@@ -1138,7 +1138,7 @@ class TestAllFieldsSerialization(unittest.TestCase):
 
     def test_positives_serialization_to_json(self):
         dtime = datetime.now()
-        json = simplejson.dumps({
+        json = demjson.encode({
             "Person":
             {
                 "id": 1,
@@ -1168,7 +1168,7 @@ class TestAllFieldsSerialization(unittest.TestCase):
 
     def test_positives_serialization_to_json_with_integers(self):
         dtime = datetime.now()
-        json = simplejson.dumps({
+        json = demjson.encode({
             "Person":
             {
                 "id": 1,
@@ -1199,7 +1199,7 @@ class TestAllFieldsSerialization(unittest.TestCase):
 
     def test_negatives_serialization_to_json(self):
         dtime = datetime.now()
-        json = simplejson.dumps({
+        json = demjson.encode({
             "Person":
             {
                 "id": 1,
@@ -1229,7 +1229,7 @@ class TestAllFieldsSerialization(unittest.TestCase):
 
     def test_negatives_serialization_to_json_with_integers(self):
         dtime = datetime.now()
-        json = simplejson.dumps({
+        json = demjson.encode({
             "Person":
             {
                 "id": 1,

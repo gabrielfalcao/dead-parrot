@@ -18,7 +18,7 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-from simplejson import dumps, loads
+from deadparrot.lib import demjson
 
 from base import Serializer
 
@@ -31,9 +31,9 @@ class JSONSerializer(Serializer):
         self.obj = obj
 
     def serialize(self):
-        return dumps(self.obj)
+        return demjson.encode(self.obj)
 
     @classmethod
     def deserialize(cls, json):
-        return loads(json)
+        return demjson.decode(json)
 

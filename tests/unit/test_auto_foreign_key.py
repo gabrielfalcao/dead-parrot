@@ -18,7 +18,7 @@
 # Boston, MA 02111-1307, USA.
 
 import pmock
-import simplejson
+from deadparrot.lib import demjson
 
 from nose.tools import *
 

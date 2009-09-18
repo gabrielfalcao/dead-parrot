@@ -19,7 +19,7 @@
 
 import unittest
 import pmock
-import simplejson
+from deadparrot.lib import demjson
 
 from nose.tools import *
 
@@ -165,7 +165,7 @@ class TestForeignKeySerialization(unittest.TestCase):
       <name>Polly</name>
     </Parrot>
     """
-    unevaluated_json = simplejson.dumps({
+    unevaluated_json = demjson.encode({
         'Parrot': {
             'is_dead': True,
             'id': 1,
@@ -177,7 +177,7 @@ class TestForeignKeySerialization(unittest.TestCase):
             }
         }
     })
-    evaluated_json = simplejson.dumps({
+    evaluated_json = demjson.encode({
         'Parrot': {
             'is_dead': True,
             'id': 1,
