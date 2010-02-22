@@ -70,7 +70,7 @@ def test_model_set_manager_objects_attribute_should_be_a_dict():
         pass
 
     manager = models.ModelSetManager(ModelSetModelTest4)
-    assert isinstance(manager.objects, dict), \
+    assert isinstance(manager.objects, list), \
            'manager.objects should be a list, but is a %r' % type(manager.objects)
 
 
@@ -117,14 +117,29 @@ def test_model_set_manager_add_include_object_in_its_objects():
 
     message2 = 'The length of objects should be %d, but is %d'
     add_method_manager.add(model1)
-    assert model1 in add_method_manager.objects.values(), message1 % 'model1'
+    assert model1 in add_method_manager.objects, message1 % 'model1'
     assert len(add_method_manager.objects) == 1, message2 % (1, len(add_method_manager.objects))
     add_method_manager.add(model2)
-    assert model2 in add_method_manager.objects.values(), message1 % 'model2'
+    assert model2 in add_method_manager.objects, message1 % 'model2'
     assert len(add_method_manager.objects) == 2, message2 % (2, len(add_method_manager.objects))
     add_method_manager.add(model3)
-    assert model3 in add_method_manager.objects.values(), message1 % 'model3'
+    assert model3 in add_method_manager.objects, message1 % 'model3'
     assert len(add_method_manager.objects) == 3, message2 % (3, len(add_method_manager.objects))
+
+def test_model_set_manager_add_keeps_the_adition_order():
+    add_method_manager = models.ModelSetManager(ModelSetModelTestMethods)
+    model1 = ModelSetModelTestMethods()
+    model2 = ModelSetModelTestMethods()
+    model3 = ModelSetModelTestMethods()
+
+    add_method_manager.add(model2)
+    add_method_manager.add(model1)
+    add_method_manager.add(model2)
+    add_method_manager.add(model3)
+
+    assert_equals(add_method_manager.objects[0], model2)
+    assert_equals(add_method_manager.objects[1], model1)
+    assert_equals(add_method_manager.objects[2], model3)
 
 def test_model_set_manager_add_replaces_when_model_is_same():
     add_method_manager = models.ModelSetManager(ModelSetModelTestMethods)
@@ -178,10 +193,10 @@ def test_model_set_manager_remove_remove_object_from_its_objects():
 
     message2 = 'The length of objects should be %d, but is %d'
     remove_method_manager.add(model1)
-    assert model1 in remove_method_manager.objects.values(), message1 % 'model1'
+    assert model1 in remove_method_manager.objects, message1 % 'model1'
     assert len(remove_method_manager.objects) == 1, message2 % (1, len(remove_method_manager.objects))
     remove_method_manager.remove(model1)
-    assert model1 not in remove_method_manager.objects.values(), message1 % 'model1'
+    assert model1 not in remove_method_manager.objects, message1 % 'model1'
     assert len(remove_method_manager.objects) == 0, message2 % (2, len(remove_method_manager.objects))
 
 def test_model_set_manager_remover_raises_when_object_not_within():

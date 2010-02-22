@@ -292,11 +292,12 @@ class TestBasicModel(unittest.TestCase):
         assert p.name == u'John Doe', "Expected 'John Doe', got %s" % repr(p.name)
         assert p.birthdate == date(1988, 2, 10), "Expected datetime.date(1988, 2, 10), got %s" % repr(p.birthdate)
         assert p.vehicles is not None, '%r.vehicles should not be None' % p
+
         car_model_set = p.vehicles.as_modelset()
         length = len(car_model_set)
         assert length == 2, "Expected 2 cars within %r.vehicles.as_modelset(), got %d" % (p.vehicles, length)
-        assert car_model_set[0] == Car(name='Ferrari')
-        assert car_model_set[1] == Car(name='Fiat')
+        assert car_model_set[0] == Car(name='Fiat')
+        assert car_model_set[1] == Car(name='Ferrari')
 
     def test_to_dict_many_to_many_field(self):
         class Car(Model):

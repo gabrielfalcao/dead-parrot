@@ -387,7 +387,8 @@ class ModelSetManager(object):
         if not isinstance(model, type) or not issubclass(model, Model):
             raise TypeError, 'ModelSetManager takes a models.Model subclass as construction parameter, got %r' % model
         self.model = model
-        self.objects = {}
+        self.objects = []
+        self.hashes = []
 
     def __repr__(self):
         return '<ModelSetManager for %s object>' % self.model.__name__
@@ -397,7 +398,16 @@ class ModelSetManager(object):
             raise TypeError, 'ModelSetManager.add takes a instance of %r ' \
                              'as parameter, got %r' % (self.model, instance)
 
-        self.objects[hash(instance)] = instance
+        object_hash = hash(instance)
+
+        try:
+            index = self.hashes.index(object_hash)
+            self.objects[index] = instance
+            self.hashes[index] = object_hash
+
+        except ValueError:
+            self.objects.append(instance)
+            self.hashes.append(object_hash)
 
     def remove(self, instance):
         if not isinstance(instance, self.model):
@@ -405,13 +415,16 @@ class ModelSetManager(object):
                              'as parameter, got %r' % (self.model, instance)
 
         try:
-            del self.objects[hash(instance)]
-        except KeyError:
+            object_hash = hash(instance)
+            index = self.hashes.index(object_hash)
+            del self.objects[index]
+            del self.hashes[index]
+        except (ValueError, IndexError):
             raise ValueError('%r not in %r' % (instance, self))
 
     def as_modelset(self):
         SetClass = self.model.Set()
-        return SetClass(*self.objects.values())
+        return SetClass(*self.objects)
 
     def to_dict(self):
         return self.as_modelset().to_dict()
