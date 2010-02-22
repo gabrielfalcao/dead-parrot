@@ -31,6 +31,7 @@ setup(name='Dead Parrot',
     url='http://deadparrot.gabrielfalcao.com',
     packages=[
           'deadparrot',
+          'deadparrot.lib',
           'deadparrot.models',
           'deadparrot.serialization',
           'deadparrot.serialization.plugins',
