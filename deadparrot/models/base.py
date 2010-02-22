@@ -335,7 +335,7 @@ class Model(object):
                 will_model = cls._meta._relationships[k].to_model
                 if isinstance(v, list):
                     msetmanager = ModelSetManager(will_model)
-                    for instance in [will_model.from_dict(d) for d in reversed(v)]:
+                    for instance in [will_model.from_dict(d) for d in v]:
                         msetmanager.add(instance)
                     setattr(obj, k, msetmanager)
                 else:

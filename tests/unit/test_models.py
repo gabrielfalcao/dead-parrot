@@ -296,8 +296,8 @@ class TestBasicModel(unittest.TestCase):
         car_model_set = p.vehicles.as_modelset()
         length = len(car_model_set)
         assert length == 2, "Expected 2 cars within %r.vehicles.as_modelset(), got %d" % (p.vehicles, length)
-        assert car_model_set[0] == Car(name='Fiat')
-        assert car_model_set[1] == Car(name='Ferrari')
+        assert car_model_set[0] == Car(name='Ferrari')
+        assert car_model_set[1] == Car(name='Fiat')
 
     def test_to_dict_many_to_many_field(self):
         class Car(Model):
