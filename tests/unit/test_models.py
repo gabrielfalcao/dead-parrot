@@ -24,7 +24,7 @@ from deadparrot.models import fields, base
 from deadparrot import models
 from deadparrot.models import Model
 from deadparrot.models import build_metadata
-from datetime import date, time, datetime
+from datetime import date, datetime
 
 from utils import one_line_xml, assert_raises
 
@@ -244,30 +244,6 @@ class TestBasicModel(unittest.TestCase):
         assert p.live_in is not None, '%r.live_in should not be None' % p
         assert p.live_in == expected, "Expected %r, got %s" % (expected, repr(p.birthdate))
 
-    def test_to_dict_foreign_key(self):
-        class House(Model):
-            address = fields.TextField(primary_key=True)
-
-        class Person(Model):
-            name = fields.CharField(max_length=20, primary_key=True)
-            birthdate = fields.DateField(format="%d/%m/%Y")
-            live_in = fields.ForeignKey(House)
-
-        my_dict = {
-            'Person': {
-                'name': u"John Doe",
-                'birthdate': u"10/02/1988",
-                'live_in': {
-                    'House': {
-                        'address': 'Franklin St.'
-                    }
-                }
-            }
-        }
-
-        p = Person(name='John Doe', birthdate=date(1988, 2, 10), live_in=House(address='Franklin St.'))
-        assert p.to_dict() == my_dict, 'Expected %r, got %r' % (my_dict, p.to_dict())
-
     def test_from_dict_many_to_many_field(self):
         class Car(Model):
             name = fields.CharField(max_length=100, primary_key=True)
@@ -298,38 +274,6 @@ class TestBasicModel(unittest.TestCase):
         assert length == 2, "Expected 2 cars within %r.vehicles.as_modelset(), got %d" % (p.vehicles, length)
         assert car_model_set[0] == Car(name='Ferrari')
         assert car_model_set[1] == Car(name='Fiat')
-
-    def test_to_dict_many_to_many_field(self):
-        class Car(Model):
-            name = fields.CharField(max_length=100, primary_key=True)
-
-        class Person(Model):
-            name = fields.CharField(max_length=20, primary_key=True)
-            birthdate = fields.DateField(format="%d/%m/%Y")
-            vehicles = fields.ManyToManyField(Car)
-
-        my_dict = {
-            'Person': {
-                'name': u"John Doe",
-                'birthdate': u"10/02/1988",
-                'vehicles':  [
-                    {'Car': {'name': 'Ferrari'}},
-                    {'Car': {'name': 'Fiat'}},
-                ]
-            }
-        }
-
-        p = Person(name='John Doe', birthdate=date(1988, 2, 10), vehicles=[Car(name='Ferrari'), Car(name='Fiat')])
-        assert p.name == u'John Doe', "Expected 'John Doe', got %s" % repr(p.name)
-        assert p.birthdate == date(1988, 2, 10), "Expected datetime.date(1988, 2, 10), got %s" % repr(p.birthdate)
-        assert p.vehicles is not None, '%r.vehicles should not be None' % p
-        car_model_set = p.vehicles.as_modelset()
-        length = len(car_model_set)
-        assert length == 2, "Expected 2 cars within %r.vehicles.as_modelset(), got %d" % (p.vehicles, length)
-        assert car_model_set[0] == Car(name='Ferrari')
-        assert car_model_set[1] == Car(name='Fiat')
-
-        assert p.to_dict() == my_dict, 'Expected %r, got %r' % (my_dict, p.to_dict())
 
     def test_to_dict_many_to_many_field(self):
         class House(Model):
@@ -662,6 +606,8 @@ class TestModelSet(unittest.TestCase):
         self.assert_(isinstance(people, models.ModelSet),
                      "people should be a ModelSet")
         self.assertEquals(people.to_dict(), self.my_dict)
+        self.assertEquals(people[0], person1)
+        self.assertEquals(people[1], person2)
 
 class TestModelSerialization(unittest.TestCase):
     class Person(Model):
@@ -964,7 +910,6 @@ class TestModelOperations(unittest.TestCase):
             birthdate = fields.DateField(format="%d/%m/%Y")
 
         person1 = Person(name=u"blaj", birthdate=u'10/10/2000')
-        person2 = Person(name=u"blaj", birthdate=u'10/10/2000')
         self.assertRaises(TypeError, person1, range(10))
 
     def test_all_fields_equals_success(self):
@@ -1322,25 +1267,6 @@ class TestModelSpecialMethods:
         assert john1.email == u'john@doe.net', 'john1.email should be u"john@doe.net", got %r' % john1.email
         assert john2.name == u'John Doe', 'john2.name should be u"John Doe", got %r' % john2.name
         assert john2.email == u'john@doe.net', 'john2.email should be u"john@doe.net", got %r' % john2.email
-
-    def test_fill_from_object_success_retrieve_callable_results_string(self):
-        '''If the object we are retrieving attributes from, has a
-        callable with the same name as an attribute of deadparrot,
-        then I try to get its value'''
-
-        class Person(models.Model):
-            name = models.CharField(max_length=40)
-            email = models.EmailField()
-
-        class FooBarJohn(object):
-            name = 'John Doe'
-
-            def email(self):
-                return 'john@doe.net'
-
-        john1 = Person.fill_from_object(FooBarJohn)
-        assert john1.name == u'John Doe', 'john1.name should be u"John Doe", got %r' % john1.name
-        assert john1.email == u'john@doe.net', 'john1.email should be u"john@doe.net", got %r' % john1.email
 
     def test_fill_from_object_success_retrieve_callable_results_string(self):
         '''If the object we are retrieving attributes from, has a
