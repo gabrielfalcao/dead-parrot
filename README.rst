@@ -61,7 +61,7 @@ Or, to install those in Debian/Ubuntu::
     aptitude install python-simplejson
 
 Hands On!
-========
+=========
 What about doing some serialization ? ::
 
    >>> from deadparrot import models
