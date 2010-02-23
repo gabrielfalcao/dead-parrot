@@ -78,6 +78,7 @@ class FileObjectsManager(ObjectsManager):
         modelset.add(model)
 
         fobj = codecs.open(self._fullpath, 'w', 'utf-8')
+
         fobj.write(modelset.serialize('json'))
         fobj.close()
 

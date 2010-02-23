@@ -17,13 +17,6 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-import pmock
-from deadparrot.lib import demjson
-
-from nose.tools import *
-
-from utils import one_line_xml
-
 from deadparrot import models
 
 class TestAutoForeignKey:

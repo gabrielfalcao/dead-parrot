@@ -20,7 +20,6 @@
 
 from deadparrot.serialization import Registry
 from deadparrot.models import managers
-from deadparrot.models.attributes import Attribute
 from deadparrot.models.managers import *
 from deadparrot.models.fields import *
 
@@ -30,7 +29,6 @@ from deadparrot.models.fields import *
 from deadparrot.models.registry import _REGISTRY
 from deadparrot.models.registry import _MODULE_REGISTRY
 from deadparrot.models.registry import _APP_REGISTRY
-from deadparrot.models.registry import ModelRegistry
 
 VALIDATE_NONE = "The model won't validate any fields"
 VALIDATE_ALL = """
@@ -207,7 +205,6 @@ class ModelSet(object):
         if not isinstance(edict, dict):
             raise TypeError, "%s.from_dict takes a dict as parameter. " \
                   "Got %r" % (cls.__name__, type(edict))
-
         items = edict[cls.__model_class__._meta.verbose_name_plural]
         return cls(*[cls.__model_class__.from_dict(i) for i in items])
 
@@ -231,7 +228,26 @@ class Model(object):
                k not in self._meta._relationships.keys():
                 raise AttributeError, \
             "%s has no attribute %s" % (self.__class__.__name__, k)
-            setattr(self, k, v)
+
+            is_relation = k in self._meta._relationships.keys()
+            if is_relation:
+                if isinstance(v, list):
+                    if len(v) == 0:
+                        continue
+
+                    klass = self._meta._relationships[k].model
+                    if not all([isinstance(x, klass) for x in v]):
+                        raise TypeError('Got non %r objects in attribute %r models on %r' % (klass, k, self))
+
+                    msmanager = ModelSetManager(klass)
+                    for model_object in v:
+                        msmanager.add(model_object)
+
+                    setattr(self, k, msmanager)
+                else:
+                    setattr(self, k, v)
+            else:
+                setattr(self, k, v)
 
     def __repr__(self):
         if hasattr(self, '__unicode__'):
@@ -285,7 +301,6 @@ class Model(object):
 
     def __setattr__(self, attr, val):
         if attr in self._data.keys():
-            klassname = self.__class__.__name__
             if attr in self._meta._fields.keys():
                 field = self._meta._fields[attr]
             elif attr in self._meta._relationships.keys():
@@ -319,7 +334,7 @@ class Model(object):
                                  data_dict)
         try:
             d = data_dict[cls._meta.verbose_name].copy()
-        except KeyError, e:
+        except KeyError:
             raise TypeError, "%s.from_dict got an mismatched dict structure." \
                   "Expected {'%s': {... data ...}} like structure, got %s" % (cls,
                                                                               cls._meta.verbose_name,
@@ -332,12 +347,16 @@ class Model(object):
                 setattr(obj, k, v)
 
             if k in rel_keys:
-                will_model = cls._meta._relationships[k].to_model
-                if isinstance(v, list):
+                rship = cls._meta._relationships[k]
+                will_model = rship.to_model
+                if isinstance(rship, ManyToManyField):
                     msetmanager = ModelSetManager(will_model)
-                    for instance in [will_model.from_dict(d) for d in v]:
-                        msetmanager.add(instance)
-                    setattr(obj, k, msetmanager)
+                    if isinstance(v, list):
+                        for instance in [will_model.from_dict(d) for d in v]:
+                            msetmanager.add(instance)
+                        setattr(obj, k, msetmanager)
+                    else:
+                        setattr(obj, k, msetmanager.from_dict(v))
                 else:
                     setattr(obj, k, will_model.from_dict(v))
 
@@ -431,4 +450,8 @@ class ModelSetManager(object):
 
     def from_dict(self, data_dict):
         SetClass = self.model.Set()
-        return SetClass.from_dict(data_dict)
+        mset = SetClass.from_dict(data_dict)
+        for item in mset.items:
+            self.add(item)
+
+        return self

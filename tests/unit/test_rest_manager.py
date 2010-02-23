@@ -17,10 +17,8 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 import re
-from mox import Mox
 
 from deadparrot.models.base import Model
-from deadparrot.models.fields import CharField, IntegerField
 from deadparrot.models import managers
 
 from utils import assert_raises

@@ -257,10 +257,12 @@ class TestBasicModel(unittest.TestCase):
             'Person': {
                 'name': u"John Doe",
                 'birthdate': u"10/02/1988",
-                'vehicles':  [
-                    {'Car': {'name': 'Ferrari'}},
-                    {'Car': {'name': 'Fiat'}},
-                ]
+                'vehicles':  {
+                    'Cars': [
+                        {'Car': {'name': 'Ferrari'}},
+                        {'Car': {'name': 'Fiat'}},
+                    ]
+                }
             }
         }
 

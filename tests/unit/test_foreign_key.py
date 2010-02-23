@@ -18,10 +18,9 @@
 # Boston, MA 02111-1307, USA.
 
 import unittest
-import pmock
 from deadparrot.lib import demjson
 
-from nose.tools import *
+from utils import assert_raises
 
 from utils import one_line_xml
 
@@ -192,7 +191,6 @@ class TestForeignKeySerialization(unittest.TestCase):
     })
 
     def test_to_xml_unevaluated(self):
-        pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
                        name=u"Polly",
                        is_dead=True,
@@ -201,7 +199,6 @@ class TestForeignKeySerialization(unittest.TestCase):
                           one_line_xml(self.unevaluated_xml))
 
     def test_to_xml_evaluated(self):
-        pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
                        name=u"Polly",
                        is_dead=True,
@@ -210,7 +207,6 @@ class TestForeignKeySerialization(unittest.TestCase):
                           one_line_xml(self.evaluated_xml))
 
     def test_to_json_unevaluated(self):
-        pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
                        name=u"Polly",
                        is_dead=True,
@@ -219,7 +215,6 @@ class TestForeignKeySerialization(unittest.TestCase):
                           self.unevaluated_json)
 
     def test_to_json_evaluated(self):
-        pollys_cage = Cage(id=1, color=u'black')
         polly = Parrot(id=1,
                        name=u"Polly",
                        is_dead=True,

@@ -19,16 +19,15 @@
 
 import pmock
 
-from nose.tools import *
-
-from urllib2 import URLError
+from nose.tools import assert_equals
+from utils import assert_raises
 
 from deadparrot import models
 from deadparrot.models import fields
 from deadparrot.models import Model
 
 from decimal import Decimal
-from datetime import date, time, datetime
+from datetime import datetime
 
 class TestFieldsBasicBehavior:
     """
@@ -321,13 +320,6 @@ class TestFieldsBasicBehavior:
             except fields.FieldValidationError:
                 pass
 
-    def test_emailfield_fail_on_validate(self):
-        class Person(Model):
-            email = fields.EmailField()
-
-        person_dict = {'Person': {'email': None}}
-        assert_raises(TypeError, Person.from_dict, person_dict)
-
     def test_emailfield_fail_construct(self):
         assert_raises(TypeError, fields.EmailField, max_length=None)
 
@@ -604,13 +596,6 @@ class TestFieldsBasicBehavior:
                           Person.from_dict,
                           person_dict)
 
-    def test_urlfield_fail_validate_url(self):
-        def make_class():
-            class Person(Model):
-                blog = fields.URLField(verify_exists=None)
-
-        assert_raises(TypeError, make_class)
-
     def test_urlfield_fail_value_nonstring(self):
         class Person(Model):
             blog = fields.URLField(verify_exists=False)
@@ -638,8 +623,3 @@ class TestFieldsBasicBehavior:
         assert (checker.does_exists())
 
         urlmock.verify()
-
-    def test_auto_foreignkey(self):
-        pass
-#         class Person(Model):
-#             father = fields.ForeignKey('self')

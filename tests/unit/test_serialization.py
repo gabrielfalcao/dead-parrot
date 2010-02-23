@@ -18,16 +18,7 @@
 # Boston, MA 02111-1307, USA.
 
 import unittest
-import pmock
 from deadparrot.lib import demjson
-
-from urllib2 import URLError
-
-from datetime import date, time, datetime
-from decimal import Decimal
-
-from deadparrot import models
-from deadparrot.models import fields, Model
 from deadparrot.serialization import Registry
 from deadparrot.serialization.plugins.json import JSONSerializer
 from deadparrot.serialization.plugins.xml import XMLSerializer

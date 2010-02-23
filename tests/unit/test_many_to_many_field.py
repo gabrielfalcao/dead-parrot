@@ -17,11 +17,9 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-from nose.tools import *
-
 from deadparrot import models
-
-from utils import one_line_xml
+from nose.tools import assert_equals
+from utils import assert_raises
 
 class TestManyToManyField:
     def test_not_lazy_not_referenced(self):
@@ -61,16 +59,16 @@ class TestManyToManyField:
         assert_raises(AttributeError, fk.resolve)
 
     def test_auto_resolve_with_model_objects(self):
-        def create_model(self):
-            class TestM2MSlave1(models.Model):
-                id = models.IntegerField(primary_key=True)
+        class TestM2MSlave1(models.Model):
+            id = models.IntegerField(primary_key=True)
 
-            class TestM2MMaster1(models.Model):
-                id = models.IntegerField(primary_key=True)
-                slaves = models.ManyToManyField(TestM2MSlave1)
+        class TestM2MMaster1(models.Model):
+            id = models.IntegerField(primary_key=True)
+            slaves = models.ManyToManyField(TestM2MSlave1)
 
-            assert fk.from_model is TestM2MMaster1
-            assert fk.to_model is TestM2MSlave1
+        fk = TestM2MMaster1._meta._relationships['slaves']
+        assert fk.from_model is TestM2MMaster1
+        assert fk.to_model is TestM2MSlave1
 
     def test_value_is_a_model_set_manager(self):
         class TestM2MSlave2(models.Model):
@@ -97,6 +95,7 @@ class TestManyToManyField:
         assert master.slaves.model == TestM2MSlave3, 'The ModelSetManager in TestM2MMaster3().slaves should manage the model Testm2mslave3. But actually it manages %r' % master.slaves.model
 
     def test_filling_model_with_m2m(self):
+
         class TestM2MSlave4(models.Model):
             id = models.IntegerField(primary_key=True)
 
@@ -104,7 +103,8 @@ class TestManyToManyField:
             id = models.IntegerField(primary_key=True)
             slaves = models.ManyToManyField(TestM2MSlave4)
 
-        master = TestM2MMaster4(id=1, slaves=[TestM2MSlave4(id=1)])
+        master = TestM2MMaster4(id=1, slaves=[TestM2MSlave4(id=999)])
+        assert_equals(master.slaves.as_modelset()[0].id, 999)
 
 class TestManyToManyFieldMetaSerialization:
     unevaluated_dict = {
@@ -112,39 +112,44 @@ class TestManyToManyFieldMetaSerialization:
             'is_dead': True,
             'id': 1,
             'name': u'Polly',
-            'cages': [
-                {
-                    'Cage': {
-                        'id': 1
+            'cages': {
+                'Cages': [
+                    {
+                        'Cage': {
+                            'id': 1
+                        }
+                    },
+                    {
+                        'Cage': {
+                            'id': 2
+                        }
                     }
-                },
-                {
-                    'Cage': {
-                        'id': 2
-                    }
-                }
-            ]
+                ]
+            }
         }
     }
+
     evaluated_dict = {
         'Parrot': {
             'is_dead': True,
             'id': 1,
             'name': u'Polly',
-            'cages': [
-                {
-                    'Cage': {
-                        'id': 1,
-                        'color': u'black'
+            'cages': {
+                'Cages': [
+                    {
+                        'Cage': {
+                            'id': 1,
+                            'color': u'black'
+                        }
+                    },
+                    {
+                        'Cage': {
+                            'id': 2,
+                            'color': u'black'
+                        }
                     }
-                },
-                {
-                    'Cage': {
-                        'id': 2,
-                        'color': u'black'
-                    }
-                }
-            ]
+                ]
+            }
         }
     }
 
@@ -165,7 +170,7 @@ class TestManyToManyFieldMetaSerialization:
                        is_dead=True,
                        cages=[Cage(id=1), Cage(id=2)])
 
-        assert polly.to_dict() == self.unevaluated_dict
+        assert_equals(polly.to_dict(), self.unevaluated_dict)
 
     def test_as_dict_evaluated(self):
         class Cage(models.Model):
@@ -184,4 +189,4 @@ class TestManyToManyFieldMetaSerialization:
                        is_dead=True,
                        cages=[Cage(id=1, color='black'), Cage(id=2, color='black')])
 
-        assert polly.to_dict() == self.evaluated_dict
+        assert_equals(polly.to_dict(), self.evaluated_dict)

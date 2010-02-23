@@ -17,11 +17,9 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-import pmock
+from nose.tools import assert_equals
+from utils import assert_raises
 
-from nose.tools import *
-
-from deadparrot.models import build_metadata
 from deadparrot.models import Attribute
 from deadparrot.models import DateTimeAttribute
 from deadparrot.models import DateAttribute
@@ -56,7 +54,6 @@ def test_int():
 
 def test_datetime_success():
     dta = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
-    dta2 = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
 
     iters = '2009/03/24 00:46:20', \
             datetime.strptime('2009/03/24 00:46:20',
@@ -70,21 +67,6 @@ def test_datetime_success():
 
 def test_datetime_raises():
     dta = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
-    dta2 = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
-
-    iters = '2009/03/24 00:46:20', \
-            datetime.strptime('2009/03/24 00:46:20',
-                              "%Y/%m/%d %H:%M:%S")
-    for val in iters:
-        dta.fill('creation_date', val)
-        assert_raises(TypeError,
-                          dta.fill,
-                          'creation_date',
-                          100.5)
-
-def test_datetime_raises():
-    dta = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
-    dta2 = DateTimeAttribute("%Y/%m/%d %H:%M:%S")
 
     iters = '2009/03/24 00:46:20', \
             datetime.strptime('2009/03/24 00:46:20',
