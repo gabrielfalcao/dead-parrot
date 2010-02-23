@@ -1,3 +1,9 @@
+python-deadparrot (0.1.4) experimental; urgency=low
+
+  * New upstream release, with several bug fixes.
+
+ -- Gabriel Falcão Gonçalves de Moura <gabriel@nacaolivre.org>  Tue, 23 Feb 2010 10:53:36 -0300
+
 python-deadparrot (0.1.3) experimental; urgency=low
 
   * Little improvements release.
