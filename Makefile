@@ -54,11 +54,11 @@ clean:
 
 unit:
 	@echo "Running unit tests..."
-	@nosetests -s --with-coverage --cover-package=deadparrot tests/unit
+	@nosetests --verbosity=2 -s --with-coverage --cover-package=deadparrot tests/unit
 
 functional: clean run_server
 	@echo "Running functional tests..."
-	@nosetests -s --with-coverage --cover-package=deadparrot tests/functional
+	@nosetests --verbosity=2 -s --with-coverage --cover-package=deadparrot tests/functional
 
 doctest:
 	@echo -ne $(blue)
@@ -102,10 +102,10 @@ build: clean test
 
 run_server: kill_server
 	@echo "Running builtin HTTP server ..."
-	@cd tests/functional/parrotserver && bob go 2>&1 > log.txt &
+	@(cd tests/functional/parrotserver && bob go 2>&1) > log.txt &
 	@sleep 5
 
 kill_server:
-	@echo "Shutting down builtin HTTP server ..."
-	@-ps aux | egrep 'bob go' | egrep -v grep | awk '{ print $$2 }' | xargs kill -9 2>&1 /dev/null
-	@echo "Done."
+	@echo -n "Shutting down builtin HTTP server ..."
+	@(ps aux | egrep 'bob go' | egrep -v grep | awk '{ print $$2 }' | xargs kill -9 2>&1 | exit 0) > /dev/null
+	@echo " Done."
