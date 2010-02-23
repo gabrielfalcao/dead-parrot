@@ -30,7 +30,7 @@ else
     blue   :=
     white  :=
 endif
-
+nose_command := nosetests --verbosity=2 -s --with-coverage --cover-package=deadparrot.server --cover-package=deadparrot.serialization --cover-package=deadparrot.models
 
 help:
 	@echo "Available targets are:"
@@ -54,11 +54,11 @@ clean:
 
 unit:
 	@echo "Running unit tests..."
-	@nosetests --verbosity=2 -s --with-coverage --cover-package=deadparrot tests/unit
+	@$(nose_command) tests/unit
 
 functional: clean run_server
 	@echo "Running functional tests..."
-	@nosetests --verbosity=2 -s --with-coverage --cover-package=deadparrot tests/functional
+	@$(nose_command) tests/functional
 
 doctest:
 	@echo -ne $(blue)
