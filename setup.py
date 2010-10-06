@@ -23,7 +23,7 @@ import sys
 from setuptools import setup, find_packages
 from deadparrot import __version__
 
-setup(name='Dead Parrot',
+setup(name='dead-parrot',
     version=__version__,
     description='A model-based Django(ish) RESTful server/client',
     author=u'Gabriel Falcão',
