@@ -319,7 +319,16 @@ class Model(object):
             if isinstance(field, Field):
                 if self._meta.fields_validation_policy != VALIDATE_NONE:
                     # raising the field-specific exceptions
-                    field.validate(val)
+                    try:
+                        field.validate(val)
+                    except FieldValidationError, e:
+                        raise FieldValidationError(
+                            'On field %r: got %r should be a %r' % (
+                                attr,
+                                val,
+                                field.vartype
+                            )
+                        )
                 val = field.convert_type(val)
             self._data[attr] = val
 

@@ -52,6 +52,7 @@ class Field(Attribute):
     null = True
     blank = True
     vartype = None
+
     def __init__(self, *args, **kw):
         d = {'blank': 'blank', 'null': 'null', 'validate': 'must_validate'}
         for attr, setname in d.items():
@@ -203,7 +204,7 @@ class IntegerField(Field):
     def validate(self, value):
         try:
             self.vartype(value)
-        except TypeError:
+        except (TypeError, ValueError):
             raise FieldValidationError, "The value of a %s must " \
                   "be an number (even when inside a string) " \
                   "got an %s" % (self.__class__.__name__,

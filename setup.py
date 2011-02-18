@@ -26,7 +26,7 @@ from deadparrot import __version__
 setup(name='dead-parrot',
     version=__version__,
     description='A model-based Django(ish) RESTful server/client',
-    author=u'Gabriel Falcão',
+    author=u'Gabriel Falcao',
     author_email='gabriel@nacaolivre.org',
     url='http://deadparrot.gabrielfalcao.com',
     packages=[
